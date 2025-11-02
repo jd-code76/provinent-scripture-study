@@ -10,7 +10,6 @@ $FileOrder = @(
     "variables.css",
     "reset.css",
     "layout.css",
-    "welcome.css", 
     "sidebar.css",
     "reference-panel.css",
     "resize-handles.css",
