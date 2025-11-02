@@ -6,8 +6,6 @@
 /* ====================================================================
    TABLE OF CONTENTS
    
-    FETCH HELPER
-    LOAD PASSAGE
     DATE / TIME
     ERROR HANDLING
     EVENT LISTENERS
@@ -17,7 +15,6 @@
     INITIALIZATION
     START THE APP
     THEMING
-    WELCOME SCREEN HANDLERS
 ==================================================================== */
 
 
@@ -164,16 +161,6 @@ export function handleError(error, context) {
 
 /* Setup all event listeners for the application */
 function setupEventListeners() {
-    // Welcome Screen
-    document.getElementById('getStartedBtn')
-            .addEventListener('click', completeWelcome);
-    document.getElementById('welcomePdfUploadArea')
-            .addEventListener('click', () => {
-                document.getElementById('welcomePdfUpload').click();
-            });
-    document.getElementById('welcomePdfUpload')
-            .addEventListener('change', handleWelcomePDFUpload);
-
     // Theme Toggle
     document.querySelector('.theme-toggle')
             .addEventListener('click', toggleTheme);
@@ -693,104 +680,6 @@ export function applyColorTheme() {
 
 
 /* ====================================================================
-   WELCOME SCREEN HANDLERS
-   First-time user onboarding with optional PDF upload
-==================================================================== */
-
-/* Handle PDF file selection on welcome screen */
-async function handleWelcomePDFUpload(ev) {
-    try {
-        const file = ev.target.files[0];
-        if (!file) return;
-        
-        if (file.size > 50 * 1024 * 1024) {
-            alert('PDF file is too large (max 50 MiB).');
-            ev.target.value = '';
-            return;
-        }
-        
-        state.welcomePdfFile = file;
-        document.getElementById('welcomePdfUploadArea').classList.add('has-file');
-        document.getElementById('welcomeUploadText').innerHTML = `
-            <strong>${file.name}</strong><br>
-            <small>Ready to use for offline mode</small>`;
-    }  catch (err) {
-        handleError(err, 'handleWelcomePDFUpload');
-    } 
-}
-
-/* Complete welcome flow and initialize main app */
-async function completeWelcome() {
-    showLoading(true);
-    
-    try {
-        if (state.welcomePdfFile) {
-            const reader = new FileReader();
-            const arrayBuffer = await new Promise((resolve, reject) => {
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = (e) => reject(new Error('Failed to read file'));
-                reader.readAsArrayBuffer(state.welcomePdfFile);
-            });
-            
-            const bufferCopy = arrayBuffer.slice(0);
-            const loadingTask = pdfjsLib.getDocument({ data: bufferCopy });
-            const pdf = await loadingTask.promise;
-            const base64 = arrayBufferToBase64(arrayBuffer);
-            const pdfData = {
-                name: state.welcomePdfFile.name,
-                data: base64,
-                uploadDate: new Date().toISOString(),
-                numPages: pdf.numPages
-            };
-
-            await savePDFToIndexedDB(pdfData);
-            
-            state.settings.customPdf = {
-                name: pdfData.name,
-                uploadDate: pdfData.uploadDate,
-                numPages: pdfData.numPages,
-                storedInDB: true
-            };
-        }
-        
-        state.settings.hasSeenWelcome = true;
-        saveToStorage();
-        saveToCookies();
-        
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        await init();
-        
-    } catch (err) {
-        handleError(err, 'completeWelcome');
-        alert('Error processing PDF: ' + err.message + 
-              '. You can continue without offline mode.');
-        state.settings.hasSeenWelcome = true;
-        saveToStorage();
-        saveToCookies();
-        document.getElementById('welcomeScreen').classList.add('hidden');
-        await init();
-    } finally {
-        showLoading(false);
-    }
-}
-
-/**
- * HELPER: ATTACH WELCOME LISTENERS
- * Set up event listeners for welcome screen (used for early exit)
- */
-function attachWelcomeListeners() {
-    document.getElementById('getStartedBtn')
-            .addEventListener('click', completeWelcome);
-    document.getElementById('welcomePdfUploadArea')
-            .addEventListener('click', () => {
-                document.getElementById('welcomePdfUpload').click();
-            });
-    document.getElementById('welcomePdfUpload')
-            .addEventListener('change', handleWelcomePDFUpload);
-}
-
-
-/* ====================================================================
    INITIALIZATION
    Application startup sequence
 ==================================================================== */
@@ -816,24 +705,15 @@ async function init() {
     window.addEventListener('online', () => updateOfflineStatus(false));
     window.addEventListener('offline', () => updateOfflineStatus(true));
 
-    // Guard defaults for other settings (if they were never saved)
+    // Guard defaults for other settings
     if (!state.settings.readingMode)    state.settings.readingMode      = 'readingPlan';
     if (!state.settings.readingPlanId)  state.settings.readingPlanId    = 'default';
 	
-    // Initialize manual navigation (book/chapter dropdowns)
+    // Initialize manual navigation
     initBookChapterControls();
 	
-    // Restore the book/chapter UI to the saved values
-    restoreBookChapterUI();   // also loads the passage
-
-    // Check welcome screen
-    if (!state.settings.hasSeenWelcome) {
-        attachWelcomeListeners();
-        return;
-    }
-
-    // Hide welcome screen
-    document.getElementById('welcomeScreen').classList.add('hidden');
+    // Restore the book/chapter UI
+    restoreBookChapterUI();
 
     // Apply theme
     applyTheme();
