@@ -1,6 +1,7 @@
 # Provinent Scripture Study
 
-A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools and traditional reverence.
+A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools and traditional reverence. 
+The entirety of this project was written using AI tools like [Gab AI](https://gab.ai) and [Lumo](https://lumo.proton.me/u/8/).
 
 ## Features
 
@@ -86,15 +87,15 @@ All user data (highlights, notes, settings) is stored locally in your browser. N
 
 ## Attribution
 
-- Scripture text provided by bible.helloao.org API
-- Berean Standard Bible translation by Berean Bible
+- Scripture text provided by [bible.helloao.org](bible.helloao.org) API
+- Berean Standard Bible translation by [Berean Bible](https://berean.bible)
 - Icons by Font Awesome
 - PDF rendering by PDF.js
 - Markdown processing by Marked.js
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 (GPLv3).
+This project is licensed under the [GNU General Public License v3.0 (GPLv3)](https://www.gnu.org/licenses/gpl-3.0.en.html#license-text).
 
 - **Freedom to use**: Anyone can use this software for any purpose
 - **Freedom to study**: Anyone can examine how it works and modify it
