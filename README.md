@@ -1,2 +1,110 @@
-# provinent-scripture-study
-An online, desktop-focused Bible study web application.
+# Provinent Scripture Study
+
+A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools and traditional reverence.
+
+## Features
+
+### Core Functionality
+- **Daily Scripture Passages**: Get a new passage daily with sequential or book-specific reading plans
+- **Multi-Translation Support**: NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT
+- **Verse Highlighting**: Right-click verses to highlight in 6 different colors for study emphasis
+- **Study Notes**: Full Markdown support with live preview and export capabilities
+- **Original Language Tools**: Click any verse for Strong's Concordance data and Greek/Hebrew interlinear analysis
+- **Reference Panel**: Side-by-side Bible comparison with multiple translation options
+
+### Advanced Features
+- **Offline PDF Support**: Upload Berean Standard Bible PDFs for offline reading
+- **Reading Plans**: 90-day sequential and book-specific plans (Genesis, Psalms, Proverbs, etc.)
+- **Search Integration**: Built-in Bible Gateway search functionality
+- **Data Management**: Import/export highlights and notes, local storage persistence
+- **Responsive Design**: Works on desktops and tablets, mobile devices work but are not recommended
+- **Dark/Light Mode**: Toggle between color themes with multiple accent color options
+
+### Study Resources Integration
+The sidebar provides organized access to extensive theological resources including:
+- Online Bible platforms
+- Christian doctrine references
+- Theological resources
+- Podcasts and devotionals
+- Study tools and commentaries
+
+## Technical Stack
+
+- **Frontend**: Pure HTML5, CSS3, and Vanilla JavaScript (ES6+)
+- **Libraries**: 
+  - PDF.js for PDF rendering
+  - Marked.js for Markdown processing
+  - Font Awesome for icons
+- **API**: Bible.helloao.org for scripture text
+- **Storage**: LocalStorage for user data persistence
+- **Build**: No build process required - runs directly in modern browsers
+
+## Installation
+
+1. Clone or download this repository
+2. Serve the files through any web server (no server-side processing required)
+3. Open `index.html` in a web browser
+
+### Optional PDF Setup
+For offline functionality:
+1. Download a Berean Standard Bible PDF from the provided links
+2. Upload via the welcome screen or settings panel
+3. Select "Custom PDF" in the reference panel dropdown
+
+## Usage
+
+### Basic Navigation
+- Use Prev/Next buttons to navigate reading plan passages
+- Select specific books/chapters from dropdown menus
+- Click "Resume Reading Plan" to continue where you left off
+- Use "Random Passage" for study from any canon passage of Holy Scripture
+
+### Study Features
+- **Right-click verses** to open highlight color picker
+- **Click verses** for original language analysis (Strong's Concordance)
+- **Toggle notes panel** to write study notes with Markdown support
+- **Open reference panel** for side-by-side translation comparison
+
+### Data Management
+- Export/import your highlights and notes via JSON files
+- Export notes as Markdown or plain text
+- Clear specific data types or perform complete reset in settings
+
+## Browser Support
+
+- Chrome/Chromium 80+ (only tested on these browsers)
+- Firefox 75+
+- Safari 13+
+- Edge 80+
+
+## Privacy & Data
+
+All user data (highlights, notes, settings) is stored locally in your browser. No data is transmitted to external servers except for:
+- Bible passage requests to bible.helloao.org
+- Resource links opened in external sites
+- Optional Bible Gateway searches
+
+## Attribution
+
+- Scripture text provided by bible.helloao.org API
+- Berean Standard Bible translation by Berean Bible
+- Icons by Font Awesome
+- PDF rendering by PDF.js
+- Markdown processing by Marked.js
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 (GPLv3).
+
+- **Freedom to use**: Anyone can use this software for any purpose
+- **Freedom to study**: Anyone can examine how it works and modify it
+- **Freedom to distribute**: Anyone can share original or modified versions
+- **Copyleft**: All derivative works must remain under GPLv3, preventing commercial proprietary exploitation
+
+## Support
+
+For issues or suggestions, please check the browser console for error messages and ensure you're using a supported browser version.
+
+---
+
+*Soli Deo Gloria*
