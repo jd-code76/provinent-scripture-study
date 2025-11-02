@@ -1,0 +1,243 @@
+/* ====================================================================
+   NOTES SECTION
+   Right panel for taking study notes with text/markdown views
+==================================================================== */
+
+.notes-section {
+    width: 400px;
+    padding: 20px;
+    background-color: var(--notes-background);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    min-width: 50px;
+    transition: all 0.3s ease;
+}
+
+.notes-section.hidden {
+    display: none;
+}
+
+/* Notes Header & Controls */
+
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.notes-header h3 {
+    color: var(--text-color);
+}
+
+.notes-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.notes-controls button {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* Notes View Toggle (Text/Markdown) */
+
+.notes-view-toggle {
+    display: flex;
+    gap: 5px;
+    padding: 5px;
+    background-color: var(--toolbar-background);
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.view-toggle-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    background-color: transparent;
+    color: var(--text-color);
+    transition: all 0.2s;
+}
+
+.view-toggle-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.view-toggle-btn:hover:not(.active) {
+    background-color: var(--verse-hover);
+}
+
+.view-toggle-btn:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Markdown Toolbar */
+
+.markdown-toolbar {
+    display: flex;
+    gap: 5px;
+    padding: 10px;
+    background-color: var(--toolbar-background);
+    border: 1px solid var(--border-color);
+    border-radius: 5px 5px 0 0;
+    flex-wrap: wrap;
+}
+
+.markdown-btn {
+    padding: 6px 12px;
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-color);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.markdown-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.markdown-btn:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.markdown-btn:active {
+    transform: scale(0.95);
+}
+
+/* Notes Input & Display */
+
+#notesInput,
+#notesDisplay {
+    flex: 1;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 5px 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: var(--card-background);
+    color: var(--text-color);
+}
+
+#notesInput {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    resize: none;
+}
+
+#notesInput:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+#notesDisplay {
+    overflow-y: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+}
+
+/* Markdown Rendering Styles */
+
+#notesDisplay h1,
+#notesDisplay h2,
+#notesDisplay h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+#notesDisplay h1 {
+    font-size: 2em;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+#notesDisplay h2 {
+    font-size: 1.5em;
+}
+
+#notesDisplay h3 {
+    font-size: 1.2em;
+}
+
+#notesDisplay code {
+    background-color: var(--toolbar-background);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    border: 1px solid var(--border-color);
+}
+
+#notesDisplay pre {
+    background-color: var(--toolbar-background);
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+}
+
+#notesDisplay pre code {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+#notesDisplay blockquote {
+    border-left: 4px solid var(--accent-color);
+    padding-left: 15px;
+    margin: 15px 0;
+    opacity: 0.8;
+}
+
+#notesDisplay ul,
+#notesDisplay ol {
+    margin-left: 25px;
+    margin-bottom: 15px;
+}
+
+#notesDisplay a {
+    color: var(--accent-color);
+}
+
+#notesDisplay a:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+#notesDisplay p {
+    margin-bottom: 10px;
+}
+
+#notesDisplay table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+}
+
+#notesDisplay table th,
+#notesDisplay table td {
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    text-align: left;
+}
+
+#notesDisplay table th {
+    background-color: var(--toolbar-background);
+    font-weight: bold;
+}

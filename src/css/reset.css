@@ -1,0 +1,41 @@
+/* ====================================================================
+   RESET & BASE STYLES
+   Basic CSS reset to ensure consistent rendering across browsers
+==================================================================== */
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Remove animation for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Improved focus styles for accessibility */
+:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --shadow: rgba(0, 0, 0, 0.8);
+        --shadow-strong: rgba(0, 0, 0, 0.9);
+    }
+    
+    .verse:hover {
+        outline: 2px solid var(--accent-color);
+    }
+}

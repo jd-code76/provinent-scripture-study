@@ -1,0 +1,159 @@
+/* ====================================================================
+   CSS CUSTOM PROPERTIES (Theme Variables)
+   These variables control the entire color scheme and can be switched
+   dynamically via JavaScript by changing data-theme attributes
+==================================================================== */
+
+/* Light Theme Colors (Default) */
+:root {
+    /* Primary brand colors */
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    
+    /* Background colors */
+    --background: #ecf0f1;
+    --card-background: #ffffff;
+    --toolbar-background: #f8f9fa;
+    --notes-background: #f8f9fa;
+    --sidebar-background: #2c3e50;
+    --header-background: #ffffff;
+    --popup-background: #ffffff;
+    
+    /* Text colors */
+    --text-color: #2c3e50;
+    --sidebar-text: #ecf0f1;
+    
+    /* Border and UI elements */
+    --border-color: #bdc3c7;
+    --verse-hover: #f0f0f0;
+    
+    /* Shadows for depth */
+    --shadow: rgba(0, 0, 0, 0.1);
+    --shadow-strong: rgba(0, 0, 0, 0.3);
+
+    /* Spacing variables */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Border radius variables */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    
+    /* Transition variables */
+    --transition-fast: 150ms ease;
+    --transition-normal: 300ms ease;
+    --transition-slow: 500ms ease;
+}
+
+/* Color Theme Variations */
+
+/* Blue theme (default) */
+[data-color-theme="blue"] {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+}
+
+/* Green theme */
+[data-color-theme="green"] {
+    --primary-color: #1b5e20;
+    --secondary-color: #2e7d32;
+    --accent-color: #4caf50;
+}
+
+/* Purple theme */
+[data-color-theme="purple"] {
+    --primary-color: #4a148c;
+    --secondary-color: #6a1b9a;
+    --accent-color: #9c27b0;
+}
+
+/* Red theme */
+[data-color-theme="red"] {
+    --primary-color: #b71c1c;
+    --secondary-color: #c62828;
+    --accent-color: #f44336;
+}
+
+/* Orange theme */
+[data-color-theme="orange"] {
+    --primary-color: #e65100;
+    --secondary-color: #ef6c00;
+    --accent-color: #ff9800;
+}
+
+/* Teal theme */
+[data-color-theme="teal"] {
+    --primary-color: #004d40;
+    --secondary-color: #00695c;
+    --accent-color: #009688;
+}
+
+/* Dark Theme Colors */
+[data-theme="dark"] {
+    /* Dark backgrounds */
+    --background: #0d1117;
+    --card-background: #161b22;
+    --toolbar-background: #161b22;
+    --notes-background: #0d1117;
+    --sidebar-background: #0d1117;
+    --header-background: #161b22;
+    --popup-background: #161b22;
+    
+    /* Light text on dark backgrounds */
+    --text-color: #e1e1e1;
+    --sidebar-text: #c9d1d9;
+    
+    /* Adjusted UI elements */
+    --border-color: #444;
+    --verse-hover: #21262d;
+    
+    /* Stronger shadows for depth in dark mode */
+    --shadow: rgba(0, 0, 0, 0.4);
+    --shadow-strong: rgba(0, 0, 0, 0.6);
+}
+
+/* Dark Mode Color Theme Adjustments */
+
+[data-theme="dark"][data-color-theme="blue"] {
+    --primary-color: #1a3a52;
+    --secondary-color: #2c5f7f;
+    --accent-color: #5dade2;
+}
+
+[data-theme="dark"][data-color-theme="green"] {
+    --primary-color: #1b4d20;
+    --secondary-color: #2e6d32;
+    --accent-color: #66bb6a;
+}
+
+[data-theme="dark"][data-color-theme="purple"] {
+    --primary-color: #4a148c;
+    --secondary-color: #7b1fa2;
+    --accent-color: #ab47bc;
+}
+
+[data-theme="dark"][data-color-theme="red"] {
+    --primary-color: #b71c1c;
+    --secondary-color: #d32f2f;
+    --accent-color: #ef5350;
+}
+
+[data-theme="dark"][data-color-theme="orange"] {
+    --primary-color: #e65100;
+    --secondary-color: #f57c00;
+    --accent-color: #ffa726;
+}
+
+[data-theme="dark"][data-color-theme="teal"] {
+    --primary-color: #004d40;
+    --secondary-color: #00796b;
+    --accent-color: #26a69a;
+}
+

@@ -1,0 +1,127 @@
+/* ====================================================================
+   BODY & GLOBAL STYLES
+   Base styles applied to the entire application
+==================================================================== */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background);
+    color: var(--text-color);
+    line-height: 1.6;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* ====================================================================
+   MAIN LAYOUT CONTAINER
+   Flexbox container that holds all main UI panels
+==================================================================== */
+
+.container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ====================================================================
+   PANEL COLLAPSE/EXPAND SYSTEM
+   Allows panels to be minimized to save screen space
+==================================================================== */
+
+.panel-collapsed {
+    min-width: 50px !important;
+    max-width: 50px !important;
+}
+
+.panel-collapsed > *:not(.collapse-toggle):not(.resize-handle) {
+    display: none !important;
+}
+
+.collapse-toggle {
+    will-change: transform;
+    position: absolute;
+    top: 55%;
+    right: 5px;
+    transform: translateY(-50%);
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    z-index: 100;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.collapse-toggle:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.collapse-toggle:focus {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
+
+.panel-collapsed .collapse-toggle {
+    right: 5px;
+}
+
+.collapse-toggle::before {
+    content: '\25C0'; /* ◀ */
+    transition: transform 0.3s ease;
+}
+
+.panel-collapsed .collapse-toggle::before {
+    content: '\25B6'; /* ▶ */
+}
+
+#scriptureSection .collapse-toggle::before {
+    content: '\25B6'; /* ▶ */
+}
+
+#scriptureSection.panel-collapsed .collapse-toggle::before {
+    content: '\25C0'; /* ◀ */
+}
+
+#notesSection .collapse-toggle::before {
+    content: '\25B6'; /* ▶ */
+}
+
+#notesSection.panel-collapsed .collapse-toggle::before {
+    content: '\25C0'; /* ◀ */
+}
+
+.scripture-section {
+    scroll-behavior: smooth;
+    scroll-padding-top: 20px;
+}
+
+/* ====================================================================
+   MAIN CONTENT AREA
+   Central container holding header, toolbar, and content sections
+==================================================================== */
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* ====================================================================
+   CONTENT AREA LAYOUT
+   Horizontal container for scripture and notes sections
+==================================================================== */
+
+.content-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}

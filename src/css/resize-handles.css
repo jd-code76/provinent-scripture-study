@@ -1,0 +1,43 @@
+/* ====================================================================
+   RESIZE HANDLES
+   Draggable handles between panels to adjust widths
+==================================================================== */
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    cursor: ew-resize;
+    background-color: transparent;
+    transition: background-color 0.2s;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.resize-handle::after {
+    content: '\22EE\22EE'; /* ⋮⋮ */
+    color: var(--border-color);
+    font-size: 18px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.resize-handle:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.resize-handle:hover::after {
+    opacity: 1;
+    color: var(--accent-color);
+}
+
+.resize-handle-right {
+    right: 0;
+}
+
+.resize-handle-left {
+    left: 0;
+}

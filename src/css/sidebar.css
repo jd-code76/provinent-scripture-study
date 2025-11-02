@@ -1,0 +1,135 @@
+/* ====================================================================
+   SIDEBAR
+   Left navigation panel with links, resources, and controls
+==================================================================== */
+
+.sidebar {
+    width: 280px;
+    background-color: var(--sidebar-background);
+    color: var(--sidebar-text);
+    padding: 20px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+    position: relative;
+    min-width: 50px;
+    transition: all 0.3s ease;
+}
+
+.sidebar h2 {
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+    color: var(--sidebar-text);
+}
+
+/* Sidebar Sections & Headers */
+
+.sidebar-section {
+    margin-bottom: 10px;
+}
+
+.sidebar-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    margin-top: 15px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.sidebar-section-header:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-section-header:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.sidebar-section-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--accent-color);
+}
+
+.section-toggle {
+    font-size: 0.9em;
+    transition: transform 0.3s;
+}
+
+.section-toggle.collapsed {
+    transform: rotate(-90deg);
+}
+
+.sidebar-section-content {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 1;
+}
+
+.sidebar-section-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* Sidebar Links & Navigation */
+
+.sidebar-links {
+    list-style: none;
+    margin-top: 10px;
+}
+
+.sidebar-links li {
+    margin-bottom: 8px;
+}
+
+.sidebar-links a {
+    color: var(--sidebar-text);
+    text-decoration: none;
+    display: block;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    opacity: 0.9;
+}
+
+.sidebar-links a:hover {
+    background-color: var(--secondary-color);
+    opacity: 1;
+}
+
+.sidebar-links a:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Reference Panel Toggle Button */
+
+.reference-panel-toggle {
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 14px;
+    font-weight: bold;
+    transition: opacity 0.3s;
+}
+
+.reference-panel-toggle:hover {
+    opacity: 0.8;
+}
+
+.reference-panel-toggle:focus {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
