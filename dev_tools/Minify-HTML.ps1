@@ -33,8 +33,8 @@ Write-Host "All source files found" -ForegroundColor Green
 function Remove-Html-Comments {
     param([string]$htmlContent)
     
-    # Remove HTML comments <!-- --> but preserve IE conditional comments
-    $htmlContent = $htmlContent -replace '<!--(?!\[if\s)(?!.*\[endif\]).*?-->', ''
+    # Remove standard HTML comments but preserve IE conditional comments
+    $htmlContent = $htmlContent -replace '<!--(?!\[if.*?\]>|<!\[endif).*?-->', ''
     
     return $htmlContent
 }
