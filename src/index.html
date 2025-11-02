@@ -24,10 +24,16 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     
-    <!-- FAVICON – generated on‑the‑fly (SVG data‑uri) -->
-    <link rel="icon" type="image/svg+xml" 
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%232c3e50;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%233498db;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='15' fill='url(%23grad)'/%3E%3Cpath d='M30 25 L30 75 L50 65 L70 75 L70 25 Z' fill='%23f8f8f8' stroke='%23d4af37' stroke-width='2'/%3E%3Cline x1='40' y1='35' x2='60' y2='35' stroke='%232c3e50' stroke-width='1.5'/%3E%3Cline x1='40' y1='45' x2='60' y2='45' stroke='%232c3e50' stroke-width='1.5'/%3E%3Cline x1='40' y1='55' x2='60' y2='55' stroke='%232c3e50' stroke-width='1.5'/%3E%3Cline x1='35' y1='60' x2='65' y2='40' stroke='%23c8b072' stroke-width='2.5'/%3E%3Cline x1='35' y1='40' x2='65' y2='60' stroke='%23c8b072' stroke-width='2.5'/%3E%3C/svg%3E" 
-    aria-label="Bible with Cross Icon">
+    <!-- FAVICON -->
+    <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+    <meta name="theme-color" content="#600">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Provinent Scripture Study">
+    <meta name="msapplication-TileColor" content="#600">
 
     <!-- THIRD‑PARTY LIBRARIES - Loaded asynchronously -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
@@ -301,7 +307,7 @@
                         class="reference-panel-iframe"
                         src=""
                         title="Reference Bible Content"
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+                        sandbox="allow-scripts allow-popups allow-forms"></iframe>
 
                 <div class="pdf-viewer" id="pdfViewer">
                     <div class="pdf-controls">
@@ -343,7 +349,7 @@
                 <h1>Provinent Scripture Study</h1>
                 <div class="header-controls">
                     <button class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle dark mode">
-                        <span id="themeIcon" aria-hidden="true">🌙</span>
+                        <span id="themeIcon" aria-hidden="true"><i class="fas fa-moon"></i></span>
                     </button>
                     <button class="btn toggle-notes" aria-label="Toggle notes">Notes</button>
                     <button class="btn" id="openSettingsBtn">Settings</button>
@@ -677,7 +683,13 @@ Examples:
                     <strong>Created by:</strong> Jordan DiPasquale
                 </div>
                 <div class="attribution-links">
-                    <div class="about-description">Code written using AI tools</div>
+                    <div class="about-description">Code written using AI tools</div> 
+                    <a href="https://github.com/jd-code76/provinent-scripture-study" target="_blank" class="attribution-link github">
+                        <div>
+                            <strong>Source Code</strong>
+                            <div class="link-description">Hosted on GitHub</div>
+                        </div>
+                    </a>
                     
                     <a href="https://gab.ai/" target="_blank" class="attribution-link gab">
                         <div>

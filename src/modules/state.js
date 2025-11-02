@@ -19,7 +19,7 @@ import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
 
 /* Global constants */
-export const APP_VERSION = '1.0.2025.11.01';
+export const APP_VERSION = '1.01.2025.11.02';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -142,7 +142,6 @@ export const state = {
         theme: 'light',                 // 'light' | 'dark'
         colorTheme: 'blue',             // Color accent theme
         notesView: 'text',              // 'text' | 'markdown'
-        hasSeenWelcome: false,          // First-time user flag
         
         // Panel states
         referencePanelOpen: false,      // Is reference panel visible?
@@ -172,9 +171,7 @@ export const state = {
         currentPage: 1,                 // Current PDF page number (persistent)
         renderTask: null,               // Current rendering task (runtime only)
         zoomLevel: 1                    // Current zoom level (persistent)
-    },
-
-    welcomePdfFile: null                // File object from welcome screen
+    }
 };
 
 
@@ -247,8 +244,7 @@ export function saveToStorage() {
                 pdf: {
                     currentPage: state.pdf.currentPage,
                     zoomLevel: state.pdf.zoomLevel
-                },
-                welcomePdfFile: null
+                }
             };
             
             if (cleanState.settings.customPdf && cleanState.settings.customPdf.data) {

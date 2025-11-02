@@ -225,7 +225,6 @@ export async function deleteAllData() {
                 theme: 'light',
                 colorTheme: 'blue',
                 notesView: 'text',
-                hasSeenWelcome: true,
                 referencePanelOpen: false,
                 referenceSource: 'biblegateway',
                 collapsedSections: {},
@@ -245,8 +244,7 @@ export async function deleteAllData() {
                 currentPage: 1,
                 renderTask: null,
                 zoomLevel: 1
-            },
-            welcomePdfFile: null
+            }
         };
         Object.assign(state, defaultState);
         document.getElementById('notesInput').value = '';

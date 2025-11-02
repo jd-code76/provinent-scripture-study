@@ -8,7 +8,6 @@ param(
 # Define file mappings
 $fileMappings = @(
     @{ Source = "../src/main.js"; Destination = "../public/main.js" },
-    @{ Source = "../src/sw.js"; Destination = "../public/sw.js" },
     @{ Source = "../src/modules/api.js"; Destination = "../public/modules/api.js" },
     @{ Source = "../src/modules/navigation.js"; Destination = "../public/modules/navigation.js" },
     @{ Source = "../src/modules/passage.js"; Destination = "../public/modules/passage.js" },
@@ -45,7 +44,6 @@ function Remove-JSComments {
     $processedLines = @()
     
     $inBlockComment = $false
-    $blockCommentBuffer = @()
     
     foreach ($line in $lines) {
         $currentLine = $line

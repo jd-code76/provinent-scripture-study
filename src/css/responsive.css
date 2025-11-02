@@ -22,56 +22,6 @@
     }
 }
 
-/* Mobile (768px and below) */
-@media (max-width: 768px) {
-    .container {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 200px;
-    }
-
-    .content-area {
-        flex-direction: column;
-    }
-
-    .notes-section {
-        width: 100%;
-        border-left: none;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .reference-panel {
-        width: 100%;
-        border-left: none;
-        border-top: 1px solid var(--border-color);
-    }
-    
-    .footnote {
-        padding: 6px;
-        margin-bottom: 8px;
-    }
-
-    .toolbar-info {
-        display: none;
-    }
-
-    .embedded-resources {
-        grid-template-columns: 1fr;
-    }
-
-    .welcome-content h1 {
-        font-size: 2em;
-    }
-
-    .welcome-actions {
-        flex-direction: column;
-    }
-}
-
 /* Misc. responsive design enhancements */
 @container (max-width: 768px) {
     .feature-grid {

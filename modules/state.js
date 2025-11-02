@@ -1,6 +1,6 @@
 ﻿import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
-export const APP_VERSION = '1.0.2025.11.01';
+export const APP_VERSION = '1.01.2025.11.02';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 export const BOOK_ORDER = [
@@ -55,7 +55,6 @@ export const state = {
         theme: 'light',                 // 'light' | 'dark'
         colorTheme: 'blue',             
         notesView: 'text',              // 'text' | 'markdown'
-        hasSeenWelcome: false,          
         referencePanelOpen: false,      
         referenceSource: 'biblegateway',// 'biblegateway' | 'biblehub' | 'pdf'
         collapsedSections: {},          
@@ -75,8 +74,7 @@ export const state = {
         currentPage: 1,                 
         renderTask: null,               
         zoomLevel: 1                    
-    },
-    welcomePdfFile: null                
+    }
 };
 export function formatBookNameForSource(bookName, source) {
     const book = bookName.toLowerCase();
@@ -125,8 +123,7 @@ export function saveToStorage() {
                 pdf: {
                     currentPage: state.pdf.currentPage,
                     zoomLevel: state.pdf.zoomLevel
-                },
-                welcomePdfFile: null
+                }
             };
             if (cleanState.settings.customPdf && cleanState.settings.customPdf.data) {
                 const { data, ...meta } = cleanState.settings.customPdf;

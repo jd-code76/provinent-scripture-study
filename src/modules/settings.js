@@ -279,7 +279,7 @@ export async function clearCache() {
     }
 }
 
-/* Delete all stored data (highlights, notes, settings, PDFs) but keep the user in the app (don't show welcome screen) */
+/* Delete all stored data (highlights, notes, settings, PDFs) */
 export async function deleteAllData() {
     // Double confirmation for destructive action
     const confirmDelete = confirm('WARNING: This will delete ALL your data. Would you like to create a backup first?');
@@ -308,7 +308,6 @@ export async function deleteAllData() {
             console.warn('Could not delete PDF from IndexedDB:', e);
         }
         
-        // Reset state to defaults (but keep hasSeenWelcome = true)
         const defaultState = {
             currentVerse: null,
             currentVerseData: null,
@@ -326,7 +325,6 @@ export async function deleteAllData() {
                 theme: 'light',
                 colorTheme: 'blue',
                 notesView: 'text',
-                hasSeenWelcome: true,
                 referencePanelOpen: false,
                 referenceSource: 'biblegateway',
                 collapsedSections: {},
@@ -346,8 +344,7 @@ export async function deleteAllData() {
                 currentPage: 1,
                 renderTask: null,
                 zoomLevel: 1
-            },
-            welcomePdfFile: null
+            }
         };
         
         // Apply the reset state

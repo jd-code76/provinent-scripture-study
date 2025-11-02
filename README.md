@@ -1,6 +1,6 @@
 # Provinent Scripture Study
 
-A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools and traditional reverence. 
+A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools. 
 The entirety of this project was written using AI tools like [Gab AI](https://gab.ai) and [Lumo](https://lumo.proton.me).
 
 Access the site here: [https://provinent.org](https://provinent.org)
@@ -40,7 +40,7 @@ The sidebar provides organized access to extensive theological resources includi
   - Font Awesome for icons
 - **API**: Bible.helloao.org for scripture text
 - **Storage**: LocalStorage for user data persistence
-- **Build**: No build process required - runs directly in modern browsers
+- **Build**: Use the provided scripts for setup and consistency
 
 ## Installation
 
@@ -49,9 +49,9 @@ The sidebar provides organized access to extensive theological resources includi
 3. Open `index.html` in a web browser
 
 ### Optional PDF Setup
-For offline functionality:
+For an offline Bible:
 1. Download a Berean Standard Bible PDF from the provided links
-2. Upload via the welcome screen or settings panel
+2. Upload via the settings panel
 3. Select "Custom PDF" in the reference panel dropdown
 
 ## Usage
@@ -61,12 +61,6 @@ For offline functionality:
 - Select specific books/chapters from dropdown menus
 - Click "Resume Reading Plan" to continue where you left off
 - Use "Random Passage" for study from any canon passage of Holy Scripture
-
-### Study Features
-- **Right-click verses** to open highlight color picker
-- **Click verses** for original language analysis (Strong's Concordance)
-- **Toggle notes panel** to write study notes with Markdown support
-- **Open reference panel** for side-by-side translation comparison
 
 ### Data Management
 - Export/import your highlights and notes via JSON files

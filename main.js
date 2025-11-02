@@ -1,4 +1,4 @@
-import {
+﻿import {
     initBookChapterControls,
     nextPassage,
     prevPassage,
@@ -353,31 +353,6 @@ export function showError(msg) {
 export function clearError() {
     document.getElementById('errorContainer').innerHTML = '';
 }
-async function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        try {
-            const response = await fetch('/sw.js');
-            if (!response.ok) {
-                console.error('Service worker script not found or inaccessible');
-                return null;
-            }
-            const registration = await navigator.serviceWorker.register('/sw.js', {
-                scope: '/'
-            });
-            console.log('Service Worker registered successfully:', registration);
-            return registration;
-        } catch (err) {
-            console.error('Service Worker registration failed:', err);
-            if (err.message.includes('MIME')) {
-                console.error('MIME type issue - ensure server serves sw.js as application/javascript');
-            }
-            return null;
-        }
-    } else {
-        console.log('Service workers are not supported');
-        return null;
-    }
-}
 function updateOfflineStatus(isOffline) {
     const indicator = document.getElementById('offlineIndicator');
     if (!indicator) {
@@ -466,8 +441,9 @@ function toggleTheme() {
 }
 export function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.settings.theme);
-    document.getElementById('themeIcon').textContent =
-        state.settings.theme === 'light' ? '🌙' : '☀️';
+    const themeIcon = document.getElementById('themeIcon');
+    themeIcon.textContent = '';
+    themeIcon.className = state.settings.theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
 }
 export function selectColorTheme(t) {
     state.settings.colorTheme = t;
@@ -507,13 +483,6 @@ async function init() {
     loadPassage();
     setupEventListeners();
     setInterval(updateDateTime, 1_000);
-    setTimeout(async () => {
-        try {
-            await registerServiceWorker();
-        } catch (err) {
-            handleError(err, 'init');
-        }
-    }, 1000);
     console.log('App initialized successfully');
 }
 if (document.readyState === 'loading') {
