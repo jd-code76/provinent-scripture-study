@@ -3,6 +3,8 @@
 A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools and traditional reverence. 
 The entirety of this project was written using AI tools like [Gab AI](https://gab.ai) and [Lumo](https://lumo.proton.me).
 
+Access the site here: [https://provinent.org](https://provinent.org)
+
 ## Features
 
 ### Core Functionality
