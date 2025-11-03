@@ -209,6 +209,22 @@ export async function updateReferencePanel() {
         transSel.style.display = source === 'pdf' ? 'none' : 'block';
         filterTranslationOptions(source, transSel);
         
+        // Clean up PDF state when switching away from PDF
+        if (source !== 'pdf') {
+            pdfViewer.classList.remove('active');
+            iframe.style.display = 'block';
+            
+            // Additional cleanup to ensure PDF doesn't interfere
+            if (state.pdf.renderTask) {
+                try {
+                    await state.pdf.renderTask.cancel();
+                } catch (e) {
+                    // Ignore cancellation errors
+                }
+                state.pdf.renderTask = null;
+            }
+        }
+        
         const actualSource = document.getElementById('referenceSource').value;
         const translation = transSel.value;
         
@@ -216,7 +232,6 @@ export async function updateReferencePanel() {
         if (state.settings.readingMode === 'readingPlan') {
             passage = getActivePlan()[state.settings.currentPassageIndex];
         } else {
-            // Manual mode - use current book/chapter
             passage = {
                 book: state.settings.manualBook,
                 chapter: state.settings.manualChapter,
@@ -224,9 +239,8 @@ export async function updateReferencePanel() {
             };
         }
         
-        // Handle book name formatting for different sources
         const bookName = passage.book.toLowerCase().replace(/\s+/g, '_');
-        const bookAbbr = bookName.substring(0, 3).toUpperCase(); // First 3 letters for some sources
+        const bookAbbr = bookName.substring(0, 3).toUpperCase();
         const chapter = passage.chapter;
 
         if (actualSource === 'pdf') {
@@ -235,77 +249,87 @@ export async function updateReferencePanel() {
                 document.getElementById('referenceSource').value = 'biblegateway';
                 transSel.style.display = 'block';
                 filterTranslationOptions('biblegateway', transSel);
+                // Ensure iframe is visible when falling back
+                iframe.style.display = 'block';
+                pdfViewer.classList.remove('active');
                 return;
             }
+            
+            // Show PDF, hide iframe
             iframe.style.display = 'none';
             pdfViewer.classList.add('active');
             document.getElementById('zoomLevel').textContent =
                 Math.round(state.settings.pdfZoom * 100) + '%';
             await loadPDF();
             
-        } else if (actualSource === 'biblehub') {
-            const bibleHubCode = bibleHubUrlMap[translation] || translation.toLowerCase();
-            const url = `https://biblehub.com/${bibleHubCode}/${bookName}/${chapter}.htm`;
-            iframe.src = url;
-        } else if (actualSource === 'biblecom') {
-            const bibleComCode = bibleComUrlMap[translation];
-            if (!bibleComCode) {
-                alert(`Bible.com doesn't support ${translation}. Please choose another translation.`);
-                return;
-            }
-            
-            const formattedBook = formatBookNameForSource(passage.book, 'biblecom');
-            
-            // Try multiple URL formats - Bible.com has inconsistent URL structures
-            const urlFormats = [
-                `https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}?interface=embed`,
-                `https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}`,
-                `https://www.bible.com/bible/${bibleComCode}/${chapter}.${translation}?${formattedBook}=${chapter}`
-            ];
-            
-            // Try each URL format until one works
-            let currentUrlIndex = 0;
-            
-            function tryNextUrl() {
-                if (currentUrlIndex >= urlFormats.length) {
-                    alert('Could not load Bible.com. Please try another reference source.');
-                    return;
-                }
-                
-                iframe.src = urlFormats[currentUrlIndex];
-                currentUrlIndex++;
-            }
-            
-            iframe.onerror = function() {
-                tryNextUrl();
-            };
-            
-            tryNextUrl();
-        } else if (actualSource === 'ebibleorg') {
-            const ebibleOrgCode = ebibleOrgUrlMap[translation];
-            if (!ebibleOrgCode) {
-                alert(`eBible.org doesn't support ${translation}. Please choose another translation.`);
-                return;
-            }
-            const bookRef = bookName === 'psalms' ? 'PS1' : `${bookAbbr}1`; // Psalms handling
-            const url = `https://ebible.org/study/?w1=bible&t1=${encodeURIComponent(ebibleOrgCode)}&v1=${bookRef}_${chapter}`;
-            iframe.src = url;
-        } else if (actualSource === 'stepbible') {
-            const stepBibleCode = stepBibleUrlMap[translation];
-            if (!stepBibleCode) {
-                alert(`STEP Bible doesn't support ${translation}. Please choose another translation.`);
-                return;
-            }
-            const url = getStepBibleUrl(passage.displayRef, translation);
-            iframe.src = url;
         } else {
-            // Bible Gateway (default)
-            const query = passage.displayRef.replace(/\s+/g, '+');
-            let version = translation;
-            // Handle special cases for Bible Gateway
-            if (translation === 'GNV') version = 'GNV'; // Geneva Bible
-            const url = `https://www.biblegateway.com/passage/?search=${query}&version=${version}&interface=print`;
-            iframe.src = url;
+            // Hide PDF, show iframe for all other sources
+            pdfViewer.classList.remove('active');
+            iframe.style.display = 'block';
+            
+            if (actualSource === 'biblehub') {
+                const bibleHubCode = bibleHubUrlMap[translation] || translation.toLowerCase();
+                const url = `https://biblehub.com/${bibleHubCode}/${bookName}/${chapter}.htm`;
+                iframe.src = url;
+            } else if (actualSource === 'biblecom') {
+				const bibleComCode = bibleComUrlMap[translation];
+				if (!bibleComCode) {
+					alert(`Bible.com doesn't support ${translation}. Please choose another translation.`);
+					return;
+				}
+				
+				const formattedBook = formatBookNameForSource(passage.book, 'biblecom');
+				
+				// Try multiple URL formats - Bible.com has inconsistent URL structures
+				const urlFormats = [
+					`https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}?interface=embed`,
+					`https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}`,
+					`https://www.bible.com/bible/${bibleComCode}/${chapter}.${translation}?${formattedBook}=${chapter}`
+				];
+				
+				// Try each URL format until one works
+				let currentUrlIndex = 0;
+				
+				function tryNextUrl() {
+					if (currentUrlIndex >= urlFormats.length) {
+						alert('Could not load Bible.com. Please try another reference source.');
+						return;
+					}
+					
+					iframe.src = urlFormats[currentUrlIndex];
+					currentUrlIndex++;
+				}
+				
+				iframe.onerror = function() {
+					tryNextUrl();
+				};
+				
+				tryNextUrl();
+            } else if (actualSource === 'ebibleorg') {
+				const ebibleOrgCode = ebibleOrgUrlMap[translation];
+				if (!ebibleOrgCode) {
+					alert(`eBible.org doesn't support ${translation}. Please choose another translation.`);
+					return;
+				}
+				const bookRef = bookName === 'psalms' ? 'PS1' : `${bookAbbr}1`; // Psalms handling
+				const url = `https://ebible.org/study/?w1=bible&t1=${encodeURIComponent(ebibleOrgCode)}&v1=${bookRef}_${chapter}`;
+				iframe.src = url;
+            } else if (actualSource === 'stepbible') {
+			   const stepBibleCode = stepBibleUrlMap[translation];
+				if (!stepBibleCode) {
+					alert(`STEP Bible doesn't support ${translation}. Please choose another translation.`);
+					return;
+				}
+				const url = getStepBibleUrl(passage.displayRef, translation);
+				iframe.src = url;
+            } else {
+                // Bible Gateway (default)
+                const query = passage.displayRef.replace(/\s+/g, '+');
+                let version = translation;
+                if (translation === 'GNV') version = 'GNV';
+                const url = `https://www.biblegateway.com/passage/?search=${query}&version=${version}&interface=print`;
+                iframe.src = url;
+            }
         }
         
         saveToStorage();

@@ -103,9 +103,7 @@ export function showStrongsReference(verseEl) {
                         </button>
                     </div>
                 </div>
-                <iframe src="${greekUrl}"
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms">
-                </iframe>
+                <iframe src="${greekUrl}"></iframe>
             </div>
 
             <div class="resource-frame">
@@ -117,9 +115,7 @@ export function showStrongsReference(verseEl) {
                         </button>
                     </div>
                 </div>
-                <iframe src="${stepUrl}"
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms">
-                </iframe>
+                <iframe src="${stepUrl}"></iframe>
             </div>
         </div>
 
