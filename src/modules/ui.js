@@ -276,12 +276,7 @@ export async function updateReferencePanel() {
                 currentUrlIndex++;
             }
             
-            iframe.onload = function() {
-                console.log('Bible.com loaded successfully with format', currentUrlIndex);
-            };
-            
             iframe.onerror = function() {
-                console.log('Trying next Bible.com URL format...');
                 tryNextUrl();
             };
             

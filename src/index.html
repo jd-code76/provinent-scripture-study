@@ -30,7 +30,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
     <meta name="theme-color" content="#600">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Provinent Scripture Study">
     <meta name="msapplication-TileColor" content="#600">
@@ -307,7 +307,7 @@
                         class="reference-panel-iframe"
                         src=""
                         title="Reference Bible Content"
-                        sandbox="allow-scripts allow-popups allow-forms"></iframe>
+                        sandbox="allow-same-origin allow-popups allow-forms"></iframe>
 
                 <div class="pdf-viewer" id="pdfViewer">
                     <div class="pdf-controls">
@@ -459,21 +459,7 @@
                     </div>
 
                     <!-- Textarea for raw notes (visible in Text mode) -->
-                    <textarea id="notesInput" aria-label="Study notes" placeholder="Write your study notes here...
-
-Text mode: Plain text
-Markdown mode: Live markdown preview
-
-Examples:
-# Heading 1
-## Heading 2
-**Bold text**
-*Italic text*
-- Bullet point
-1. Numbered list
-> Quote
-[Link text](url)
-"></textarea>
+                    <textarea id="notesInput" aria-label="Study notes" placeholder="Write your study notes here..."></textarea>
 
                     <!-- Rendered markdown preview (visible in Markdown mode) -->
                     <div id="notesDisplay" style="display: none;"></div>
