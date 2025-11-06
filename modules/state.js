@@ -1,6 +1,6 @@
 ﻿import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
-export const APP_VERSION = '1.1.2025.11.06';
+export const APP_VERSION = '1.1.01.2025.11.06';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 export const BOOK_ORDER = [
@@ -432,20 +432,23 @@ export function updateURL(translation, book, chapter) {
 export function parseURL() {
     const path = window.location.pathname;
     if (path === '/') {
-        return null; 
+        return null;
     }
     const pathParts = path.split('/').filter(part => part !== '');
     if (pathParts.length >= 3) {
         const translation = pathParts[0].toUpperCase();
-        let book = pathParts[1];
+        let bookAbbreviation = pathParts[1].toUpperCase();
         const chapter = parseInt(pathParts[2], 10);
-        book = book.charAt(0).toUpperCase() + book.slice(1).toLowerCase();
+        const book = ABBREVIATION_TO_BOOK_NAME[bookAbbreviation];
+        if (!book) {
+            console.warn('Invalid book abbreviation in URL:', bookAbbreviation);
+            return null;
+        }
         if (!AVAILABLE_TRANSLATIONS.includes(translation)) {
             console.warn('Invalid translation in URL:', translation);
             return null;
         }
-        const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
-        if (!BOOKS_ABBREVIATED.includes(bookAbbr)) {
+        if (!BOOKS_ABBREVIATED.includes(bookAbbreviation)) {
             console.warn('Invalid book in URL:', book);
             return null;
         }

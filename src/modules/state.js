@@ -20,7 +20,7 @@ import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
 
 /* Global constants */
-export const APP_VERSION = '1.1.2025.11.06';
+export const APP_VERSION = '1.1.01.2025.11.06';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -677,13 +677,9 @@ export function updateBibleGatewayVersion() {
  */
 export function updateURL(translation, book, chapter) {
     const cleanTranslation = translation.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    
-    // Convert book name to abbreviation using your mapping
     const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
     const cleanBook = bookAbbr ? bookAbbr.toLowerCase() : book.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    
     const cleanChapter = Math.max(1, parseInt(chapter) || 1);
-    
     const newURL = `/${cleanTranslation}/${cleanBook}/${cleanChapter}`;
     window.history.pushState({ translation, book, chapter }, '', newURL);
 }
@@ -697,18 +693,23 @@ export function parseURL() {
     
     // Handle root path
     if (path === '/') {
-        return null; // Let navigateFromURL handle the redirect
+        return null;
     }
     
     const pathParts = path.split('/').filter(part => part !== '');
     
     if (pathParts.length >= 3) {
         const translation = pathParts[0].toUpperCase();
-        let book = pathParts[1];
+        let bookAbbreviation = pathParts[1].toUpperCase();
         const chapter = parseInt(pathParts[2], 10);
         
-        // Capitalize book name properly (convert "genesis" to "Genesis")
-        book = book.charAt(0).toUpperCase() + book.slice(1).toLowerCase();
+        // Convert abbreviation to full book name
+        const book = ABBREVIATION_TO_BOOK_NAME[bookAbbreviation];
+        
+        if (!book) {
+            console.warn('Invalid book abbreviation in URL:', bookAbbreviation);
+            return null;
+        }
         
         // Validate translation
         if (!AVAILABLE_TRANSLATIONS.includes(translation)) {
@@ -716,9 +717,8 @@ export function parseURL() {
             return null;
         }
         
-        // Validate book
-        const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
-        if (!BOOKS_ABBREVIATED.includes(bookAbbr)) {
+        // Validate book (using the full name)
+        if (!BOOKS_ABBREVIATED.includes(bookAbbreviation)) {
             console.warn('Invalid book in URL:', book);
             return null;
         }
@@ -734,4 +734,3 @@ export function parseURL() {
     
     return null;
 }
-
