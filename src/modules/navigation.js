@@ -9,6 +9,7 @@
     BOOK & CHAPTER SELECTORS
     MANUAL PREV/NEXT
     PASSAGE NAVIGATION
+    URL ROUTING
 ==================================================================== */
 
 
@@ -34,12 +35,17 @@ import {
 } from './passage.js'
 
 import {
+    AVAILABLE_TRANSLATIONS,
+    BOOKS_ABBREVIATED,
     BOOK_ORDER,
+    BOOK_NAME_TO_ABBREVIATION,
     CHAPTER_COUNTS,
     bookNameMapping,
     getActivePlan,
+    parseURL,
     saveToStorage,
-    state
+    state,
+    updateURL
 } from './state.js'
 
 import { updateReferencePanel } from './ui.js'
@@ -81,25 +87,19 @@ export function populateChapterDropdown(selectedBook) {
 export async function loadSelectedChapter(book = null, chapter = null) {
     const selBook = book || document.getElementById('bookSelect').value;
     const selChapter = chapter || document.getElementById('chapterSelect').value;
-
     const apiBook = getApiBookCode(selBook);
-
+    
     try {
         showLoading(true);
-        
         const apiTranslation = apiTranslationCode(state.settings.bibleTranslation);
         const chapterData = await fetchChapter(
             apiTranslation,
             apiBook,
             selChapter
         );
-
-        // Get chapter footnotes from the API response
-        const chapterFootnotes = chapterData.chapter.footnotes || [];
         
-        // Initialize footnote counter
+        const chapterFootnotes = chapterData.chapter.footnotes || [];
         const footnoteCounter = { value: 1 };
-
         const verses = chapterData.chapter.content
             .filter(v => v.type === 'verse')
             .map(v => ({
@@ -107,34 +107,33 @@ export async function loadSelectedChapter(book = null, chapter = null) {
                 text: extractVerseText(v.content, chapterFootnotes, footnoteCounter),
                 reference: `${selBook} ${selChapter}:${v.number}`
             }));
-
-        document.getElementById('passageReference').textContent =
-            `${selBook} ${selChapter}`;
         
-        // Clear old footnotes before displaying new chapter
         state.footnotes = {};
-        
         displayPassage(verses, `${selBook} ${selChapter}`);
         clearError();
-
-        // Scroll to top when loading new chapter
         document.getElementById('scriptureSection').scrollTop = 0;
-
-        // If we're in manual mode, update the manual state
+        
         if (state.settings.readingMode === 'manual') {
             state.settings.manualBook = selBook;
             state.settings.manualChapter = Number(selChapter);
             saveToStorage();
         }
-
+        
         if (state.settings.referencePanelOpen) {
             updateReferencePanel();
         }
         
+        // Ensure manual mode is set for manual navigation
+        if (book && chapter) {
+            state.settings.readingMode = 'manual';
+            state.settings.manualBook = selBook;
+            state.settings.manualChapter = Number(selChapter);
+        }
+        
+        saveToStorage();
     } catch (err) {
         handleError(err, 'loadSelectedChapter');
         showError(`Could not load ${selBook} ${selChapter}: ${err.message}`);
-
     } finally {
         showLoading(false);
     }
@@ -191,23 +190,36 @@ export function initBookChapterControls() {
 export function manualPrevChapter() {
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
+    let nextBook = state.settings.manualBook;
+    let nextChapter = chap;
 
     if (chap > 1) {
-        state.settings.manualChapter = chap - 1;
+        nextChapter = chap - 1;
     } else {
         if (bookIdx > 0) {
             const prevBook = BOOK_ORDER[bookIdx - 1];
             const maxCh = CHAPTER_COUNTS[prevBook];
-            state.settings.manualBook = prevBook;
-            state.settings.manualChapter = maxCh;
+            nextBook = prevBook;
+            nextChapter = maxCh;
         } else {
             return;
         }
     }
 
+    state.settings.manualBook = nextBook;
+    state.settings.manualChapter = nextChapter;
     state.settings.readingMode = 'manual';
     
-    loadSelectedChapter(state.settings.manualBook, state.settings.manualChapter);
+    // Update URL before loading passage
+    const translation = getCurrentTranslation();
+    updateURL(translation, nextBook, nextChapter);
+
+    // Upate verse reference display
+    const displayRef = `${nextBook} ${nextChapter}`;
+    document.getElementById('passageReference').textContent = displayRef;
+    state.currentPassageReference = displayRef;
+    
+    loadSelectedChapter(nextBook, nextChapter);
     syncBookChapterSelectors();
     saveToStorage();
 
@@ -225,22 +237,35 @@ export function manualNextChapter() {
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
     const maxCh = CHAPTER_COUNTS[state.settings.manualBook];
+    let nextBook = state.settings.manualBook;
+    let nextChapter = chap;
 
     if (chap < maxCh) {
-        state.settings.manualChapter = chap + 1;
+        nextChapter = chap + 1;
     } else {
         if (bookIdx < BOOK_ORDER.length - 1) {
-            const nextBook = BOOK_ORDER[bookIdx + 1];
-            state.settings.manualBook = nextBook;
-            state.settings.manualChapter = 1;
+            const newBook = BOOK_ORDER[bookIdx + 1];
+            nextBook = newBook;
+            nextChapter = 1;
         } else {
             return;
         }
     }
 
+    state.settings.manualBook = nextBook;
+    state.settings.manualChapter = nextChapter;
     state.settings.readingMode = 'manual';
     
-    loadSelectedChapter(state.settings.manualBook, state.settings.manualChapter);
+    // Update URL before loading passage
+    const translation = getCurrentTranslation();
+    updateURL(translation, nextBook, nextChapter);
+
+    // Upate verse reference display
+    const displayRef = `${nextBook} ${nextChapter}`;
+    document.getElementById('passageReference').textContent = displayRef;
+    state.currentPassageReference = displayRef;
+    
+    loadSelectedChapter(nextBook, nextChapter);
     syncBookChapterSelectors();
     saveToStorage();
     
@@ -261,9 +286,19 @@ export function prevPassage() {
         const len = getActivePlan().length;
         let newIndex = (state.settings.currentPassageIndex - 1 + len) % len;
         state.settings.currentPassageIndex = newIndex;
-        loadPassage();
+        
+        // Get the passage details for URL update
+        const plan = getActivePlan();
+        const passage = plan[newIndex];
+        const translation = getCurrentTranslation();
+        
+        // Update URL
+        updateURL(translation, passage.book, passage.chapter);
+        
+        loadPassage(passage.book, passage.chapter, translation);
     } else {
         manualPrevChapter();
+        // URL update is handled within manualPrevChapter()
     }
     // Scroll to top
     document.getElementById('scriptureSection').scrollTop = 0;
@@ -276,9 +311,19 @@ export function nextPassage() {
         let newIndex = (state.settings.currentPassageIndex + 1) % len;
         if (newIndex < 0) newIndex = len - 1;
         state.settings.currentPassageIndex = newIndex;
-        loadPassage();
+        
+        // Get the passage details for URL update
+        const plan = getActivePlan();
+        const passage = plan[newIndex];
+        const translation = getCurrentTranslation();
+        
+        // Update URL
+        updateURL(translation, passage.book, passage.chapter);
+        
+        loadPassage(passage.book, passage.chapter, translation);
     } else {
         manualNextChapter();
+        // URL update is handled within manualNextChapter()
     }
     // Scroll to top
     document.getElementById('scriptureSection').scrollTop = 0;
@@ -300,6 +345,10 @@ export async function randomPassage() {
         // Update the manual state so the UI reflects the new location
         state.settings.manualBook = randomLoc.book;
         state.settings.manualChapter = randomLoc.chapter;
+
+        // Update URL
+        const translation = getCurrentTranslation();
+        updateURL(translation, randomLoc.book, randomLoc.chapter);
 
         // Persist the change
         saveToStorage();
@@ -328,17 +377,12 @@ export async function randomPassage() {
 export function syncBookChapterSelectors() {
     const bookSel = document.getElementById('bookSelect');
     const chapterSel = document.getElementById('chapterSelect');
-
-    // Update book dropdown
     if (bookSel.value !== state.settings.manualBook) {
         bookSel.value = state.settings.manualBook;
         populateChapterDropdown(state.settings.manualBook);
     }
-
-    // Update chapter dropdown
     const curMax = CHAPTER_COUNTS[state.settings.manualBook];
     const curChap = state.settings.manualChapter;
-
     populateChapterDropdown(state.settings.manualBook);
     chapterSel.value = (curChap <= curMax) ? curChap : curMax;
 }
@@ -424,5 +468,162 @@ async function getRandomBibleLocation() {
     } catch (err) {
         handleError(err, 'getRandomBibleLocation');
     } 
+}
+
+
+/* ====================================================================
+   URL ROUTING
+   Handle navigation via URL parameters
+==================================================================== */
+
+/* Helper function to get current translation */
+export function getCurrentTranslation() {
+    return state.settings.bibleTranslation || 'BSB';
+}
+
+/* Navigate based on URL parameters */
+export function navigateFromURL() {
+    const urlParams = parseURL();
+    
+    // Handle root path redirect
+    if (!urlParams && window.location.pathname === '/') {
+        // Default to BSB Genesis 1 for root path
+        const defaultParams = {
+            translation: 'BSB',
+            book: 'Genesis',
+            chapter: 1
+        };
+        
+        // Update URL without page reload
+        const newUrl = `/${defaultParams.translation.toLowerCase()}/${defaultParams.book.toLowerCase()}/${defaultParams.chapter}`;
+        window.history.replaceState(defaultParams, '', newUrl);
+        
+        // Load the default passage
+        return loadDefaultPassage(defaultParams);
+    }
+    
+    if (urlParams) {
+        const isValidTranslation = AVAILABLE_TRANSLATIONS.includes(urlParams.translation);
+        const bookAbbr = BOOK_NAME_TO_ABBREVIATION[urlParams.book];
+        const isValidBook = BOOKS_ABBREVIATED.includes(bookAbbr);
+        const isValidChapter = urlParams.chapter > 0 && urlParams.chapter < 151;
+        
+        if (isValidTranslation && isValidBook && isValidChapter) {
+            // Set mode to manual for URL navigation
+            state.settings.readingMode = 'manual';
+            
+            // Update UI selectors first
+            state.settings.manualBook = urlParams.book;
+            state.settings.manualChapter = urlParams.chapter;
+            state.settings.bibleTranslation = urlParams.translation;
+            
+            // Set dropdown values
+            const bookSelect = document.getElementById('bookSelect');
+            const chapterSelect = document.getElementById('chapterSelect');
+            
+            if (bookSelect) bookSelect.value = urlParams.book;
+            if (chapterSelect) {
+                populateChapterDropdown(urlParams.book);
+                chapterSelect.value = urlParams.chapter;
+            }
+            
+            // Update passage reference immediately
+            const passageRefElement = document.getElementById('passageReference');
+            if (passageRefElement) {
+                passageRefElement.textContent = `${urlParams.book} ${urlParams.chapter}`;
+                state.currentPassageReference = `${urlParams.book} ${urlParams.chapter}`;
+            }
+            
+            // Update header title immediately
+            const headerTitleEl = document.getElementById('passageHeaderTitle');
+            if (headerTitleEl) {
+                headerTitleEl.textContent = `Holy Bible: ${urlParams.translation}`;
+            }
+            
+            // Clear reading plan label
+            const planLabelEl = document.getElementById('planLabel');
+            if (planLabelEl) {
+                planLabelEl.textContent = '';
+            }
+            
+            // Use loadSelectedChapter which properly handles the reference display
+            loadSelectedChapter(urlParams.book, urlParams.chapter);
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Load default passage for root URL */
+function loadDefaultPassage(params) {
+    state.settings.readingMode = 'manual';
+    state.settings.manualBook = params.book;
+    state.settings.manualChapter = params.chapter;
+    state.settings.bibleTranslation = params.translation;
+    
+    // Set dropdown values
+    const bookSelect = document.getElementById('bookSelect');
+    const chapterSelect = document.getElementById('chapterSelect');
+    
+    if (bookSelect) bookSelect.value = params.book;
+    if (chapterSelect) {
+        populateChapterDropdown(params.book);
+        chapterSelect.value = params.chapter;
+    }
+    
+    // Update passage reference
+    const passageRefElement = document.getElementById('passageReference');
+    if (passageRefElement) {
+        passageRefElement.textContent = `${params.book} ${params.chapter}`;
+        state.currentPassageReference = `${params.book} ${params.chapter}`;
+    }
+    
+    // Update header
+    const headerTitleEl = document.getElementById('passageHeaderTitle');
+    if (headerTitleEl) {
+        headerTitleEl.textContent = `Holy Bible: ${params.translation}`;
+    }
+    
+    loadSelectedChapter(params.book, params.chapter);
+    return true;
+}
+
+/* Update navigation and URL */
+function updateNavigation(book, chapter, translation) {
+    updateURL(translation, book, chapter);
+}
+
+/* Handle browser back/forward navigation */
+export function setupPopStateListener() {
+    window.addEventListener('popstate', (event) => {
+        if (event.state) {
+            const { translation, book, chapter } = event.state;
+            loadPassage(book, chapter, translation);
+        } else {
+            // If no state, try to parse current URL
+            navigateFromURL();
+        }
+    });
+}
+
+/* Modify book and chapter selection handlers to update URL */
+export function setupNavigationWithURL() {
+    // Book selection
+    document.getElementById('bookSelect').addEventListener('change', (e) => {
+        const book = e.target.value;
+        const chapter = 1; // Default to first chapter
+        const translation = getCurrentTranslation();
+        updateNavigation(book, chapter, translation);
+        loadPassage(book, chapter, translation);
+    });
+
+    // Chapter selection
+    document.getElementById('chapterSelect').addEventListener('change', (e) => {
+        const book = document.getElementById('bookSelect').value;
+        const chapter = parseInt(e.target.value);
+        const translation = getCurrentTranslation();
+        updateNavigation(book, chapter, translation);
+        loadPassage(book, chapter, translation);
+    });
 }
 

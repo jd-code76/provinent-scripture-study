@@ -71,11 +71,11 @@ export async function fetchChapter(translation, book, chapter) {
 export async function loadPassageFromAPI(passageInfo) {
     try {
         showLoading(true);
-        const { book, chapter, startVerse, endVerse, displayRef } = passageInfo;
+        const { book, chapter, startVerse, endVerse, displayRef, translation } = passageInfo;
         state.currentPassageReference = displayRef;
-        const apiMap = apiTranslationCode(state.settings.bibleTranslation);
+        const apiTranslation = translation ? apiTranslationCode(translation) : apiTranslationCode(state.settings.bibleTranslation);
         const apiBook = getApiBookCode(book);
-        const chapterData = await fetchChapter(apiMap, apiBook, chapter);
+        const chapterData = await fetchChapter(apiTranslation, apiBook, chapter);
         if (!chapterData || !chapterData.chapter || 
             !Array.isArray(chapterData.chapter.content)) {
             throw new Error('Malformed API response – missing chapter.content');

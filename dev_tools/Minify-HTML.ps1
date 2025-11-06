@@ -8,7 +8,7 @@ param(
 
 # Simplified file processing - single source file
 $SourceFile = "../src/index.html"
-$OutputBase = "../public"
+$OutputBase = "../www"
 $FilesToProcess = @("index.html")
 
 # Check if source files exist

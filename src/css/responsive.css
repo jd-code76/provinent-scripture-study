@@ -42,6 +42,107 @@
     .toggle-notes {
         display: inline-block;
     }
+
+    .header {
+        padding: 2px 3px;
+        /* display: flex; */
+    }
+
+    * {
+        /* scrollbar-width: thin; */
+    }
+        
+    .toolbar {
+        /* padding: 2px 1px; */
+        gap: 2px;
+        /* display: flex; */
+        /* border-bottom: 1px solid var(--border-color); */
+    }
+
+    .notes-section {
+        padding: 4px;
+        width: 250px;
+    }
+
+    .collapse-toggle {
+        width: 60px;
+        height: 60px;
+    }
+
+    .notes-controls button {
+        font-size: 14px;
+    }
+
+    .notes-header h3 {
+        font-size: 20px;
+    }
+
+    .sidebar {
+        padding: 10px;
+    }
+
+    .btn {
+        padding: 8px 2px;
+        font-size: 14px;
+    }
+
+    .passage-header {
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+
+    .embedded-resources {
+        grid-template-columns: auto;
+    }
+
+    .reference-panel-header {
+        padding: 2px;
+    }
+
+    .toolbar-divider {
+        margin: 0 3px;
+    }
+
+    .toolbar button {
+        padding: 5px 5px;
+        font-size: 14px;
+    }
+
+    .highlights-modal {
+        width: 95%;
+        max-width: none;
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .highlights-filters {
+        justify-content: center;
+    }
+    
+    .highlight-filter-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+    
+    .highlight-item {
+        padding: 12px;
+    }
+}
+
+/* Animation for highlights modal appearance */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.highlights-modal.active {
+    animation: modalSlideIn 0.3s ease-out;
 }
 
 .sr-only {

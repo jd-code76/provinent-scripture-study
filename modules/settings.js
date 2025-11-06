@@ -19,7 +19,8 @@ import {
     saveToCookies,
     saveToStorage,
     state,
-    updateBibleGatewayVersion
+    updateBibleGatewayVersion,
+    updateURL
 } from './state.js'
 import {
     restorePanelStates,
@@ -45,7 +46,7 @@ export function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `bible-study-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `provinent-bible-study-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -132,7 +133,10 @@ export async function saveSettings() {
         const newPlanId = document.getElementById('readingPlanId').value;
         const newTranslation = document.getElementById('bibleTranslationSetting').value;
         const newReferenceVersion = document.getElementById('referenceVersionSetting').value;
-        const oldPlanId = state.settings.readingPlanId; 
+        const currentBook = state.settings.manualBook;
+        const currentChapter = state.settings.manualChapter;
+        const oldPlanId = state.settings.readingPlanId;
+        updateURL(newTranslation, currentBook, currentChapter);
         state.settings.bibleTranslation = newTranslation;
         state.settings.referenceVersion = newReferenceVersion;
         state.settings.readingPlanId = newPlanId;

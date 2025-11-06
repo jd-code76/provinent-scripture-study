@@ -25,13 +25,22 @@
 
 /* Global imports */
 import {
+    getCurrentTranslation,
     initBookChapterControls,
+    loadSelectedChapter,
+    navigateFromURL,
     nextPassage,
     prevPassage,
-    randomPassage
+    randomPassage,
+    setupNavigationWithURL,
+    setupPopStateListener
 } from './modules/navigation.js'
 
-import { loadPassage, setupFootnoteHandlers } from './modules/passage.js'
+import { 
+    loadPassage, 
+    scrollToVerse, 
+    setupFootnoteHandlers 
+} from './modules/passage.js'
 
 import {
     clearSearch,
@@ -39,7 +48,6 @@ import {
     handlePDFUpload,
     navigateToSearchResult,
     renderPage,
-    savePDFToIndexedDB,
     searchPDF,
     setupPDFCleanup,
     updateCustomPdfInfo,
@@ -59,12 +67,14 @@ import {
 } from './modules/settings.js'
 
 import {
+    BOOK_ORDER,
     updateBibleGatewayVersion,
     loadFromCookies,
     loadFromStorage,
     saveToCookies,
     saveToStorage,
-    state
+    state,
+    updateURL
 } from './modules/state.js'
 
 import { closeStrongsPopup } from './modules/strongs.js'
@@ -376,6 +386,16 @@ function setupEventListeners() {
         }
     });
 
+    // Highlights button
+    document.getElementById('showHighlightsBtn')
+            .addEventListener('click', showHighlightsModal);
+
+    // Highlights modal close
+    document.getElementById('closeHighlightsBtn')
+            .addEventListener('click', closeHighlightsModal);
+    document.getElementById('highlightsOverlay')
+            .addEventListener('click', closeHighlightsModal);
+
     // Popup Overlays (Strong's)
     document.getElementById('popupOverlay')
             .addEventListener('click', closeStrongsPopup);
@@ -610,6 +630,133 @@ function clearHighlights() {
     saveToStorage();
 }
 
+/* Open highlights modal */
+function showHighlightsModal() {
+    const overlay = document.getElementById('highlightsOverlay');
+    const modal = document.getElementById('highlightsModal');
+    
+    overlay.classList.add('active');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    renderHighlights('all');
+    
+    // Add filter button listeners
+    document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            renderHighlights(this.dataset.color);
+        });
+    });
+}
+
+/* Close highlights modal */
+function closeHighlightsModal() {
+    const overlay = document.getElementById('highlightsOverlay');
+    const modal = document.getElementById('highlightsModal');
+    
+    overlay.classList.remove('active');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+/* Render highlights list in modal */
+function renderHighlights(filterColor = 'all') {
+    const highlightsList = document.getElementById('highlightsList');
+    const highlights = state.highlights || {};
+    
+    if (Object.keys(highlights).length === 0) {
+        highlightsList.innerHTML = '<div class="no-highlights">No verses have been highlighted yet</div>';
+        return;
+    }
+    
+    let html = '';
+    const versesByColor = {};
+    
+    // Group verses by color
+    Object.entries(highlights).forEach(([reference, color]) => {
+        if (!versesByColor[color]) versesByColor[color] = [];
+        versesByColor[color].push(reference);
+    });
+    
+    // Sort verses within each color group
+    Object.keys(versesByColor).forEach(color => {
+        versesByColor[color].sort((a, b) => {
+            // Sort by book, chapter, verse
+            const [bookA, chapA, verseA] = a.split(/[ :]/);
+            const [bookB, chapB, verseB] = b.split(/[ :]/);
+            
+            const bookOrderA = BOOK_ORDER.indexOf(bookA);
+            const bookOrderB = BOOK_ORDER.indexOf(bookB);
+            
+            if (bookOrderA !== bookOrderB) return bookOrderA - bookOrderB;
+            if (parseInt(chapA) !== parseInt(chapB)) return parseInt(chapA) - parseInt(chapB);
+            return parseInt(verseA) - parseInt(verseB);
+        });
+    });
+    
+    // Render verses
+    Object.entries(versesByColor).forEach(([color, references]) => {
+        if (filterColor !== 'all' && filterColor !== color) return;
+        
+        references.forEach(reference => {
+            const verseText = getVerseTextFromStorage(reference) || 'Verse text not available';
+            html += `
+                <div class="highlight-item ${color}" data-reference="${reference}" data-color="${color}">
+                    <div class="highlight-ref">${reference}</div>
+                    <div class="highlight-text">${verseText}</div>
+                </div>
+            `;
+        });
+    });
+    
+    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter.</div>';
+    
+    // Add click handlers to navigate to verses
+    document.querySelectorAll('.highlight-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const reference = item.dataset.reference;
+            navigateToHighlightedVerse(reference);
+            closeHighlightsModal();
+        });
+    });
+}
+
+/* Retrieve verse text from localStorage cache */
+function getVerseTextFromStorage(reference) {
+    try {
+        const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
+        return cachedVerses[reference];
+    } catch (e) {
+        return null;
+    }
+}
+
+/* Navigate to the highlighted verse in the main passage when selected from highlights modal */
+function navigateToHighlightedVerse(reference) {
+    // Parse reference format: "Book Chapter:Verse"
+    const match = reference.match(/^(.+?) (\d+):(\d+)$/);
+    if (!match) return;
+    
+    const [, book, chapter, verse] = match;
+    
+    // Update navigation
+    state.settings.readingMode = 'manual';
+    state.settings.manualBook = book;
+    state.settings.manualChapter = parseInt(chapter);
+    
+    // Update URL
+    const translation = getCurrentTranslation();
+    updateURL(translation, book, chapter);
+    
+    // Load the chapter
+    loadSelectedChapter(book, chapter);
+    
+    // Scroll to the specific verse (you'll need to add this to passage.js)
+    setTimeout(() => scrollToVerse(verse), 500);
+}
+
 
 /* ====================================================================
    THEMING
@@ -624,14 +771,15 @@ function toggleTheme() {
     saveToCookies();
 }
 
-/* Apply current theme to document */
+/* Apply current theme to document (dark mode/light mode) */
 export function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.settings.theme);
     const themeIcon = document.getElementById('themeIcon');
-    
-    // Clear the text content and set appropriate classes
     themeIcon.textContent = '';
     themeIcon.className = state.settings.theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+    
+    // Refresh highlights modal if open
+    refreshHighlightsModalTheme();
 }
 
 /* Select a color theme */
@@ -643,12 +791,27 @@ export function selectColorTheme(t) {
             .forEach(o => o.classList.remove('selected'));
     document.querySelector(`.color-theme-option[data-theme="${t}"]`)
             .classList.add('selected');
+    
+    // Refresh highlights modal if open
+    refreshHighlightsModalTheme();
 }
 
-/* Apply current color theme to document */
+/* Apply current color theme (user selected color scheme) to document */
 export function applyColorTheme() {
-    document.documentElement.setAttribute('data-color-theme',
-                                          state.settings.colorTheme);
+    document.documentElement.setAttribute('data-color-theme', state.settings.colorTheme);
+    
+    // Refresh highlights modal if open
+    refreshHighlightsModalTheme();
+}
+
+/* Refresh highlights modal to match current theme/color */
+function refreshHighlightsModalTheme() {
+    const modal = document.getElementById('highlightsModal');
+    if (modal.classList.contains('show')) {
+        // Re-render highlights to apply new theme
+        const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
+        renderHighlights(activeFilter);
+    }
 }
 
 
@@ -681,10 +844,12 @@ async function init() {
     // Guard defaults for other settings
     if (!state.settings.readingMode)    state.settings.readingMode      = 'readingPlan';
     if (!state.settings.readingPlanId)  state.settings.readingPlanId    = 'default';
-	
+    
     // Initialize manual navigation
     initBookChapterControls();
-	
+    setupNavigationWithURL();
+    setupPopStateListener();
+    
     // Restore the book/chapter UI
     restoreBookChapterUI();
 
@@ -703,13 +868,22 @@ async function init() {
     switchNotesView(state.settings.notesView || 'text');
     updateBibleGatewayVersion();
 
-    loadPassage();
-
     // Wire up all event listeners
     setupEventListeners();
 
     // Start periodic updates
     setInterval(updateDateTime, 1_000);
+    
+    // Only load default passage if we didn't navigate from URL
+    const navigatedFromURL = navigateFromURL();
+    if (!navigatedFromURL) {
+        // Only load default passage if URL navigation didn't happen
+        // AND we're not at the root path (which should have been redirected)
+        if (window.location.pathname !== '/') {
+            loadPassage();
+        }
+        // If we're at root path, navigateFromURL should have handled the redirect
+    }
     
     console.log('App initialized successfully');
 }

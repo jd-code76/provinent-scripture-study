@@ -16,6 +16,7 @@ $FileOrder = @(
     "header.css",
     "scripture.css",
     "color-picker.css",
+    "highlights-popup.css",
     "strongs-popup.css",
     "notes.css",
     "settings.css",
@@ -26,7 +27,7 @@ $FileOrder = @(
 )
 
 $SourceDir = "../src/css"
-$outputDir = "../public"
+$outputDir = "../www"
 $outputFile = "styles.css"
 $outputPath = Join-Path -Path $outputDir -ChildPath $outputFile
 

@@ -9,22 +9,22 @@ Access the site here: [https://provinent.org](https://provinent.org)
 
 ### Core Functionality
 - **Daily Scripture Passages**: Get a new passage daily with sequential or book-specific reading plans
-- **Multi-Translation Support**: NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT
+- **Multi-Translation Support**: ASV, KJV, GNV, BSB, NET
 - **Verse Highlighting**: Right-click verses to highlight in 6 different colors for study emphasis
 - **Study Notes**: Full Markdown support with live preview and export capabilities
-- **Original Language Tools**: Click any verse for Strong's Concordance data and Greek/Hebrew interlinear analysis
-- **Reference Panel**: Side-by-side Bible comparison with multiple translation options
+- **Original Language Tools**: Click any verse for Strong's Concordance data (provided by [STEP Bible](https://www.stepbible.org))and Greek/Hebrew interlinear analysis (provided by [Bible Hub](https://biblehub.com/interlinear/))
+- **Reference Panel**: Side-by-side Bible comparison with multiple translation options (NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT)
 
 ### Advanced Features
 - **Offline PDF Support**: Upload Berean Standard Bible PDFs for offline reading
 - **Reading Plans**: 90-day sequential and book-specific plans (Genesis, Psalms, Proverbs, etc.)
-- **Search Integration**: Built-in Bible Gateway search functionality
+- **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality
 - **Data Management**: Import/export highlights and notes, local storage persistence
-- **Responsive Design**: Works on desktops and tablets, mobile devices work but are not recommended
+- **Responsive Design**: Useable on desktops and tablets, mobile devices work but are not recommended
 - **Dark/Light Mode**: Toggle between color themes with multiple accent color options
 
 ### Study Resources Integration
-The sidebar provides organized access to extensive theological resources including:
+The sidebar provides organized access to extensive theological resources (Reformed Theology/Calvinism focused) including:
 - Online Bible platforms
 - Christian doctrine references
 - Theological resources
@@ -48,7 +48,7 @@ The sidebar provides organized access to extensive theological resources includi
 2. Serve the files through any web server (no server-side processing required)
 3. Open `index.html` in a web browser
 
-### Optional PDF Setup
+### Optional PDF Import
 For an offline Bible:
 1. Download a Berean Standard Bible PDF from the provided links
 2. Upload via the settings panel
@@ -57,15 +57,15 @@ For an offline Bible:
 ## Usage
 
 ### Basic Navigation
-- Use Prev/Next buttons to navigate reading plan passages
+- Use Prev/Next buttons to navigate passages
 - Select specific books/chapters from dropdown menus
 - Click "Resume Reading Plan" to continue where you left off
-- Use "Random Passage" for study from any canon passage of Holy Scripture
+- Use "Random Passage" to study from any canon passage of Holy Scripture
 
 ### Data Management
 - Export/import your highlights and notes via JSON files
 - Export notes as Markdown or plain text
-- Clear specific data types or perform complete reset in settings
+- Clear cache or perform complete reset in settings
 
 ## Browser Support
 
@@ -76,18 +76,19 @@ For an offline Bible:
 
 ## Privacy & Data
 
-All user data (highlights, notes, settings) is stored locally in your browser. No data is transmitted to external servers except for:
-- Bible passage requests to bible.helloao.org
-- Resource links opened in external sites
-- Optional Bible Gateway searches
+Highlights, notes, and settings are stored locally in your browser. Data transmitted to external servers:
+- Bible passage requests are handled by bible.helloao.org
+- Bible Hub (interlinear) and STEP Bible (both when using Verse Analysis popup)
+- Bible Gateway searches
+- Resource links opened in external sites via the sidebar
 
 ## Attribution
 
 - Scripture text provided by [bible.helloao.org](https://bible.helloao.org) API
 - Berean Standard Bible translation by [Berean Bible](https://berean.bible)
 - Icons by Font Awesome
-- PDF rendering by PDF.js
-- Markdown processing by Marked.js
+- PDF rendering by [PDF.js](https://cdnjs.com/libraries/pdf.js)
+- Markdown processing by [Marked.js](https://cdn.jsdelivr.net/npm/marked/)
 
 ## License
 

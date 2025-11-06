@@ -148,18 +148,18 @@ export async function fetchChapter(translation, book, chapter) {
 export async function loadPassageFromAPI(passageInfo) {
     try {
         showLoading(true);
-        const { book, chapter, startVerse, endVerse, displayRef } = passageInfo;
+        const { book, chapter, startVerse, endVerse, displayRef, translation } = passageInfo;
 
         state.currentPassageReference = displayRef;
 
-        // API translation mapping
-        const apiMap = apiTranslationCode(state.settings.bibleTranslation);
+        // Use the passed translation or fall back to settings
+        const apiTranslation = translation ? apiTranslationCode(translation) : apiTranslationCode(state.settings.bibleTranslation);
 
         // Normalize book code
         const apiBook = getApiBookCode(book);
 
         // Fetch chapter data
-        const chapterData = await fetchChapter(apiMap, apiBook, chapter);
+        const chapterData = await fetchChapter(apiTranslation, apiBook, chapter);
 
         // Validate response
         if (!chapterData || !chapterData.chapter || 

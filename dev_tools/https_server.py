@@ -85,11 +85,7 @@ class HTTPSRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
     
     def do_GET(self):
-        # Default to index.html if root path
-        if self.path == '/':
-            self.path = '/index.html'
-        
-        # Security check - prevent path traversal
+        # Security check - prevent path traversal first
         requested_path = Path(self.translate_path(self.path))
         web_root = Path(WEB_ROOT).resolve()
         
@@ -100,42 +96,40 @@ class HTTPSRequestHandler(http.server.SimpleHTTPRequestHandler):
         except:
             self.send_error(403, "Forbidden")
             return
+        
+        # Check if the requested file exists
+        original_path = self.path
+        file_path = WEB_ROOT / original_path[1:]  # Remove leading slash
+        
+        # If the file doesn't exist, serve index.html for SPA routing
+        if not file_path.exists() or file_path.is_dir():
+            # For SPA: serve index.html for any non-existent file path
+            # but only if it looks like a SPA route (not a static file extension)
+            path_parts = original_path.split('.')
+            if len(path_parts) > 1:
+                # This has a file extension, check if it's a static file type
+                file_ext = path_parts[-1].lower()
+                static_extensions = ['css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'ico', 'svg', 
+                                   'ttf', 'woff', 'woff2', 'pdf', 'json', 'xml', 'txt']
+                if file_ext in static_extensions:
+                    # This is a static file that should exist but doesn't - 404
+                    self.send_error(404, "File not found")
+                    return
             
+            # Serve index.html for SPA routes
+            self.path = '/index.html'
+        
         return super().do_GET()
     
     def log_message(self, format, *args):
-        # Custom logging format
+        # Custom logging format to show SPA routing
         print(f"{self.address_string()} - {self.log_date_time_string()} - {format % args}")
+
 
 def main():
     # Create web root directory if it doesn't exist
     WEB_ROOT.mkdir(exist_ok=True)
     print(f"Web root directory: {WEB_ROOT.resolve()}")
-    
-    # Create default index.html if it doesn't exist
-    index_file = WEB_ROOT / "index.html"
-    if not index_file.exists():
-        index_content = """<!DOCTYPE html>
-<html>
-<head>
-    <title>Python HTTPS Server</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { color: #333; }
-    </style>
-</head>
-<body>
-    <h1>Welcome to Python HTTPS Server</h1>
-    <p>Server is running successfully!</p>
-    <p>Current time: <span id="time"></span></p>
-    <script>
-        document.getElementById('time').textContent = new Date().toLocaleString();
-    </script>
-</body>
-</html>"""
-        with open(index_file, 'w', encoding='utf-8') as f:
-            f.write(index_content)
-        print(f"Created default index.html at: {index_file}")
     
     # Generate SSL certificate if needed
     try:

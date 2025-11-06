@@ -40,7 +40,19 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
 
     <!-- STYLE SHEET -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/styles.css">
+
+    <!-- Register service worker for handling navigation -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
 
     <!-- FONT AWESOME – icons used throughout the UI -->
     <link rel="stylesheet"
@@ -199,7 +211,7 @@
 
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="podcasts">
-                    <h3>Podcasts</h3>
+                    <h3>Podcasts and Radio</h3>
                     <span class="section-toggle" aria-hidden="true">▼</span>
                 </div>
                 <div class="sidebar-section-content" id="content-podcasts">
@@ -207,6 +219,7 @@
                         <li><a href="https://www.aomin.org/aoblog/webcast" target="_blank" rel="noopener noreferrer">Alpha & Omega Ministries Podcasts</a></li>
                         <li><a href="https://www.desiringgod.org/podcasts" target="_blank" rel="noopener noreferrer">Desiring God Podcasts</a></li>
                         <li><a href="https://www.gty.org/radio-broadcast" target="_blank" rel="noopener noreferrer">Grace to You Radio Broadcast</a></li>
+                        <li><a href="https://refnet.fm" target="_blank" rel="noopener noreferrer">RefNet Christian Internet Radio</a></li>
                         <li><a href="https://www.ligonier.org/podcasts/renewing-your-mind" target="_blank" rel="noopener noreferrer">Renewing Your Mind with R.C. Sproul</a></li>
                     </ul>
                 </div>
@@ -395,9 +408,14 @@
                     <!-- options will be injected by script.js -->
                 </select>
 
+                <!-- Highlight button to show highlighted verses-->
+                <button class="btn btn-secondary" id="showHighlightsBtn" title="View highlighted verses">
+                    <i class="fas fa-highlighter"></i> Highlights
+                </button>
+
                 <!-- Small help text -->
                 <span class="toolbar-info">
-                    Click any verse for further analysis • Right‑click to highlight
+                    Click a verse to study • Right‑click to highlight
                 </span>
             </div>   <!-- end .toolbar -->
 
@@ -482,6 +500,29 @@
         </div>
         <button class="btn btn-secondary" id="removeHighlight"
                 style="width: 100%; margin-top: 10px;">Remove Highlight</button>
+    </div>
+
+    <!-- Highlights Modal -->
+    <div class="popup-overlay" id="highlightsOverlay" aria-hidden="true"></div>
+    <div class="highlights-modal" id="highlightsModal" role="dialog" aria-labelledby="highlightsModalTitle" aria-modal="true">
+        <div class="popup-header">
+            <h2 id="highlightsModalTitle">Highlights</h2>
+            <button class="popup-close" id="closeHighlightsBtn" aria-label="Close highlights">×</button>
+        </div>
+        <div class="highlights-content" id="highlightsContent">
+            <div class="highlights-filters">
+                <button class="highlight-filter-btn active" data-color="all">All Colors</button>
+                <button class="highlight-filter-btn" data-color="yellow">Yellow</button>
+                <button class="highlight-filter-btn" data-color="green">Green</button>
+                <button class="highlight-filter-btn" data-color="blue">Blue</button>
+                <button class="highlight-filter-btn" data-color="pink">Pink</button>
+                <button class="highlight-filter-btn" data-color="orange">Orange</button>
+                <button class="highlight-filter-btn" data-color="purple">Purple</button>
+            </div>
+            <div class="highlights-list" id="highlightsList">
+                <!-- Highlighted verses will be inserted here -->
+            </div>
+        </div>
     </div>
 
     <!-- STRONG’S POP‑UP -->
@@ -704,7 +745,7 @@
     </div>
 
     <!-- JAVASCRIPT ENTRY POINT -->
-    <script type="module" src="main.js" defer></script>
+    <script type="module" src="/main.js" defer></script>
 </body>
 </html>
 

@@ -135,47 +135,39 @@ export async function deletePDFFromIndexedDB() {
 export async function handlePDFUpload(ev) {
     const file = ev.target.files[0];
     if (!file) return;
-
     if (file.size > 50 * 1024 * 1024) {
         alert('PDF file is too large (max 50 MiB).');
         ev.target.value = '';
         return;
     }
-
     try {
         showLoading(true);
-        
         const buf = await readFileAsArrayBuffer(file);
         const bufferCopy = buf.slice(0);
+        
         const pdf = await pdfjsLib.getDocument({ data: bufferCopy }).promise;
         
         const storageBuffer = buf.slice(0);
         const b64 = arrayBufferToBase64(storageBuffer);
-
         const pdfData = {
             name: file.name,
             data: b64,
             uploadDate: new Date().toISOString(),
             numPages: pdf.numPages
         };
-
         await savePDFToIndexedDB(pdfData);
-        
         state.settings.customPdf = {
             name: pdfData.name,
             uploadDate: pdfData.uploadDate,
             numPages: pdfData.numPages,
             storedInDB: true
         };
-
         saveToStorage();
         updateCustomPdfInfo();
-
         alert('PDF uploaded successfully! You can now use it in the Reference Panel.');
-        
-    } catch (e) {
+    } catch (err) {
         handleError(err, 'handlePDFUpload');
-        alert('Error uploading PDF: ' + e.message);
+        alert('Error uploading PDF: ' + err.message);
     } finally {
         showLoading(false);
         ev.target.value = '';
@@ -244,21 +236,15 @@ export async function loadPDF() {
         alert('No custom PDF uploaded. Please upload one first.');
         return;
     }
-
     try {
         showLoading(true);
-        
-        // Clean up any existing PDF document
         if (state.pdf.doc) {
             state.pdf.doc.destroy().catch(() => {});
             state.pdf.doc = null;
         }
-        
         state.pdf.renderTask = null;
-
         const pdfData = await loadPDFFromIndexedDB();
         if (!pdfData) throw new Error('PDF not found in DB');
-
         const buf = base64ToArrayBuffer(pdfData.data);
         
         const loadingTask = pdfjsLib.getDocument({ 
@@ -274,24 +260,17 @@ export async function loadPDF() {
         });
         
         state.pdf.doc = await loadingTask.promise;
-
-        // RESTORE SAVED PAGE AND ZOOM
         const savedPage = state.pdf.currentPage || 1;
         const validPage = Math.min(savedPage, state.pdf.doc.numPages);
         state.pdf.currentPage = validPage;
-        
-        // Apply saved zoom level (or use default if none saved)
         const savedZoom = state.pdf.zoomLevel || state.settings.pdfZoom;
         updatePDFZoom(savedZoom);
-        
         document.getElementById('pageCount').textContent = state.pdf.doc.numPages;
         document.getElementById('pageInput').max = state.pdf.doc.numPages;
         document.getElementById('pageInput').value = validPage;
-        
     } catch (err) {
         handleError(err, 'loadPDF');
         alert('Could not load PDF: ' + err.message);
-        
         state.pdf.doc = null;
         state.pdf.renderTask = null;
     } finally {
@@ -386,7 +365,6 @@ export async function renderPage(pageNum) {
         
     } catch (err) {
         if (err.name === 'RenderingCancelledException') {
-            console.log('Rendering cancelled normally');
             return;
         }
         

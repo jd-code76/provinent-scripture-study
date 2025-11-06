@@ -10,6 +10,7 @@
     BOOK FORMATTING
     PERSISTENCE
     READING PLAN & BOOK-NAME MAPPINGS
+    URL UPDATES AND PARSING
 ==================================================================== */
 
 
@@ -19,7 +20,7 @@ import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
 
 /* Global constants */
-export const APP_VERSION = '1.01.2025.11.02';
+export const APP_VERSION = '1.1.2025.11.06';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -105,6 +106,49 @@ export const CHAPTER_COUNTS = {
     // Revelation
     Revelation: 22
 };
+
+/**
+ * BOOKS_ABBREVIATED
+ * Array of Bible book abbreviations for URL validation
+ */
+export const BOOKS_ABBREVIATED = [
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI', '2KI', 
+    '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SNG', 'ISA', 'JER', 
+    'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC', 'NAH', 'HAB', 'ZEP', 
+    'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT', 'ROM', '1CO', '2CO', 'GAL', 
+    'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM', 'HEB', 'JAM', '1PE', 
+    '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+];
+
+/**
+ * AVAILABLE_TRANSLATIONS
+ * Supported Bible translations for URL validation
+ */
+export const AVAILABLE_TRANSLATIONS = [
+    'ASV', 'KJV', 'GNV', 'BSB', 'NET'
+];
+
+// Add to state.js - Simple mapping between abbreviations and full names
+export const ABBREVIATION_TO_BOOK_NAME = {
+    'GEN': 'Genesis', 'EXO': 'Exodus', 'LEV': 'Leviticus', 'NUM': 'Numbers', 'DEU': 'Deuteronomy',
+    'JOS': 'Joshua', 'JDG': 'Judges', 'RUT': 'Ruth', '1SA': '1 Samuel', '2SA': '2 Samuel',
+    '1KI': '1 Kings', '2KI': '2 Kings', '1CH': '1 Chronicles', '2CH': '2 Chronicles',
+    'EZR': 'Ezra', 'NEH': 'Nehemiah', 'EST': 'Esther', 'JOB': 'Job', 'PSA': 'Psalms',
+    'PRO': 'Proverbs', 'ECC': 'Ecclesiastes', 'SNG': 'Song of Solomon', 'ISA': 'Isaiah', 'JER': 'Jeremiah',
+    'LAM': 'Lamentations', 'EZE': 'Ezekiel', 'DAN': 'Daniel', 'HOS': 'Hosea', 'JOE': 'Joel',
+    'AMO': 'Amos', 'OBA': 'Obadiah', 'JON': 'Jonah', 'MIC': 'Micah', 'NAH': 'Nahum',
+    'HAB': 'Habakkuk', 'ZEP': 'Zephaniah', 'HAG': 'Haggai', 'ZEC': 'Zechariah', 'MAL': 'Malachi',
+    'MAT': 'Matthew', 'MAR': 'Mark', 'LUK': 'Luke', 'JOH': 'John', 'ACT': 'Acts',
+    'ROM': 'Romans', '1CO': '1 Corinthians', '2CO': '2 Corinthians', 'GAL': 'Galatians',
+    'EPH': 'Ephesians', 'PHI': 'Philippians', 'COL': 'Colossians', '1TH': '1 Thessalonians',
+    '2TH': '2 Thessalonians', '1TI': '1 Timothy', '2TI': '2 Timothy', 'TIT': 'Titus',
+    'PHM': 'Philemon', 'HEB': 'Hebrews', 'JAM': 'James', '1PE': '1 Peter', '2PE': '2 Peter',
+    '1JO': '1 John', '2JO': '2 John', '3JO': '3 John', 'JUD': 'Jude', 'REV': 'Revelation'
+};
+
+export const BOOK_NAME_TO_ABBREVIATION = Object.fromEntries(
+    Object.entries(ABBREVIATION_TO_BOOK_NAME).map(([abbr, name]) => [name, abbr])
+);
 
 
 /* ====================================================================
@@ -588,14 +632,6 @@ export const stepBibleUrlMap = {
     // NKJV, CSB, NLT not supported
 };
 
-/**
- * Return the short code that appears in the Settings dropdown.
- * This is exactly what the user selects (e.g. "BSB", "KJV", "NET").
- */
-export function getTranslationShorthand() {
-    return state.settings.bibleTranslation || 'BSB';
-}
-
 /* Version map for Bible Gateway search button */
 function getBibleGatewayVersionCode(appTranslation) {
     const versionMap = {
@@ -625,5 +661,77 @@ export function updateBibleGatewayVersion() {
     } else {
         versionInput.value = versionCode;
     }
+}
+
+
+/* ====================================================================
+   URL UPDATES AND PARSING
+   Handle navigation via URL parameters
+==================================================================== */
+
+/**
+ * Update URL to reflect current translation, book, and chapter
+ * @param {string} translation - Bible translation code (e.g., 'BSB')
+ * @param {string} book - Book name (e.g., 'GEN')
+ * @param {number} chapter - Chapter number
+ */
+export function updateURL(translation, book, chapter) {
+    const cleanTranslation = translation.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    
+    // Convert book name to abbreviation using your mapping
+    const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
+    const cleanBook = bookAbbr ? bookAbbr.toLowerCase() : book.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    
+    const cleanChapter = Math.max(1, parseInt(chapter) || 1);
+    
+    const newURL = `/${cleanTranslation}/${cleanBook}/${cleanChapter}`;
+    window.history.pushState({ translation, book, chapter }, '', newURL);
+}
+
+/**
+ * Parse URL parameters to extract translation, book, and chapter
+ * @returns {Object|null} Object with translation, book, chapter or null if invalid
+ */
+export function parseURL() {
+    const path = window.location.pathname;
+    
+    // Handle root path
+    if (path === '/') {
+        return null; // Let navigateFromURL handle the redirect
+    }
+    
+    const pathParts = path.split('/').filter(part => part !== '');
+    
+    if (pathParts.length >= 3) {
+        const translation = pathParts[0].toUpperCase();
+        let book = pathParts[1];
+        const chapter = parseInt(pathParts[2], 10);
+        
+        // Capitalize book name properly (convert "genesis" to "Genesis")
+        book = book.charAt(0).toUpperCase() + book.slice(1).toLowerCase();
+        
+        // Validate translation
+        if (!AVAILABLE_TRANSLATIONS.includes(translation)) {
+            console.warn('Invalid translation in URL:', translation);
+            return null;
+        }
+        
+        // Validate book
+        const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
+        if (!BOOKS_ABBREVIATED.includes(bookAbbr)) {
+            console.warn('Invalid book in URL:', book);
+            return null;
+        }
+        
+        // Validate chapter
+        if (isNaN(chapter) || chapter <= 0 || chapter > 150) {
+            console.warn('Invalid chapter in URL:', chapter);
+            return null;
+        }
+        
+        return { translation, book, chapter };
+    }
+    
+    return null;
 }
 

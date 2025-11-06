@@ -1,6 +1,6 @@
 ﻿import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
-export const APP_VERSION = '1.01.2025.11.02';
+export const APP_VERSION = '1.1.2025.11.06';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 export const BOOK_ORDER = [
@@ -37,6 +37,36 @@ export const CHAPTER_COUNTS = {
     '2 John': 1, '3 John': 1, Jude: 1,
     Revelation: 22
 };
+export const BOOKS_ABBREVIATED = [
+    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT', '1SA', '2SA', '1KI', '2KI', 
+    '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SNG', 'ISA', 'JER', 
+    'LAM', 'EZE', 'DAN', 'HOS', 'JOE', 'AMO', 'OBA', 'JON', 'MIC', 'NAH', 'HAB', 'ZEP', 
+    'HAG', 'ZEC', 'MAL', 'MAT', 'MAR', 'LUK', 'JOH', 'ACT', 'ROM', '1CO', '2CO', 'GAL', 
+    'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM', 'HEB', 'JAM', '1PE', 
+    '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
+];
+export const AVAILABLE_TRANSLATIONS = [
+    'ASV', 'KJV', 'GNV', 'BSB', 'NET'
+];
+export const ABBREVIATION_TO_BOOK_NAME = {
+    'GEN': 'Genesis', 'EXO': 'Exodus', 'LEV': 'Leviticus', 'NUM': 'Numbers', 'DEU': 'Deuteronomy',
+    'JOS': 'Joshua', 'JDG': 'Judges', 'RUT': 'Ruth', '1SA': '1 Samuel', '2SA': '2 Samuel',
+    '1KI': '1 Kings', '2KI': '2 Kings', '1CH': '1 Chronicles', '2CH': '2 Chronicles',
+    'EZR': 'Ezra', 'NEH': 'Nehemiah', 'EST': 'Esther', 'JOB': 'Job', 'PSA': 'Psalms',
+    'PRO': 'Proverbs', 'ECC': 'Ecclesiastes', 'SNG': 'Song of Solomon', 'ISA': 'Isaiah', 'JER': 'Jeremiah',
+    'LAM': 'Lamentations', 'EZE': 'Ezekiel', 'DAN': 'Daniel', 'HOS': 'Hosea', 'JOE': 'Joel',
+    'AMO': 'Amos', 'OBA': 'Obadiah', 'JON': 'Jonah', 'MIC': 'Micah', 'NAH': 'Nahum',
+    'HAB': 'Habakkuk', 'ZEP': 'Zephaniah', 'HAG': 'Haggai', 'ZEC': 'Zechariah', 'MAL': 'Malachi',
+    'MAT': 'Matthew', 'MAR': 'Mark', 'LUK': 'Luke', 'JOH': 'John', 'ACT': 'Acts',
+    'ROM': 'Romans', '1CO': '1 Corinthians', '2CO': '2 Corinthians', 'GAL': 'Galatians',
+    'EPH': 'Ephesians', 'PHI': 'Philippians', 'COL': 'Colossians', '1TH': '1 Thessalonians',
+    '2TH': '2 Thessalonians', '1TI': '1 Timothy', '2TI': '2 Timothy', 'TIT': 'Titus',
+    'PHM': 'Philemon', 'HEB': 'Hebrews', 'JAM': 'James', '1PE': '1 Peter', '2PE': '2 Peter',
+    '1JO': '1 John', '2JO': '2 John', '3JO': '3 John', 'JUD': 'Jude', 'REV': 'Revelation'
+};
+export const BOOK_NAME_TO_ABBREVIATION = Object.fromEntries(
+    Object.entries(ABBREVIATION_TO_BOOK_NAME).map(([abbr, name]) => [name, abbr])
+);
 export const state = {
     currentVerse: null,                 
     currentVerseData: null,             
@@ -365,9 +395,6 @@ export const stepBibleUrlMap = {
     'NET': 'NET2full',      
     'NIV': 'NIV'
 };
-export function getTranslationShorthand() {
-    return state.settings.bibleTranslation || 'BSB';
-}
 function getBibleGatewayVersionCode(appTranslation) {
     const versionMap = {
         'NASB1995': 'NASB1995',
@@ -393,4 +420,40 @@ export function updateBibleGatewayVersion() {
     } else {
         versionInput.value = versionCode;
     }
+}
+export function updateURL(translation, book, chapter) {
+    const cleanTranslation = translation.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
+    const cleanBook = bookAbbr ? bookAbbr.toLowerCase() : book.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const cleanChapter = Math.max(1, parseInt(chapter) || 1);
+    const newURL = `/${cleanTranslation}/${cleanBook}/${cleanChapter}`;
+    window.history.pushState({ translation, book, chapter }, '', newURL);
+}
+export function parseURL() {
+    const path = window.location.pathname;
+    if (path === '/') {
+        return null; 
+    }
+    const pathParts = path.split('/').filter(part => part !== '');
+    if (pathParts.length >= 3) {
+        const translation = pathParts[0].toUpperCase();
+        let book = pathParts[1];
+        const chapter = parseInt(pathParts[2], 10);
+        book = book.charAt(0).toUpperCase() + book.slice(1).toLowerCase();
+        if (!AVAILABLE_TRANSLATIONS.includes(translation)) {
+            console.warn('Invalid translation in URL:', translation);
+            return null;
+        }
+        const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
+        if (!BOOKS_ABBREVIATED.includes(bookAbbr)) {
+            console.warn('Invalid book in URL:', book);
+            return null;
+        }
+        if (isNaN(chapter) || chapter <= 0 || chapter > 150) {
+            console.warn('Invalid chapter in URL:', chapter);
+            return null;
+        }
+        return { translation, book, chapter };
+    }
+    return null;
 }

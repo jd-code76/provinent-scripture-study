@@ -1,10 +1,13 @@
 ﻿import { loadPassageFromAPI } from './api.js'
 import { handleError } from '../main.js'
-import { syncSelectorsToReadingPlan } from './navigation.js'
+import { 
+    getCurrentTranslation, 
+    syncBookChapterSelectors, 
+    syncSelectorsToReadingPlan 
+} from './navigation.js'
 import {
     getActivePlan,
     getCurrentPlanLabel,
-    getTranslationShorthand,
     saveToStorage,
     state
 } from './state.js'
@@ -41,6 +44,9 @@ export function displayPassage(verses) {
         verseDiv.appendChild(numSpan);
         verseDiv.appendChild(txtSpan);
         fragment.appendChild(verseDiv);
+        const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
+        cachedVerses[v.reference] = v.text.text.replace(/<[^>]*>/g, '');
+        localStorage.setItem('cachedVerses', JSON.stringify(cachedVerses));
     });
     container.innerHTML = '';
     container.appendChild(fragment);
@@ -238,37 +244,83 @@ function ensureProperSpacing(text) {
         .trim();
     return cleanedText;
 }
-export async function loadPassage() {
+export async function loadPassage(book = null, chapter = null, translation = null) {
+    if (window._isLoadingPassage) {
+        return;
+    }
+    window._isLoadingPassage = true;
     try {
-        const plan = getActivePlan();
-        if (state.settings.currentPassageIndex < 0 || state.settings.currentPassageIndex >= plan.length) {
-            state.settings.currentPassageIndex = 0;
+        if (book && chapter) {
+            state.settings.readingMode = 'manual';
+            state.settings.manualBook = book;
+            state.settings.manualChapter = chapter;
+            const headerTitleEl = document.getElementById('passageHeaderTitle');
+            if (headerTitleEl) {
+                const transShorthand = translation || getCurrentTranslation();
+                headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
+            }
+            const planLabelEl = document.getElementById('planLabel');
+            if (planLabelEl) {
+                planLabelEl.textContent = '';
+            }
+            updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
+            await loadPassageFromAPI({
+                book: book,
+                chapter: chapter,
+                startVerse: 1,
+                endVerse: 999,
+                displayRef: updateDisplayRef(state.settings.manualBook, state.settings.manualChapter),
+                translation: translation
+            });
+        } else {
+            state.settings.readingMode = 'readingPlan';
+            const plan = getActivePlan();
+            if (state.settings.currentPassageIndex < 0 || state.settings.currentPassageIndex >= plan.length) {
+                state.settings.currentPassageIndex = 0;
+            }
+            const passage = plan[state.settings.currentPassageIndex];
+            const headerTitleEl = document.getElementById('passageHeaderTitle');
+            if (headerTitleEl) {
+                const transShorthand = getCurrentTranslation();
+                headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
+            }
+            const planLabelEl = document.getElementById('planLabel');
+            if (planLabelEl) {
+                planLabelEl.textContent = `Reading plan: ${getCurrentPlanLabel()}`;
+            }
+            document.getElementById('passageReference').textContent = passage.displayRef;
+            state.currentPassageReference = passage.displayRef;
+            await loadPassageFromAPI(passage);
+            syncSelectorsToReadingPlan();
         }
-        const passage = plan[state.settings.currentPassageIndex];
-        const headerTitleEl = document.getElementById('passageHeaderTitle');
-        if (headerTitleEl) {
-            const transShorthand = getTranslationShorthand();
-            headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
-        }
-        const planLabelEl = document.getElementById('planLabel');
-        if (planLabelEl) {
-            planLabelEl.textContent = `Reading plan: ${getCurrentPlanLabel()}`;
-        }
-        document.getElementById('passageReference').textContent = passage.displayRef;
-        state.currentPassageReference = passage.displayRef;
-        await loadPassageFromAPI(passage);
         if (state.settings.referencePanelOpen) {
             updateReferencePanel();
         }
         saveToStorage();
-        if (state.settings.readingMode === 'readingPlan') {
-            syncSelectorsToReadingPlan();
-        }
     } catch (err) {
         handleError(err, 'loadPassage');
-    } 
+    } finally {
+        window._isLoadingPassage = false;
+    }
 }
 export function afterContentLoad() {
     const event = new CustomEvent('contentLoaded');
     document.dispatchEvent(event);
+}
+export function scrollToVerse(verseNumber) {
+    updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
+    syncBookChapterSelectors();
+    const verseElement = document.querySelector(`.verse[data-verse-number="${verseNumber}"]`);
+    if (verseElement) {
+        verseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        verseElement.style.backgroundColor = 'var(--verse-hover)';
+        setTimeout(() => {
+            verseElement.style.backgroundColor = '';
+        }, 1000);
+    }
+}
+function updateDisplayRef(book, chapter) {
+    const displayRef = `${book} ${chapter}`;
+    document.getElementById('passageReference').textContent = displayRef;
+    state.currentPassageReference = displayRef;
 }

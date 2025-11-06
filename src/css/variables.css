@@ -23,6 +23,9 @@
     /* Text colors */
     --text-color: #2c3e50;
     --sidebar-text: #ecf0f1;
+    .highlights-list {
+        --text-color: #000000;
+    }
     
     /* Border and UI elements */
     --border-color: #bdc3c7;
@@ -49,6 +52,14 @@
     --transition-fast: 150ms ease;
     --transition-normal: 300ms ease;
     --transition-slow: 500ms ease;
+
+    /* Highlight colors */
+    --highlight-yellow: #fff59d; 
+    --highlight-green: #a5d6a7;
+    --highlight-blue: #90caf9;
+    --highlight-pink: #f48fb1;
+    --highlight-orange: #ffcc80;
+   --highlight-purple: #ce93d8;
 }
 
 /* Color Theme Variations */
@@ -109,10 +120,13 @@
     /* Light text on dark backgrounds */
     --text-color: #e1e1e1;
     --sidebar-text: #c9d1d9;
+    .highlights-list {
+        --text-color: #000000;
+    }
     
     /* Adjusted UI elements */
     --border-color: #444;
-    --verse-hover: #21262d;
+    --verse-hover: #3e434a;
     
     /* Stronger shadows for depth in dark mode */
     --shadow: rgba(0, 0, 0, 0.4);
@@ -156,4 +170,3 @@
     --secondary-color: #00796b;
     --accent-color: #26a69a;
 }
-

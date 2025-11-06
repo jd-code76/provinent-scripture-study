@@ -109,9 +109,9 @@ export async function handlePDFUpload(ev) {
         saveToStorage();
         updateCustomPdfInfo();
         alert('PDF uploaded successfully! You can now use it in the Reference Panel.');
-    } catch (e) {
+    } catch (err) {
         handleError(err, 'handlePDFUpload');
-        alert('Error uploading PDF: ' + e.message);
+        alert('Error uploading PDF: ' + err.message);
     } finally {
         showLoading(false);
         ev.target.value = '';
@@ -266,7 +266,6 @@ export async function renderPage(pageNum) {
         saveToStorage();
     } catch (err) {
         if (err.name === 'RenderingCancelledException') {
-            console.log('Rendering cancelled normally');
             return;
         }
         console.warn('Render error, reloading PDF:', err);

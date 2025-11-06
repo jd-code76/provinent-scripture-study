@@ -56,7 +56,7 @@ export function showStrongsReference(verseEl) {
                 <div class="resource-frame-header">
                     <h4>BibleHub Interlinear</h4>
                     <div class="resource-frame-actions">
-                        <button class="resource-frame-btn" data-url="${greekUrl}" data-title="Greek Interlinear">
+                        <button class="resource-frame-btn" data-url="${greekUrl}" data-title="Interlinear (Hebrew is read right-to-left, Greek left-to-right)">
                             Pop Out
                         </button>
                     </div>
@@ -77,7 +77,8 @@ export function showStrongsReference(verseEl) {
         </div>
         <p style="margin-bottom:15px;opacity:0.8;font-size:0.9em;">
             <em>These resources provide detailed word-by-word analysis.
-            Use the "Pop Out" button to open them in a new tab.</em>
+            Use the "Pop Out" button to open them in a new tab.
+            Please support them as they are great resources!</em>
         </p>
         <div class="strongs-definition">
             <h3>Quick Links</h3>
