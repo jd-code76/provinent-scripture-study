@@ -28,7 +28,8 @@ import {
 
 import {
     displayPassage,
-    extractVerseText
+    extractVerseText,
+    updateDisplayRef
 } from './passage.js'
 
 import {
@@ -86,6 +87,8 @@ export async function loadSelectedChapter(book = null, chapter = null) {
     const apiBook = getApiBookCode(selBook);
 
     document.title = `${selBook} ${selChapter} - Provinent Scripture Study`;
+
+    updateDisplayRef(selBook, selChapter);
     
     try {
         showLoading(true);
@@ -170,7 +173,6 @@ export async function randomPassage() {
 
         saveToStorage();
 
-        // Load and render the passage
         await loadSelectedChapter(randomLoc.book, randomLoc.chapter);
         document.getElementById('passageReference').textContent = randomLoc.displayRef;
         state.currentPassageReference = randomLoc.displayRef;
@@ -186,7 +188,7 @@ export async function randomPassage() {
     }
 }
 
-/* Navigate to next passage/chapter based on current mode */
+/* Next chapter button handler */
 export function nextPassage() {
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
@@ -207,7 +209,7 @@ export function nextPassage() {
     updateManualNavigation(nextBook, nextChapter);
 }
 
-/* Navigate to previous passage/chapter based on current mode */
+/* Prev chapter button handler */
 export function prevPassage() {
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
@@ -248,7 +250,7 @@ function updateManualNavigation(book, chapter) {
     }
 }
 
-/* Update UI elements to reflect current mode */
+/* Update UI elements as navigated */
 function updateUIMode(translation, displayRef) {
     const headerTitleEl = document.getElementById('passageHeaderTitle');
     const passageRefElement = document.getElementById('passageReference');
@@ -263,9 +265,7 @@ function updateUIMode(translation, displayRef) {
     }
 }
 
-/**
- * Keep the book‑/chapter dropdowns in sync with the internal state.
- */
+/* Keep the book‑/chapter dropdowns in sync with the internal state */
 export function syncBookChapterSelectors() {
     const bookSel = document.getElementById('bookSelect');
     const chapterSel = document.getElementById('chapterSelect');
@@ -332,16 +332,6 @@ export function getCurrentTranslation() {
 /* Navigate based on URL parameters */
 export function navigateFromURL() {
     const urlParams = parseURL();
-    if (!urlParams && !window.location.search) {
-        const defaultParams = {
-            translation: 'BSB',
-            book: 'Genesis',
-            chapter: 1
-        };
-        
-        updateURL(defaultParams.translation, defaultParams.book, defaultParams.chapter);
-        return loadDefaultPassage(defaultParams);
-    }
     
     if (urlParams) {
         const isValidTranslation = AVAILABLE_TRANSLATIONS.includes(urlParams.translation);
@@ -375,6 +365,13 @@ export function navigateFromURL() {
             }
             
             loadSelectedChapter(urlParams.book, urlParams.chapter);
+            
+            window.history.replaceState(
+                { translation: urlParams.translation, book: urlParams.book, chapter: urlParams.chapter },
+                '',
+                window.location.search
+            );
+            
             return true;
         }
     }
@@ -387,7 +384,6 @@ function loadDefaultPassage(params) {
     state.settings.manualChapter = params.chapter;
     state.settings.bibleTranslation = params.translation;
     
-    // Set dropdown values
     const bookSelect = document.getElementById('bookSelect');
     const chapterSelect = document.getElementById('chapterSelect');
     
@@ -397,14 +393,12 @@ function loadDefaultPassage(params) {
         chapterSelect.value = params.chapter;
     }
     
-    // Update passage reference
     const passageRefElement = document.getElementById('passageReference');
     if (passageRefElement) {
         passageRefElement.textContent = `${params.book} ${params.chapter}`;
         state.currentPassageReference = `${params.book} ${params.chapter}`;
     }
     
-    // Update header
     const headerTitleEl = document.getElementById('passageHeaderTitle');
     if (headerTitleEl) {
         headerTitleEl.textContent = `Holy Bible: ${params.translation}`;
@@ -416,12 +410,31 @@ function loadDefaultPassage(params) {
 
 /* Handle browser back/forward navigation */
 export function setupPopStateListener() {
-    window.addEventListener('popstate', navigateFromURL);
+    window.addEventListener('popstate', (event) => {
+        if (event.state) {
+            const { translation, book, chapter } = event.state;
+            state.settings.manualBook = book;
+            state.settings.manualChapter = chapter;
+            state.settings.bibleTranslation = translation;
+            
+            const bookSelect = document.getElementById('bookSelect');
+            const chapterSelect = document.getElementById('chapterSelect');
+            
+            if (bookSelect) bookSelect.value = book;
+            if (chapterSelect) {
+                populateChapterDropdown(book);
+                chapterSelect.value = chapter;
+            }
+            
+            loadSelectedChapter(book, chapter);
+        } else {
+            navigateFromURL();
+        }
+    });
 }
 
 /* Modify book and chapter selection handlers to update URL */
 export function setupNavigationWithURL() {
-    // Book selection
     document.getElementById('bookSelect').addEventListener('change', (e) => {
         const book = e.target.value;
         const chapter = 1;
@@ -430,7 +443,6 @@ export function setupNavigationWithURL() {
         loadSelectedChapter(book, chapter);
     });
 
-    // Chapter selection
     document.getElementById('chapterSelect').addEventListener('change', (e) => {
         const book = document.getElementById('bookSelect').value;
         const chapter = parseInt(e.target.value);

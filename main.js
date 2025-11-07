@@ -440,6 +440,12 @@ function showHighlightsModal() {
     overlay.classList.add('active');
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    const filterButtons = document.querySelectorAll('.highlight-filter-btn');
+    filterButtons.forEach(btn => btn.classList.remove('active'));
+    const allButton = document.querySelector('.highlight-filter-btn[data-color="all"]');
+    if (allButton) {
+        allButton.classList.add('active');
+    }
     renderHighlights('all');
     document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -464,33 +470,62 @@ function renderHighlights(filterColor = 'all') {
         return;
     }
     let html = '';
-    const versesByColor = {};
-    Object.entries(highlights).forEach(([reference, color]) => {
-        if (!versesByColor[color]) versesByColor[color] = [];
-        versesByColor[color].push(reference);
-    });
-    Object.keys(versesByColor).forEach(color => {
-        versesByColor[color].sort((a, b) => {
-            const [bookA, chapA, verseA] = a.split(/[ :]/);
-            const [bookB, chapB, verseB] = b.split(/[ :]/);
-            const bookOrderA = BOOK_ORDER.indexOf(bookA);
-            const bookOrderB = BOOK_ORDER.indexOf(bookB);
-            if (bookOrderA !== bookOrderB) return bookOrderA - bookOrderB;
-            if (parseInt(chapA) !== parseInt(chapB)) return parseInt(chapA) - parseInt(chapB);
-            return parseInt(verseA) - parseInt(verseB);
+    const sortableReferences = Object.keys(highlights).map(reference => {
+        const match = reference.match(/^(\d*\s*\w+)\s+(\d+):(\d+)$/);
+        if (!match) return null;
+        let bookName = match[1].trim();
+        const chapter = parseInt(match[2]);
+        const verse = parseInt(match[3]);
+        const color = highlights[reference];
+        const bookParts = bookName.split(' ');
+        let baseBookName = bookName;
+        let bookNumber = '';
+        if (bookParts.length > 1 && /^\d+$/.test(bookParts[0])) {
+            bookNumber = bookParts[0];
+            baseBookName = bookParts.slice(1).join(' ');
+        }
+        const bookIndex = BOOK_ORDER.findIndex(book => {
+            const orderParts = book.split(' ');
+            let orderBaseName = book;
+            let orderNumber = '';
+            if (orderParts.length > 1 && /^\d+$/.test(orderParts[0])) {
+                orderNumber = orderParts[0];
+                orderBaseName = orderParts.slice(1).join(' ');
+            }
+            return orderBaseName.toLowerCase() === baseBookName.toLowerCase() && 
+                   orderNumber === bookNumber;
         });
+        return {
+            reference,
+            bookName,
+            baseBookName,
+            bookNumber,
+            bookIndex,
+            chapter,
+            verse,
+            color
+        };
+    }).filter(ref => ref !== null && ref.bookIndex !== -1);
+    sortableReferences.sort((a, b) => {
+        if (a.bookIndex !== b.bookIndex) {
+            return a.bookIndex - b.bookIndex;
+        }
+        if (a.chapter !== b.chapter) {
+            return a.chapter - b.chapter;
+        }
+        return a.verse - b.verse;
     });
-    Object.entries(versesByColor).forEach(([color, references]) => {
-        if (filterColor !== 'all' && filterColor !== color) return;
-        references.forEach(reference => {
-            const verseText = getVerseTextFromStorage(reference) || 'Verse text not available';
-            html += `
-                <div class="highlight-item ${color}" data-reference="${reference}" data-color="${color}">
-                    <div class="highlight-ref">${reference}</div>
-                    <div class="highlight-text">${verseText}</div>
-                </div>
-            `;
-        });
+    sortableReferences.forEach(ref => {
+        if (filterColor !== 'all' && ref.color !== filterColor) {
+            return;
+        }
+        const verseText = getVerseTextFromStorage(ref.reference) || 'Verse text not available';
+        html += `
+            <div class="highlight-item ${ref.color}" data-reference="${ref.reference}" data-color="${ref.color}">
+                <div class="highlight-ref">${ref.reference}</div>
+                <div class="highlight-text">${verseText}</div>
+            </div>
+        `;
     });
     highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter</div>';
     document.querySelectorAll('.highlight-item').forEach(item => {
@@ -581,6 +616,16 @@ async function init() {
     const navigatedFromURL = navigateFromURL();
     if (!navigatedFromURL) {
         if (window.location.pathname !== '/') {
+            const defaultParams = {
+                translation: 'BSB',
+                book: 'Genesis',
+                chapter: 1
+            };
+            window.history.replaceState(
+                defaultParams,
+                '',
+                `?p=bsb/gen/1`
+            );
             loadPassage();
         }
     }

@@ -20,7 +20,7 @@ import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
 
 /* Global constants */
-export const APP_VERSION = '1.1.06.2025.11.07';
+export const APP_VERSION = '1.1.07.2025.11.07';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -499,13 +499,11 @@ export function updateURL(translation, book, chapter) {
     
     const cleanBook = bookAbbr.toLowerCase();
     const cleanChapter = Math.max(1, parseInt(chapter) || 1);
-    
     const newQuery = `?p=${cleanTranslation}/${cleanBook}/${cleanChapter}`;
-    if (window.location.search !== newQuery) {
-        window.history.replaceState({}, '', newQuery);
-    }
+    const newState = { translation, book, chapter };
+    
+    window.history.pushState(newState, '', newQuery);
 }
-
 
 /**
  * Parse URL parameters to extract translation, book, and chapter

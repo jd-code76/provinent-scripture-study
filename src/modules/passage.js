@@ -393,7 +393,7 @@ export function scrollToVerse(verseNumber) {
 }
 
 /* Update the passage reference display and state */
-function updateDisplayRef(book, chapter) {
+export function updateDisplayRef(book, chapter) {
     const displayRef = `${book} ${chapter}`;
     document.getElementById('passageReference').textContent = displayRef;
     state.currentPassageReference = displayRef;

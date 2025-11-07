@@ -11,7 +11,8 @@ import {
 } from '../main.js'
 import {
     displayPassage,
-    extractVerseText
+    extractVerseText,
+    updateDisplayRef
 } from './passage.js'
 import {
     AVAILABLE_TRANSLATIONS,
@@ -52,6 +53,7 @@ export async function loadSelectedChapter(book = null, chapter = null) {
     const selChapter = chapter || document.getElementById('chapterSelect').value;
     const apiBook = getApiBookCode(selBook);
     document.title = `${selBook} ${selChapter} - Provinent Scripture Study`;
+    updateDisplayRef(selBook, selChapter);
     try {
         showLoading(true);
         const apiTranslation = apiTranslationCode(state.settings.bibleTranslation);
@@ -219,15 +221,6 @@ export function getCurrentTranslation() {
 }
 export function navigateFromURL() {
     const urlParams = parseURL();
-    if (!urlParams && !window.location.search) {
-        const defaultParams = {
-            translation: 'BSB',
-            book: 'Genesis',
-            chapter: 1
-        };
-        updateURL(defaultParams.translation, defaultParams.book, defaultParams.chapter);
-        return loadDefaultPassage(defaultParams);
-    }
     if (urlParams) {
         const isValidTranslation = AVAILABLE_TRANSLATIONS.includes(urlParams.translation);
         const bookAbbr = BOOK_NAME_TO_ABBREVIATION[urlParams.book];
@@ -254,6 +247,11 @@ export function navigateFromURL() {
                 headerTitleEl.textContent = `Holy Bible: ${urlParams.translation}`;
             }
             loadSelectedChapter(urlParams.book, urlParams.chapter);
+            window.history.replaceState(
+                { translation: urlParams.translation, book: urlParams.book, chapter: urlParams.chapter },
+                '',
+                window.location.search
+            );
             return true;
         }
     }
@@ -283,7 +281,24 @@ function loadDefaultPassage(params) {
     return true;
 }
 export function setupPopStateListener() {
-    window.addEventListener('popstate', navigateFromURL);
+    window.addEventListener('popstate', (event) => {
+        if (event.state) {
+            const { translation, book, chapter } = event.state;
+            state.settings.manualBook = book;
+            state.settings.manualChapter = chapter;
+            state.settings.bibleTranslation = translation;
+            const bookSelect = document.getElementById('bookSelect');
+            const chapterSelect = document.getElementById('chapterSelect');
+            if (bookSelect) bookSelect.value = book;
+            if (chapterSelect) {
+                populateChapterDropdown(book);
+                chapterSelect.value = chapter;
+            }
+            loadSelectedChapter(book, chapter);
+        } else {
+            navigateFromURL();
+        }
+    });
 }
 export function setupNavigationWithURL() {
     document.getElementById('bookSelect').addEventListener('change', (e) => {

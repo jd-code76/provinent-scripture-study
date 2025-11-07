@@ -81,8 +81,8 @@ export function showStrongsReference(verseEl) {
             ${verseText}
         </div>
 
-        <!-- Footnotes section for Strong's popup -->
-        <div class="strongs-footnotes-container" id="strongsFootnotesContainer"></div>
+        <!-- Footnotes section for Strong's popup - will be hidden if empty -->
+        <div class="strongs-footnotes-container" id="strongsFootnotesContainer" style="display: none;"></div>
 
         <div class="embedded-resources">
             <div class="resource-frame">
@@ -249,10 +249,11 @@ function populateStrongsFootnotes(verseRef) {
     const verseFootnotes = state.footnotes[verseRef];
 
     if (!verseFootnotes || verseFootnotes.length === 0) {
-        container.innerHTML = '<p style="opacity:0.7;text-align:center;padding:20px;">No footnotes available for this verse</p>';
+        container.style.display = 'none';
         return;
     }
 
+    container.style.display = 'block';
     container.innerHTML = `
         <hr class="footnotes-separator">
         <h4 class="footnotes-heading">Footnotes</h4>
@@ -268,8 +269,6 @@ function populateStrongsFootnotes(verseRef) {
         
         container.appendChild(footnoteDiv);
     });
-
-    container.style.display = 'block';
 }
 
 /* Setup footnote click handlers for the Strong's popup */
