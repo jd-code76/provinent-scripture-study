@@ -31,7 +31,6 @@ import {
     bibleHubUrlMap,
     ebibleOrgUrlMap,
     formatBookNameForSource,
-    getActivePlan,
     saveToStorage,
     state,
     stepBibleUrlMap
@@ -209,12 +208,10 @@ export async function updateReferencePanel() {
         transSel.style.display = source === 'pdf' ? 'none' : 'block';
         filterTranslationOptions(source, transSel);
         
-        // Clean up PDF state when switching away from PDF
         if (source !== 'pdf') {
             pdfViewer.classList.remove('active');
             iframe.style.display = 'block';
             
-            // Additional cleanup to ensure PDF doesn't interfere
             if (state.pdf.renderTask) {
                 try {
                     await state.pdf.renderTask.cancel();
@@ -228,16 +225,11 @@ export async function updateReferencePanel() {
         const actualSource = document.getElementById('referenceSource').value;
         const translation = transSel.value;
         
-        let passage;
-        if (state.settings.readingMode === 'readingPlan') {
-            passage = getActivePlan()[state.settings.currentPassageIndex];
-        } else {
-            passage = {
-                book: state.settings.manualBook,
-                chapter: state.settings.manualChapter,
-                displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`
-            };
-        }
+        const passage = {
+            book: state.settings.manualBook,
+            chapter: state.settings.manualChapter,
+            displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`
+        };
         
         const bookName = passage.book.toLowerCase().replace(/\s+/g, '_');
         const bookAbbr = bookName.substring(0, 3).toUpperCase();
@@ -249,13 +241,11 @@ export async function updateReferencePanel() {
                 document.getElementById('referenceSource').value = 'biblegateway';
                 transSel.style.display = 'block';
                 filterTranslationOptions('biblegateway', transSel);
-                // Ensure iframe is visible when falling back
                 iframe.style.display = 'block';
                 pdfViewer.classList.remove('active');
                 return;
             }
             
-            // Show PDF, hide iframe
             iframe.style.display = 'none';
             pdfViewer.classList.add('active');
             document.getElementById('zoomLevel').textContent =
@@ -263,7 +253,6 @@ export async function updateReferencePanel() {
             await loadPDF();
             
         } else {
-            // Hide PDF, show iframe for all other sources
             pdfViewer.classList.remove('active');
             iframe.style.display = 'block';
             
@@ -272,56 +261,54 @@ export async function updateReferencePanel() {
                 const url = `https://biblehub.com/${bibleHubCode}/${bookName}/${chapter}.htm`;
                 iframe.src = url;
             } else if (actualSource === 'biblecom') {
-				const bibleComCode = bibleComUrlMap[translation];
-				if (!bibleComCode) {
-					alert(`Bible.com doesn't support ${translation}. Please choose another translation.`);
-					return;
-				}
-				
-				const formattedBook = formatBookNameForSource(passage.book, 'biblecom');
-				
-				// Try multiple URL formats - Bible.com has inconsistent URL structures
-				const urlFormats = [
-					`https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}?interface=embed`,
-					`https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}`,
-					`https://www.bible.com/bible/${bibleComCode}/${chapter}.${translation}?${formattedBook}=${chapter}`
-				];
-				
-				// Try each URL format until one works
-				let currentUrlIndex = 0;
-				
-				function tryNextUrl() {
-					if (currentUrlIndex >= urlFormats.length) {
-						alert('Could not load Bible.com. Please try another reference source.');
-						return;
-					}
-					
-					iframe.src = urlFormats[currentUrlIndex];
-					currentUrlIndex++;
-				}
-				
-				iframe.onerror = function() {
-					tryNextUrl();
-				};
-				
-				tryNextUrl();
+                const bibleComCode = bibleComUrlMap[translation];
+                if (!bibleComCode) {
+                    alert(`Bible.com doesn't support ${translation}. Please choose another translation.`);
+                    return;
+                }
+                
+                const formattedBook = formatBookNameForSource(passage.book, 'biblecom');
+                
+                const urlFormats = [
+                    `https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}?interface=embed`,
+                    `https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}`,
+                    `https://www.bible.com/bible/${bibleComCode}/${chapter}.${translation}?${formattedBook}=${chapter}`
+                ];
+                
+                let currentUrlIndex = 0;
+                
+                function tryNextUrl() {
+                    if (currentUrlIndex >= urlFormats.length) {
+                        alert('Could not load Bible.com. Please try another reference source.');
+                        return;
+                    }
+                    
+                    iframe.src = urlFormats[currentUrlIndex];
+                    currentUrlIndex++;
+                }
+                
+                iframe.onerror = function() {
+                    tryNextUrl();
+                };
+                
+                tryNextUrl();
             } else if (actualSource === 'ebibleorg') {
-				const ebibleOrgCode = ebibleOrgUrlMap[translation];
-				if (!ebibleOrgCode) {
-					alert(`eBible.org doesn't support ${translation}. Please choose another translation.`);
-					return;
-				}
-				const bookRef = bookName === 'psalms' ? 'PS1' : `${bookAbbr}1`; // Psalms handling
-				const url = `https://ebible.org/study/?w1=bible&t1=${encodeURIComponent(ebibleOrgCode)}&v1=${bookRef}_${chapter}`;
-				iframe.src = url;
+                const ebibleOrgCode = ebibleOrgUrlMap[translation];
+                if (!ebibleOrgCode) {
+                    alert(`eBible.org doesn't support ${translation}. Please choose another translation.`);
+                    return;
+                }
+                const bookRef = bookName === 'psalms' ? 'PS1' : `${bookAbbr}1`;
+                const url = `https://ebible.org/study/?w1=bible&t1=${encodeURIComponent(ebibleOrgCode)}&v1=${bookRef}_${chapter}`;
+                iframe.src = url;
             } else if (actualSource === 'stepbible') {
-			   const stepBibleCode = stepBibleUrlMap[translation];
-				if (!stepBibleCode) {
-					alert(`STEP Bible doesn't support ${translation}. Please choose another translation.`);
-					return;
-				}
-				const url = getStepBibleUrl(passage.displayRef, translation);
-				iframe.src = url;
+                const stepBibleCode = stepBibleUrlMap[translation];
+                if (!stepBibleCode) {
+                    alert(`STEP Bible doesn't support ${translation}. Please choose another translation.`);
+                    return;
+                }
+                const url = getStepBibleUrl(passage.displayRef, translation);
+                iframe.src = url;
             } else {
                 // Bible Gateway (default)
                 const query = passage.displayRef.replace(/\s+/g, '+');
@@ -364,7 +351,6 @@ function filterTranslationOptions(source, selectElement) {
             if (value === currentValue) {
                 needsNewSelection = true;
                 
-                // If BSB is selected but Bible Gateway doesn't support it
                 if (value === 'BSB' && source === 'biblegateway') {
                     needsSourceChange = true;
                 }
@@ -376,16 +362,13 @@ function filterTranslationOptions(source, selectElement) {
     });
 
     if (needsSourceChange) {
-        // Auto-switch to Bible Hub when BSB is selected with Bible Gateway
         document.getElementById('referenceSource').value = 'biblehub';
         state.settings.referenceSource = 'biblehub';
         
-        // Update the UI to reflect the change
         const sourceSelect = document.getElementById('referenceSource');
         sourceSelect.value = 'biblehub';
         
-        // Continue with normal fallback logic
-        selectElement.value = 'BSB'; // Keep BSB selected since Bible Hub supports it
+        selectElement.value = 'BSB';
         state.settings.referenceVersion = 'BSB';
     }
     else if (needsNewSelection) {
@@ -398,7 +381,6 @@ function filterTranslationOptions(source, selectElement) {
         state.settings.referenceVersion = fallbackValue;
     }
 
-    // Save if we made any changes
     if (needsSourceChange || needsNewSelection) {
         saveToStorage();
     }
@@ -414,30 +396,22 @@ export function restoreBookChapterUI() {
     const bookSel    = document.getElementById('bookSelect');
     const chapterSel = document.getElementById('chapterSelect');
 
-    // Ensure valid book
     const savedBook = state.settings.manualBook || BOOK_ORDER[0];
     const bookIdx   = BOOK_ORDER.indexOf(savedBook);
     const book      = bookIdx >= 0 ? BOOK_ORDER[bookIdx] : BOOK_ORDER[0];
 
-    // Populate the book dropdown and set the saved value
-    populateBookDropdown();               // fills the <select>
-    bookSel.value = book;                 // select the saved book
-
-    // Populate chapters for that book
+    populateBookDropdown();
+    bookSel.value = book;
     populateChapterDropdown(book);
 
-    // Choose the saved chapter (or 1 if out of range)
     const savedChap = Number(state.settings.manualChapter) || 1;
     const maxChap   = CHAPTER_COUNTS[book];
-    const chapter   = Math.min(savedChap, maxChap);   // clamp
+    const chapter   = Math.min(savedChap, maxChap);
 
-    chapterSel.value = String(chapter);   // select the chapter
-
-    // Update the internal manual state (just in case)
+    chapterSel.value = String(chapter);
     state.settings.manualBook    = book;
     state.settings.manualChapter = chapter;
 
-    // Load the passage so the UI isn’t blank
     loadSelectedChapter(book, chapter);
 }
 
@@ -531,7 +505,6 @@ export function makeToggleSticky() {
     
     if (!toggle) return;
     
-    // Remove any existing position styles first
     toggle.style.position = 'sticky';
     toggle.style.top = '10px';
     toggle.style.zIndex = '1000';

@@ -2,12 +2,9 @@
 import { handleError } from '../main.js'
 import { 
     getCurrentTranslation, 
-    syncBookChapterSelectors, 
-    syncSelectorsToReadingPlan 
+    syncBookChapterSelectors
 } from './navigation.js'
 import {
-    getActivePlan,
-    getCurrentPlanLabel,
     saveToStorage,
     state
 } from './state.js'
@@ -125,8 +122,6 @@ export function setupFootnoteHandlers() {
                 setTimeout(() => {
                     targetFootnote.style.backgroundColor = '';
                 }, 1000);
-            } else {
-                console.log('No target footnote found for ref:', footnoteId, footnoteNumber);
             }
         }
         if (footnoteElement) {
@@ -138,8 +133,8 @@ export function setupFootnoteHandlers() {
             const selectors = [
                 `[class*="footnote-ref"][data-footnote-id="${footnoteId}"]`,
                 `[class*="footnote-ref"][data-footnote-number="${footnoteNumber}"]`,
-                `[class*="footnote-ref"][data-footnote-id="${footnoteNumber}"]`, 
-                `[class*="footnote-ref"][data-footnote-number="${footnoteId}"]`  
+                `[class*="footnote-ref"][data-footnote-id="${footnoteNumber}"]`,
+                `[class*="footnote-ref"][data-footnote-number="${footnoteId}"]`
             ];
             for (const selector of selectors) {
                 targetRef = scriptureContent.querySelector(selector);
@@ -166,9 +161,6 @@ export function setupFootnoteHandlers() {
                 setTimeout(() => {
                     targetRef.style.backgroundColor = '';
                 }, 1000);
-            } else {
-                console.log('No target ref found for footnote:', footnoteId, footnoteNumber);
-                console.log('Available refs:', scriptureContent.querySelectorAll('[class*="footnote-ref"]'));
             }
         }
     };
@@ -212,10 +204,10 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
         }
     }
     txt = txt.replace(/\s+/g, ' ').trim();
-    txt = txt.replace(/\s+([.,;:!?])/g, '$1'); 
-    txt = txt.replace(/([.,;:!?])(?=\w)/g, '$1 '); 
-    txt = txt.replace(/\s*"\s*/g, '" '); 
-    txt = txt.replace(/\s*'\s*/g, "' "); 
+    txt = txt.replace(/\s+([.,;:!?])/g, '$1');
+    txt = txt.replace(/([.,;:!?])(?=\w)/g, '$1 ');
+    txt = txt.replace(/\s*"\s*/g, '" ');
+    txt = txt.replace(/\s*'\s*/g, "' ");
     return { 
         text: txt,
         footnotes: footnotes
@@ -224,7 +216,7 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
 function ensureProperSpacing(text) {
     if (!text) return '';
     let cleanedText = text
-        .replace(/\s+/g, ' ')       
+        .replace(/\s+/g, ' ')
         .trim();
     cleanedText = cleanedText
         .replace(/([^'"\s])\s+([.,;:!?])/g, '$1$2')
@@ -239,8 +231,8 @@ function ensureProperSpacing(text) {
         });
     cleanedText = cleanedText
         .replace(/\s+/g, ' ')
-        .replace(/([.,;:!?]) (["'])/g, '$1$2')  
-        .replace(/(["']) ([.,;:!?])/g, '$1$2')  
+        .replace(/([.,;:!?]) (["'])/g, '$1$2')
+        .replace(/(["']) ([.,;:!?])/g, '$1$2')
         .trim();
     return cleanedText;
 }
@@ -250,50 +242,22 @@ export async function loadPassage(book = null, chapter = null, translation = nul
     }
     window._isLoadingPassage = true;
     try {
-        if (book && chapter) {
-            state.settings.readingMode = 'manual';
-            state.settings.manualBook = book;
-            state.settings.manualChapter = chapter;
-            const headerTitleEl = document.getElementById('passageHeaderTitle');
-            if (headerTitleEl) {
-                const transShorthand = translation || getCurrentTranslation();
-                headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
-            }
-            const planLabelEl = document.getElementById('planLabel');
-            if (planLabelEl) {
-                planLabelEl.textContent = '';
-            }
-            updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
-            await loadPassageFromAPI({
-                book: book,
-                chapter: chapter,
-                startVerse: 1,
-                endVerse: 999,
-                displayRef: updateDisplayRef(state.settings.manualBook, state.settings.manualChapter),
-                translation: translation
-            });
-        } else {
-            state.settings.readingMode = 'readingPlan';
-            const plan = getActivePlan();
-            if (state.settings.currentPassageIndex < 0 || state.settings.currentPassageIndex >= plan.length) {
-                state.settings.currentPassageIndex = 0;
-            }
-            const passage = plan[state.settings.currentPassageIndex];
-            const headerTitleEl = document.getElementById('passageHeaderTitle');
-            if (headerTitleEl) {
-                const transShorthand = getCurrentTranslation();
-                headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
-            }
-            const planLabelEl = document.getElementById('planLabel');
-            if (planLabelEl) {
-                planLabelEl.textContent = `Reading plan: ${getCurrentPlanLabel()}`;
-            }
-            document.getElementById('passageReference').textContent = passage.displayRef;
-            state.currentPassageReference = passage.displayRef;
-            document.title = `${passage.displayRef} - Provinent Scripture Study`;
-            await loadPassageFromAPI(passage);
-            syncSelectorsToReadingPlan();
+        state.settings.manualBook = book || state.settings.manualBook;
+        state.settings.manualChapter = chapter || state.settings.manualChapter;
+        const headerTitleEl = document.getElementById('passageHeaderTitle');
+        if (headerTitleEl) {
+            const transShorthand = translation || getCurrentTranslation();
+            headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
         }
+        updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
+        await loadPassageFromAPI({
+            book: state.settings.manualBook,
+            chapter: state.settings.manualChapter,
+            startVerse: 1,
+            endVerse: 999,
+            displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`,
+            translation: translation || getCurrentTranslation()
+        });
         if (state.settings.referencePanelOpen) {
             updateReferencePanel();
         }

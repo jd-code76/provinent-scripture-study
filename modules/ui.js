@@ -12,7 +12,6 @@ import {
     bibleHubUrlMap,
     ebibleOrgUrlMap,
     formatBookNameForSource,
-    getActivePlan,
     saveToStorage,
     state,
     stepBibleUrlMap
@@ -154,16 +153,11 @@ export async function updateReferencePanel() {
         }
         const actualSource = document.getElementById('referenceSource').value;
         const translation = transSel.value;
-        let passage;
-        if (state.settings.readingMode === 'readingPlan') {
-            passage = getActivePlan()[state.settings.currentPassageIndex];
-        } else {
-            passage = {
-                book: state.settings.manualBook,
-                chapter: state.settings.manualChapter,
-                displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`
-            };
-        }
+        const passage = {
+            book: state.settings.manualBook,
+            chapter: state.settings.manualChapter,
+            displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`
+        };
         const bookName = passage.book.toLowerCase().replace(/\s+/g, '_');
         const bookAbbr = bookName.substring(0, 3).toUpperCase();
         const chapter = passage.chapter;
@@ -190,47 +184,47 @@ export async function updateReferencePanel() {
                 const url = `https://biblehub.com/${bibleHubCode}/${bookName}/${chapter}.htm`;
                 iframe.src = url;
             } else if (actualSource === 'biblecom') {
-				const bibleComCode = bibleComUrlMap[translation];
-				if (!bibleComCode) {
-					alert(`Bible.com doesn't support ${translation}. Please choose another translation.`);
-					return;
-				}
-				const formattedBook = formatBookNameForSource(passage.book, 'biblecom');
-				const urlFormats = [
-					`https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}?interface=embed`,
-					`https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}`,
-					`https://www.bible.com/bible/${bibleComCode}/${chapter}.${translation}?${formattedBook}=${chapter}`
-				];
-				let currentUrlIndex = 0;
-				function tryNextUrl() {
-					if (currentUrlIndex >= urlFormats.length) {
-						alert('Could not load Bible.com. Please try another reference source.');
-						return;
-					}
-					iframe.src = urlFormats[currentUrlIndex];
-					currentUrlIndex++;
-				}
-				iframe.onerror = function() {
-					tryNextUrl();
-				};
-				tryNextUrl();
+                const bibleComCode = bibleComUrlMap[translation];
+                if (!bibleComCode) {
+                    alert(`Bible.com doesn't support ${translation}. Please choose another translation.`);
+                    return;
+                }
+                const formattedBook = formatBookNameForSource(passage.book, 'biblecom');
+                const urlFormats = [
+                    `https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}?interface=embed`,
+                    `https://www.bible.com/bible/${bibleComCode}/${formattedBook}.${chapter}.${translation}`,
+                    `https://www.bible.com/bible/${bibleComCode}/${chapter}.${translation}?${formattedBook}=${chapter}`
+                ];
+                let currentUrlIndex = 0;
+                function tryNextUrl() {
+                    if (currentUrlIndex >= urlFormats.length) {
+                        alert('Could not load Bible.com. Please try another reference source.');
+                        return;
+                    }
+                    iframe.src = urlFormats[currentUrlIndex];
+                    currentUrlIndex++;
+                }
+                iframe.onerror = function() {
+                    tryNextUrl();
+                };
+                tryNextUrl();
             } else if (actualSource === 'ebibleorg') {
-				const ebibleOrgCode = ebibleOrgUrlMap[translation];
-				if (!ebibleOrgCode) {
-					alert(`eBible.org doesn't support ${translation}. Please choose another translation.`);
-					return;
-				}
-				const bookRef = bookName === 'psalms' ? 'PS1' : `${bookAbbr}1`; 
-				const url = `https://ebible.org/study/?w1=bible&t1=${encodeURIComponent(ebibleOrgCode)}&v1=${bookRef}_${chapter}`;
-				iframe.src = url;
+                const ebibleOrgCode = ebibleOrgUrlMap[translation];
+                if (!ebibleOrgCode) {
+                    alert(`eBible.org doesn't support ${translation}. Please choose another translation.`);
+                    return;
+                }
+                const bookRef = bookName === 'psalms' ? 'PS1' : `${bookAbbr}1`;
+                const url = `https://ebible.org/study/?w1=bible&t1=${encodeURIComponent(ebibleOrgCode)}&v1=${bookRef}_${chapter}`;
+                iframe.src = url;
             } else if (actualSource === 'stepbible') {
-			   const stepBibleCode = stepBibleUrlMap[translation];
-				if (!stepBibleCode) {
-					alert(`STEP Bible doesn't support ${translation}. Please choose another translation.`);
-					return;
-				}
-				const url = getStepBibleUrl(passage.displayRef, translation);
-				iframe.src = url;
+                const stepBibleCode = stepBibleUrlMap[translation];
+                if (!stepBibleCode) {
+                    alert(`STEP Bible doesn't support ${translation}. Please choose another translation.`);
+                    return;
+                }
+                const url = getStepBibleUrl(passage.displayRef, translation);
+                iframe.src = url;
             } else {
                 const query = passage.displayRef.replace(/\s+/g, '+');
                 let version = translation;
@@ -279,7 +273,7 @@ function filterTranslationOptions(source, selectElement) {
         state.settings.referenceSource = 'biblehub';
         const sourceSelect = document.getElementById('referenceSource');
         sourceSelect.value = 'biblehub';
-        selectElement.value = 'BSB'; 
+        selectElement.value = 'BSB';
         state.settings.referenceVersion = 'BSB';
     }
     else if (needsNewSelection) {
@@ -301,13 +295,13 @@ export function restoreBookChapterUI() {
     const savedBook = state.settings.manualBook || BOOK_ORDER[0];
     const bookIdx   = BOOK_ORDER.indexOf(savedBook);
     const book      = bookIdx >= 0 ? BOOK_ORDER[bookIdx] : BOOK_ORDER[0];
-    populateBookDropdown();               
-    bookSel.value = book;                 
+    populateBookDropdown();
+    bookSel.value = book;
     populateChapterDropdown(book);
     const savedChap = Number(state.settings.manualChapter) || 1;
     const maxChap   = CHAPTER_COUNTS[book];
-    const chapter   = Math.min(savedChap, maxChap);   
-    chapterSel.value = String(chapter);   
+    const chapter   = Math.min(savedChap, maxChap);
+    chapterSel.value = String(chapter);
     state.settings.manualBook    = book;
     state.settings.manualChapter = chapter;
     loadSelectedChapter(book, chapter);

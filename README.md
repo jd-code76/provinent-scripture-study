@@ -8,16 +8,14 @@ Access the site here: [https://provinent.org](https://provinent.org)
 ## Features
 
 ### Core Functionality
-- **Daily Scripture Passages**: Get a new passage daily with sequential or book-specific reading plans
 - **Multi-Translation Support**: ASV, KJV, GNV, BSB, NET
 - **Verse Highlighting**: Right-click verses to highlight in 6 different colors for study emphasis
 - **Study Notes**: Full Markdown support with live preview and export capabilities
-- **Original Language Tools**: Click any verse for Strong's Concordance data (provided by [STEP Bible](https://www.stepbible.org))and Greek/Hebrew interlinear analysis (provided by [Bible Hub](https://biblehub.com/interlinear/))
+- **Original Language Tools**: Click any verse for Strong's Concordance data (provided by [STEP Bible](https://www.stepbible.org)) and Greek/Hebrew interlinear analysis (provided by [Bible Hub](https://biblehub.com/interlinear/))
 - **Reference Panel**: Side-by-side Bible comparison with multiple translation options (NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT)
 
 ### Advanced Features
 - **Offline PDF Support**: Upload Berean Standard Bible PDFs for offline reading
-- **Reading Plans**: 90-day sequential and book-specific plans (Genesis, Psalms, Proverbs, etc.)
 - **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality
 - **Data Management**: Import/export highlights and notes, local storage persistence
 - **Responsive Design**: Useable on desktops and tablets, mobile devices work but are not recommended
@@ -59,7 +57,6 @@ For an offline Bible:
 ### Basic Navigation
 - Use Prev/Next buttons to navigate passages
 - Select specific books/chapters from dropdown menus
-- Click "Resume Reading Plan" to continue where you left off
 - Use "Random Passage" to study from any canon passage of Holy Scripture
 
 ### Data Management

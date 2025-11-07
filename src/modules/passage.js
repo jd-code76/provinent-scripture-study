@@ -19,13 +19,10 @@ import { handleError } from '../main.js'
 
 import { 
     getCurrentTranslation, 
-    syncBookChapterSelectors, 
-    syncSelectorsToReadingPlan 
+    syncBookChapterSelectors
 } from './navigation.js'
 
 import {
-    getActivePlan,
-    getCurrentPlanLabel,
     saveToStorage,
     state
 } from './state.js'
@@ -44,9 +41,7 @@ import { updateReferencePanel } from './ui.js'
 export function displayPassage(verses) {
     const container = document.getElementById('scriptureContent');
     
-    // Use DocumentFragment for better performance
     const fragment = document.createDocumentFragment();
-    
     state.footnotes = {};
     const allFootnotes = [];
     
@@ -83,17 +78,14 @@ export function displayPassage(verses) {
         verseDiv.appendChild(txtSpan);
         fragment.appendChild(verseDiv);
 
-        // Cache verse text for highlights modal
         const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
         cachedVerses[v.reference] = v.text.text.replace(/<[^>]*>/g, '');
         localStorage.setItem('cachedVerses', JSON.stringify(cachedVerses));
     });
     
-    // Single DOM update
     container.innerHTML = '';
     container.appendChild(fragment);
     
-    // Setup footnotes
     if (allFootnotes.length > 0) {
         const footnotesContainer = document.createElement('div');
         footnotesContainer.className = 'footnotes-container';
@@ -113,7 +105,6 @@ export function displayPassage(verses) {
                 <sup class="footnote-number">${fn.number}</sup>
                 <span class="footnote-content">${fn.content}</span>
             `;
-            // Use consistent attribute naming
             footnoteElement.dataset.footnoteId = fn.index;
             footnoteElement.dataset.footnoteNumber = fn.number;
             footnotesFragment.appendChild(footnoteElement);
@@ -125,7 +116,6 @@ export function displayPassage(verses) {
         container.appendChild(footnotesContainer);
     }
 
-    // Setup event delegation for verse clicks
     container.addEventListener('click', (e) => {
         const verse = e.target.closest('.verse');
         if (verse && !e.target.closest('.footnote-ref')) {
@@ -133,7 +123,6 @@ export function displayPassage(verses) {
         }
     }, { once: false });
 
-    // Set up footnote handlers AFTER the content is in the DOM
     setTimeout(() => {
         setupFootnoteHandlers();
     }, 100);
@@ -141,42 +130,32 @@ export function displayPassage(verses) {
 
 /* HELPER: For displayPassage() to properly setup footnote click handlers */
 export function setupFootnoteHandlers() {
-    // Remove old delegation if it exists
     const scriptureContent = document.getElementById('scriptureContent');
     if (scriptureContent._footnoteHandler) {
         scriptureContent.removeEventListener('click', scriptureContent._footnoteHandler);
     }
     
-    // Create new handler
     const footnoteHandler = (e) => {
-        // Handle footnote number clicks (sup elements with footnote-ref class)
         const footnoteRef = e.target.closest('[class*="footnote-ref"]');
-        
-        // Handle footnote container clicks (div elements with footnote class)
         const footnoteElement = e.target.closest('.footnote');
         
         if (footnoteRef) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Get the ID/number from the data attributes (handle spaces)
             const footnoteId = (footnoteRef.dataset.footnoteId || '').trim();
             const footnoteNumber = (footnoteRef.dataset.footnoteNumber || '').trim();
             
-            // Look for the corresponding footnote element
             let targetFootnote = null;
             
-            // First try exact ID match
             if (footnoteId) {
                 targetFootnote = scriptureContent.querySelector(`.footnote[data-footnote-id="${footnoteId}"]`);
             }
             
-            // If no ID match, try number match
             if (!targetFootnote && footnoteNumber) {
                 targetFootnote = scriptureContent.querySelector(`.footnote[data-footnote-number="${footnoteNumber}"]`);
             }
             
-            // If still not found, try partial matches
             if (!targetFootnote && footnoteId) {
                 const allFootnotes = scriptureContent.querySelectorAll('.footnote');
                 for (const fn of allFootnotes) {
@@ -195,13 +174,10 @@ export function setupFootnoteHandlers() {
                     block: 'start'
                 });
                 
-                // Visual feedback
                 targetFootnote.style.backgroundColor = 'var(--verse-hover)';
                 setTimeout(() => {
                     targetFootnote.style.backgroundColor = '';
                 }, 1000);
-            } else {
-                console.log('No target footnote found for ref:', footnoteId, footnoteNumber);
             }
         }
         
@@ -209,19 +185,16 @@ export function setupFootnoteHandlers() {
             e.preventDefault();
             e.stopPropagation();
             
-            // Get the ID/number from the data attributes
             const footnoteId = (footnoteElement.dataset.footnoteId || '').trim();
             const footnoteNumber = (footnoteElement.dataset.footnoteNumber || '').trim();
             
-            // Look for the corresponding footnote reference
             let targetRef = null;
             
-            // Try multiple selectors to find the reference
             const selectors = [
                 `[class*="footnote-ref"][data-footnote-id="${footnoteId}"]`,
                 `[class*="footnote-ref"][data-footnote-number="${footnoteNumber}"]`,
-                `[class*="footnote-ref"][data-footnote-id="${footnoteNumber}"]`, // Maybe they're swapped?
-                `[class*="footnote-ref"][data-footnote-number="${footnoteId}"]`  // Maybe they're swapped?
+                `[class*="footnote-ref"][data-footnote-id="${footnoteNumber}"]`,
+                `[class*="footnote-ref"][data-footnote-number="${footnoteId}"]`
             ];
             
             for (const selector of selectors) {
@@ -229,7 +202,6 @@ export function setupFootnoteHandlers() {
                 if (targetRef) break;
             }
             
-            // If still not found, try a more flexible search
             if (!targetRef) {
                 const allRefs = scriptureContent.querySelectorAll('[class*="footnote-ref"]');
                 for (const ref of allRefs) {
@@ -250,19 +222,14 @@ export function setupFootnoteHandlers() {
                     block: 'center'
                 });
                 
-                // Visual feedback
                 targetRef.style.backgroundColor = 'var(--verse-hover)';
                 setTimeout(() => {
                     targetRef.style.backgroundColor = '';
                 }, 1000);
-            } else {
-                console.log('No target ref found for footnote:', footnoteId, footnoteNumber);
-                console.log('Available refs:', scriptureContent.querySelectorAll('[class*="footnote-ref"]'));
             }
         }
     };
     
-    // Store reference for cleanup and add the event listener
     scriptureContent._footnoteHandler = footnoteHandler;
     scriptureContent.addEventListener('click', footnoteHandler);
 }
@@ -304,7 +271,6 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
         } else if (item.type === 'chapter') {
             txt += ' ';
         } else {
-            // Try to extract text if available
             if (item.content && Array.isArray(item.content)) {
                 const nestedResult = extractVerseText(item.content, chapterFootnotes, footnoteCounter);
                 txt += nestedResult.text;
@@ -313,16 +279,11 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
         }
     }
     
-    // Replace multiple spaces with single spaces
     txt = txt.replace(/\s+/g, ' ').trim();
-    
-    // Fix punctuation spacing
-    txt = txt.replace(/\s+([.,;:!?])/g, '$1'); // Remove space before punctuation
-    txt = txt.replace(/([.,;:!?])(?=\w)/g, '$1 '); // Add space after punctuation if followed by word
-    
-    // Fix quotes
-    txt = txt.replace(/\s*"\s*/g, '" '); // Ensure space after opening quote
-    txt = txt.replace(/\s*'\s*/g, "' "); // Ensure space after single quote
+    txt = txt.replace(/\s+([.,;:!?])/g, '$1');
+    txt = txt.replace(/([.,;:!?])(?=\w)/g, '$1 ');
+    txt = txt.replace(/\s*"\s*/g, '" ');
+    txt = txt.replace(/\s*'\s*/g, "' ");
     
     return { 
         text: txt,
@@ -334,20 +295,14 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
 function ensureProperSpacing(text) {
     if (!text) return '';
     
-    // First, normalize all whitespace
     let cleanedText = text
-        .replace(/\s+/g, ' ')       // Collapse multiple spaces to one
+        .replace(/\s+/g, ' ')
         .trim();
     
-    // Handle punctuation spacing more intelligently
     cleanedText = cleanedText
-        // Remove spaces before punctuation (except after opening quotes)
         .replace(/([^'"\s])\s+([.,;:!?])/g, '$1$2')
-        // Add space after punctuation when it's followed by a word (but not if it's inside quotes)
         .replace(/([.,;:!?])(?=[A-Za-z])/g, '$1 ')
-        // Handle quotes - remove internal spaces but preserve external spacing
         .replace(/\s*"\s*/g, (match) => {
-            // If the quote is at the start or end of text, don't add extra space
             if (match === '"' || match === ' "') return '"';
             return '" ';
         })
@@ -356,11 +311,10 @@ function ensureProperSpacing(text) {
             return "' ";
         });
     
-    // Final cleanup of any remaining odd spacing
     cleanedText = cleanedText
         .replace(/\s+/g, ' ')
-        .replace(/([.,;:!?]) (["'])/g, '$1$2')  // Remove space between punctuation and quote
-        .replace(/(["']) ([.,;:!?])/g, '$1$2')  // Remove space between quote and punctuation
+        .replace(/([.,;:!?]) (["'])/g, '$1$2')
+        .replace(/(["']) ([.,;:!?])/g, '$1$2')
         .trim();
     
     return cleanedText;
@@ -372,7 +326,7 @@ function ensureProperSpacing(text) {
    Main entry point for loading scripture content
 ==================================================================== */
 
-/* Load the passage at current index in reading plan or manual selection */
+/* Load passage into main content area */
 export async function loadPassage(book = null, chapter = null, translation = null) {
     if (window._isLoadingPassage) {
         return;
@@ -381,63 +335,25 @@ export async function loadPassage(book = null, chapter = null, translation = nul
     window._isLoadingPassage = true;
     
     try {
-        if (book && chapter) {
-            state.settings.readingMode = 'manual';
-            state.settings.manualBook = book;
-            state.settings.manualChapter = chapter;
-            
-            const headerTitleEl = document.getElementById('passageHeaderTitle');
-            if (headerTitleEl) {
-                const transShorthand = translation || getCurrentTranslation();
-                headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
-            }
-            
-            const planLabelEl = document.getElementById('planLabel');
-            if (planLabelEl) {
-                planLabelEl.textContent = '';
-            }
-            
-            updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
-            
-            await loadPassageFromAPI({
-                book: book,
-                chapter: chapter,
-                startVerse: 1,
-                endVerse: 999,
-                displayRef: updateDisplayRef(state.settings.manualBook, state.settings.manualChapter),
-                translation: translation
-            });
-            
-        } else {
-            state.settings.readingMode = 'readingPlan';
-            const plan = getActivePlan();
-            
-            if (state.settings.currentPassageIndex < 0 || state.settings.currentPassageIndex >= plan.length) {
-                state.settings.currentPassageIndex = 0;
-            }
-            
-            const passage = plan[state.settings.currentPassageIndex];
-            
-            // Show "Holy Bible: [Translation]" not "Passage of the Day"
-            const headerTitleEl = document.getElementById('passageHeaderTitle');
-            if (headerTitleEl) {
-                const transShorthand = getCurrentTranslation();
-                headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
-            }
-            
-            const planLabelEl = document.getElementById('planLabel');
-            if (planLabelEl) {
-                planLabelEl.textContent = `Reading plan: ${getCurrentPlanLabel()}`;
-            }
-            
-            document.getElementById('passageReference').textContent = passage.displayRef;
-            state.currentPassageReference = passage.displayRef;
-
-            document.title = `${passage.displayRef} - Provinent Scripture Study`;
-            
-            await loadPassageFromAPI(passage);
-            syncSelectorsToReadingPlan();
+        state.settings.manualBook = book || state.settings.manualBook;
+        state.settings.manualChapter = chapter || state.settings.manualChapter;
+        
+        const headerTitleEl = document.getElementById('passageHeaderTitle');
+        if (headerTitleEl) {
+            const transShorthand = translation || getCurrentTranslation();
+            headerTitleEl.textContent = `Holy Bible: ${transShorthand}`;
         }
+        
+        updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
+        
+        await loadPassageFromAPI({
+            book: state.settings.manualBook,
+            chapter: state.settings.manualChapter,
+            startVerse: 1,
+            endVerse: 999,
+            displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`,
+            translation: translation || getCurrentTranslation()
+        });
 
         if (state.settings.referencePanelOpen) {
             updateReferencePanel();

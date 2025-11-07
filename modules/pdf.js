@@ -209,8 +209,8 @@ export async function loadPDF() {
     }
 }
 export function updatePDFZoom(zoomLevel) {
-    state.settings.pdfZoom = zoomLevel; 
-    state.pdf.zoomLevel = zoomLevel;    
+    state.settings.pdfZoom = zoomLevel;
+    state.pdf.zoomLevel = zoomLevel;
     saveToStorage();
     const zoomDisplay = document.getElementById('zoomLevel');
     if (zoomDisplay) {
@@ -269,7 +269,7 @@ export async function renderPage(pageNum) {
             return;
         }
         console.warn('Render error, reloading PDF:', err);
-        await loadPDF(); 
+        await loadPDF();
         handleError(err, 'renderPage');
     }
 }
@@ -310,7 +310,7 @@ export async function searchPDF() {
                 document.getElementById('prevSearchResult').style.display = 'inline-block';
                 document.getElementById('nextSearchResult').style.display = 'inline-block';
             }
-            navigateToSearchResult(0); 
+            navigateToSearchResult(0);
         } else {
             resultsSpan.textContent = 'No results found';
             document.getElementById('clearSearchBtn').style.display = 'none';

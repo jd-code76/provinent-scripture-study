@@ -30,7 +30,6 @@ import { updateReferencePanel } from './ui.js'
 const DB_NAME = 'BibleStudyDB';
 const DB_VERSION = 1;
 export const STORE_NAME = 'pdfStore';
-/* Proper text search with highlighting and result counting */
 export let currentSearch = {
     query: '',
     results: [],
@@ -280,11 +279,10 @@ export async function loadPDF() {
 
 /* Update the zoom level when a PDF is being used */
 export function updatePDFZoom(zoomLevel) {
-    state.settings.pdfZoom = zoomLevel; // Default setting
-    state.pdf.zoomLevel = zoomLevel;    // Current zoom level
+    state.settings.pdfZoom = zoomLevel;
+    state.pdf.zoomLevel = zoomLevel;
     saveToStorage();
     
-    // Update the zoom level display
     const zoomDisplay = document.getElementById('zoomLevel');
     if (zoomDisplay) {
         zoomDisplay.textContent = `${Math.round(zoomLevel * 100)}%`;
@@ -330,12 +328,10 @@ export async function renderPage(pageNum) {
         const canvas = document.getElementById('pdfCanvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: false });
 
-        // Clear the canvas first
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const viewport = page.getViewport({ scale: state.pdf.zoomLevel });
         
-        // Use CSS transforms for better performance
         canvas.style.width = viewport.width + 'px';
         canvas.style.height = viewport.height + 'px';
         canvas.width = viewport.width * window.devicePixelRatio;
@@ -350,12 +346,10 @@ export async function renderPage(pageNum) {
 
         await state.pdf.renderTask.promise;
         
-        // Cleanup the page object
         page.cleanup();
         
         state.pdf.renderTask = null;
 
-        // Update UI
         document.getElementById('pageInput').value = pageNum;
         document.getElementById('prevPage').disabled = pageNum <= 1;
         document.getElementById('nextPage').disabled = pageNum >= state.pdf.doc.numPages;
@@ -369,7 +363,7 @@ export async function renderPage(pageNum) {
         }
         
         console.warn('Render error, reloading PDF:', err);
-        await loadPDF(); // Reload the PDF on error
+        await loadPDF();
         
         handleError(err, 'renderPage');
     }
@@ -387,7 +381,6 @@ export async function searchPDF() {
     searchBtn.disabled = true;
     searchBtn.textContent = 'Searching...';
     
-    // Clear previous search
     clearSearchHighlights();
     currentSearch = {
         query: query,
@@ -397,12 +390,10 @@ export async function searchPDF() {
     };
     
     try {
-        // Search all pages
         for (let pageNum = 1; pageNum <= state.pdf.doc.numPages; pageNum++) {
             const page = await state.pdf.doc.getPage(pageNum)
             const textContent = await page.getTextContent();
             
-            // Simple text search (case-insensitive)
             const text = textContent.items.map(item => item.str).join(' ');
             const regex = new RegExp(query.replace(/[.*+?^{}()|[\]\\]/g, '\\$&'), 'gi');
             let match;
@@ -420,13 +411,12 @@ export async function searchPDF() {
             resultsSpan.textContent = `Found ${currentSearch.results.length} results`;
             document.getElementById('clearSearchBtn').style.display = 'inline-block';
             
-            // Show navigation buttons if there are multiple results
             if (currentSearch.results.length > 1) {
                 document.getElementById('prevSearchResult').style.display = 'inline-block';
                 document.getElementById('nextSearchResult').style.display = 'inline-block';
             }
             
-            navigateToSearchResult(0); // Go to first result
+            navigateToSearchResult(0);
         } else {
             resultsSpan.textContent = 'No results found';
             document.getElementById('clearSearchBtn').style.display = 'none';
@@ -467,7 +457,6 @@ export async function navigateToSearchResult(index) {
     try {
         if (!currentSearch.results.length || index < 0 || index >= currentSearch.results.length) return;
         
-        // Cancel any current rendering
         if (state.pdf.renderTask) {
             await state.pdf.renderTask.cancel();
             state.pdf.renderTask = null;
@@ -476,11 +465,9 @@ export async function navigateToSearchResult(index) {
         currentSearch.currentResult = index;
         const result = currentSearch.results[index];
         
-        // Navigate to page
         state.pdf.currentPage = result.page;
         await renderPage(result.page);
         
-        // Update UI
         document.getElementById('pdfSearchResults').textContent = 
             `Result ${index + 1} of ${currentSearch.results.length}`;
     }  catch (err) {
@@ -492,12 +479,10 @@ export async function navigateToSearchResult(index) {
 function clearSearchHighlights() {
     currentSearch.highlights.forEach(highlight => {
         if (highlight.animation) {
-            // Stop animation
             currentSearch.highlights = [];
         }
     });
     
-    // Re-render page
     if (state.pdf.currentPage) {
         renderPage(state.pdf.currentPage);
     }

@@ -61,8 +61,6 @@ import {
     exportData,
     importData,
     openSettings,
-    restartReadingPlan,
-    resumeReadingPlan,
     saveSettings
 } from './modules/settings.js'
 
@@ -194,12 +192,6 @@ function setupEventListeners() {
             .addEventListener('click', prevPassage);
     document.getElementById('nextPassageBtn')
             .addEventListener('click', nextPassage);
-    document.getElementById('resumeReadingPlanBtn')
-            .addEventListener('click', () => {
-                if (confirm('Return to the daily reading plan where you left off?')) {
-                    resumeReadingPlan();
-                }
-            });
     document.getElementById('randomPassageBtn')
             .addEventListener('click', randomPassage);
 
@@ -212,16 +204,14 @@ function setupEventListeners() {
                 toggleSection(sec);
             }));
 
-    // Bible Gateway search button (dynamic translation searching)
+    // Bible Gateway search button
     document.getElementById('referenceTranslation').addEventListener('change', function() {
-        // Update the state temporarily for Bible Gateway
         const tempTranslation = this.value;
         const oldTranslation = state.settings.referenceVersion;
         state.settings.referenceVersion = tempTranslation;
         
         updateBibleGatewayVersion();
         
-        // Restore the original translation (since settings aren't saved yet)
         state.settings.referenceVersion = oldTranslation;
     });
 
@@ -248,7 +238,6 @@ function setupEventListeners() {
         if (!state.pdf.doc || state.pdf.currentPage <= 1) return;
         
         try {
-            // Cancel any current rendering
             if (state.pdf.renderTask) {
                 await state.pdf.renderTask.cancel();
                 state.pdf.renderTask = null;
@@ -258,7 +247,6 @@ function setupEventListeners() {
             await renderPage(state.pdf.currentPage);
         } catch (err) {
             console.warn('Error navigating to previous page:', err);
-            // If there's an error, reload the PDF
             await loadPDF();
         }
     });
@@ -413,10 +401,6 @@ function setupEventListeners() {
             .addEventListener('click', saveSettings);
     document.getElementById('clearHighlightsBtn')
             .addEventListener('click', clearHighlights);
-    document.getElementById('restartReadingPlanBtn')
-            .addEventListener('click', () => {
-                restartReadingPlan();
-            });
     
     // Setup footnote handlers when new content is loaded
     document.addEventListener('contentLoaded', () => {
@@ -711,7 +695,7 @@ function renderHighlights(filterColor = 'all') {
         });
     });
     
-    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter.</div>';
+    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter</div>';
     
     // Add click handlers to navigate to verses
     document.querySelectorAll('.highlight-item').forEach(item => {
@@ -742,7 +726,6 @@ function navigateToHighlightedVerse(reference) {
     const [, book, chapter, verse] = match;
     
     // Update navigation
-    state.settings.readingMode = 'manual';
     state.settings.manualBook = book;
     state.settings.manualChapter = parseInt(chapter);
     
@@ -829,60 +812,37 @@ async function init() {
     loadFromCookies();
     setupPDFCleanup();
 
-    // Add offline styles
     const style = document.createElement('style');
     style.textContent = offlineStyles;
     document.head.appendChild(style);
     
-    // Check initial online status
     updateOfflineStatus(!navigator.onLine);
     
-    // Listen for online/offline events
     window.addEventListener('online', () => updateOfflineStatus(false));
     window.addEventListener('offline', () => updateOfflineStatus(true));
 
-    // Guard defaults for other settings
-    if (!state.settings.readingMode)    state.settings.readingMode      = 'readingPlan';
-    if (!state.settings.readingPlanId)  state.settings.readingPlanId    = 'default';
-    
-    // Initialize manual navigation
     initBookChapterControls();
     setupNavigationWithURL();
     setupPopStateListener();
     
-    // Restore the book/chapter UI
     restoreBookChapterUI();
-
-    // Apply theme
     applyTheme();
     applyColorTheme();
-
-    // Restore UI state
     restoreSidebarState();
     restorePanelStates();
-
-    // Initialize components
     updateDateTime();
     initResizeHandles();
     updateCustomPdfInfo();
     switchNotesView(state.settings.notesView || 'text');
     updateBibleGatewayVersion();
-
-    // Wire up all event listeners
     setupEventListeners();
-
-    // Start periodic updates
     setInterval(updateDateTime, 1_000);
     
-    // Only load default passage if we didn't navigate from URL
     const navigatedFromURL = navigateFromURL();
     if (!navigatedFromURL) {
-        // Only load default passage if URL navigation didn't happen
-        // AND we're not at the root path (which should have been redirected)
         if (window.location.pathname !== '/') {
             loadPassage();
         }
-        // If we're at root path, navigateFromURL should have handled the redirect
     }
     
     console.log('App initialized successfully');

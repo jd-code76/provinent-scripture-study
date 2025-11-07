@@ -16,7 +16,6 @@ import {
 import {
     APP_VERSION,
     BOOK_ORDER,
-    readingPlan,
     saveToCookies,
     saveToStorage,
     state,
@@ -92,34 +91,11 @@ export function importData(ev) {
     reader.readAsText(file);
     ev.target.value = '';
 }
-export function resumeReadingPlan() {
-    const curBook    = state.settings.manualBook;
-    const curChapter = state.settings.manualChapter;
-    const idx        = findReadingPlanIndex(curBook, curChapter);
-    const translation = getCurrentTranslation();
-    updateURL(translation, curBook, curChapter);
-    if (idx !== -1) {
-        state.settings.currentPassageIndex = idx;
-    }
-    state.settings.readingMode = 'readingPlan';
-    loadPassage();   
-}
-function findReadingPlanIndex(book, chapter) {
-   for (let i = 0; i < readingPlan.length; i++) {
-       const p = readingPlan[i];
-       if (p.book === book && p.chapter === chapter) {
-           return i;
-       }
-   }
-   return -1;   
-}
 export function openSettings() {
     document.getElementById('bibleTranslationSetting').value = 
         state.settings.bibleTranslation;
     document.getElementById('referenceVersionSetting').value = 
         state.settings.referenceVersion;
-    document.getElementById('readingPlanId').value =
-        state.settings.readingPlanId || 'default';
     document.querySelectorAll('.color-theme-option')
             .forEach(o => o.classList.toggle('selected',
                 o.dataset.theme === state.settings.colorTheme));
@@ -133,26 +109,19 @@ export function closeSettings() {
 }
 export async function saveSettings() {
     try {
-        const newPlanId = document.getElementById('readingPlanId').value;
         const newTranslation = document.getElementById('bibleTranslationSetting').value;
         const newReferenceVersion = document.getElementById('referenceVersionSetting').value;
         const currentBook = state.settings.manualBook;
         const currentChapter = state.settings.manualChapter;
-        const oldPlanId = state.settings.readingPlanId;
         updateURL(newTranslation, currentBook, currentChapter);
         state.settings.bibleTranslation = newTranslation;
         state.settings.referenceVersion = newReferenceVersion;
-        state.settings.readingPlanId = newPlanId;
         if (newReferenceVersion === 'BSB' && state.settings.referenceSource === 'biblegateway') {
             state.settings.referenceSource = 'biblehub';
             document.getElementById('referenceSource').value = 'biblehub';
         } else if (newReferenceVersion === 'NASB1995' && state.settings.referenceSource === 'biblehub') {
             state.settings.referenceSource = 'biblegateway';
             document.getElementById('referenceSource').value = 'biblegateway';
-        }
-        if (oldPlanId !== newPlanId) {
-            state.settings.currentPassageIndex = 0;
-            state.settings.readingMode = 'readingPlan';
         }
         const selectedTheme = document.querySelector('.color-theme-option.selected');
         if (selectedTheme) {
@@ -168,19 +137,10 @@ export async function saveSettings() {
         if (state.settings.referencePanelOpen) {
             updateReferencePanel();
         }
-        alert('Settings saved!' + (oldPlanId !== newPlanId ? ' Starting from beginning of new reading plan.' : ''));
+        alert('Settings saved!');
     } catch (err) {
         handleError(err, 'saveSettings');
     } 
-}
-export function restartReadingPlan() {
-    if (confirm('Reset the reading plan to the very first passage? Highlights and notes will stay unchanged.')) {
-        state.settings.currentPassageIndex = 0;
-        state.settings.readingMode = 'readingPlan';
-        saveToStorage();
-        loadPassage();
-        alert('Reading plan restarted – you are now at the beginning.');
-    }
 }
 export async function clearCache() {
     if (confirm('Clear all cached Bible data? This will remove offline access to previously viewed passages.')) {
@@ -223,12 +183,9 @@ export async function deleteAllData() {
             settings: {
                 bibleTranslation: 'BSB',
                 referenceVersion: 'NASB1995',
-                passageType: 'default',
-                readingMode: 'readingPlan',
                 manualBook: BOOK_ORDER[0],
                 manualChapter: 1,
                 lastUpdate: null,
-                currentPassageIndex: 0,
                 theme: 'light',
                 colorTheme: 'blue',
                 notesView: 'text',

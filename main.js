@@ -32,8 +32,6 @@ import {
     exportData,
     importData,
     openSettings,
-    restartReadingPlan,
-    resumeReadingPlan,
     saveSettings
 } from './modules/settings.js'
 import {
@@ -120,12 +118,6 @@ function setupEventListeners() {
             .addEventListener('click', prevPassage);
     document.getElementById('nextPassageBtn')
             .addEventListener('click', nextPassage);
-    document.getElementById('resumeReadingPlanBtn')
-            .addEventListener('click', () => {
-                if (confirm('Return to the daily reading plan where you left off?')) {
-                    resumeReadingPlan();
-                }
-            });
     document.getElementById('randomPassageBtn')
             .addEventListener('click', randomPassage);
     document.getElementById('referencePanelToggle')
@@ -292,10 +284,6 @@ function setupEventListeners() {
             .addEventListener('click', saveSettings);
     document.getElementById('clearHighlightsBtn')
             .addEventListener('click', clearHighlights);
-    document.getElementById('restartReadingPlanBtn')
-            .addEventListener('click', () => {
-                restartReadingPlan();
-            });
     document.addEventListener('contentLoaded', () => {
         setTimeout(setupFootnoteHandlers, 50);
     });
@@ -507,7 +495,7 @@ function renderHighlights(filterColor = 'all') {
             `;
         });
     });
-    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter.</div>';
+    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter</div>';
     document.querySelectorAll('.highlight-item').forEach(item => {
         item.addEventListener('click', () => {
             const reference = item.dataset.reference;
@@ -528,7 +516,6 @@ function navigateToHighlightedVerse(reference) {
     const match = reference.match(/^(.+?) (\d+):(\d+)$/);
     if (!match) return;
     const [, book, chapter, verse] = match;
-    state.settings.readingMode = 'manual';
     state.settings.manualBook = book;
     state.settings.manualChapter = parseInt(chapter);
     const translation = getCurrentTranslation();
@@ -579,8 +566,6 @@ async function init() {
     updateOfflineStatus(!navigator.onLine);
     window.addEventListener('online', () => updateOfflineStatus(false));
     window.addEventListener('offline', () => updateOfflineStatus(true));
-    if (!state.settings.readingMode)    state.settings.readingMode      = 'readingPlan';
-    if (!state.settings.readingPlanId)  state.settings.readingPlanId    = 'default';
     initBookChapterControls();
     setupNavigationWithURL();
     setupPopStateListener();

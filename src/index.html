@@ -381,10 +381,6 @@
                 <button class="btn btn-secondary" id="nextPassageBtn" title="Next passage">
                     Next
                 </button>
-                <button class="btn btn-secondary" id="resumeReadingPlanBtn"
-                        title="Resume the daily reading plan">
-                    Resume Reading Plan
-                </button>
 
                 <span class="toolbar-divider" aria-hidden="true"></span>
 
@@ -426,7 +422,6 @@
                     <div id="errorContainer" role="alert"></div>
                     <div class="passage-header">
                         <h2 id="passageHeaderTitle">Passage of the Day</h2>
-                        <div id="planLabel" class="plan-label"></div>
                         <div class="date" id="currentDate"></div>
                     </div>
 
@@ -574,30 +569,6 @@
             <small>
                 This sets the translation only for the side‑panel Reference Bible and the Bible Gateway search.
                 Please note that the BSB translation is not supported by Bible Gateway.
-            </small>
-        </div>
-
-        <div class="settings-group">
-            <label for="readingPlanSelect">Reading Plan</label>
-            <select id="readingPlanId">
-                <option value="default">90‑Day Sequential</option>
-                <option value="genesis">Genesis</option>
-                <option value="psalms">Psalms</option>
-                <option value="proverbs">Proverbs</option>
-                <option value="ecclesiastes">Ecclesiastes</option>
-                <option value="romans">Romans</option>
-                <option value="revelation">Revelation</option>
-            </select>
-            <small>Select which set of passages the “Next/Prev” buttons iterate over for your reading plan.</small>
-        </div>
-
-        <div class="settings-group">
-            <button class="btn btn-secondary" id="restartReadingPlanBtn"
-                    title="Start the sequential plan again from the beginning">
-                Restart Reading Plan
-            </button>
-            <small style="display:block;margin-top:5px;">
-                This will set the plan back to the first entry. Your highlights and notes will be kept.
             </small>
         </div>
 
