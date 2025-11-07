@@ -487,21 +487,14 @@ export function getCurrentTranslation() {
 /* Navigate based on URL parameters */
 export function navigateFromURL() {
     const urlParams = parseURL();
-    
-    // Handle root path redirect
-    if (!urlParams && window.location.pathname === '/') {
-        // Default to BSB Genesis 1 for root path
+    if (!urlParams && !window.location.search) {
         const defaultParams = {
             translation: 'BSB',
             book: 'Genesis',
             chapter: 1
         };
         
-        // Update URL without page reload
-        const newUrl = `/${defaultParams.translation.toLowerCase()}/${defaultParams.book.toLowerCase()}/${defaultParams.chapter}`;
-        window.history.replaceState(defaultParams, '', newUrl);
-        
-        // Load the default passage
+        updateURL(defaultParams.translation, defaultParams.book, defaultParams.chapter);
         return loadDefaultPassage(defaultParams);
     }
     

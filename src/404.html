@@ -4,11 +4,13 @@
     <meta charset="utf-8">
     <title>Redirecting...</title>
     <script>
-        // Simple redirect to index.html
-        window.location.replace('/');
+        if (window.location.pathname !== '/') {
+            const path = window.location.pathname.replace(/^\//, '') + window.location.search;
+            window.location.replace('/?p=' + encodeURIComponent(path));
+        }
     </script>
 </head>
 <body>
-    <p>Redirecting to homepage...</p>
+    <p>Redirecting...</p>
 </body>
 </html>

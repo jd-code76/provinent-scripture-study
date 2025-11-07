@@ -293,14 +293,13 @@ export function getCurrentTranslation() {
 }
 export function navigateFromURL() {
     const urlParams = parseURL();
-    if (!urlParams && window.location.pathname === '/') {
+    if (!urlParams && !window.location.search) {
         const defaultParams = {
             translation: 'BSB',
             book: 'Genesis',
             chapter: 1
         };
-        const newUrl = `/${defaultParams.translation.toLowerCase()}/${defaultParams.book.toLowerCase()}/${defaultParams.chapter}`;
-        window.history.replaceState(defaultParams, '', newUrl);
+        updateURL(defaultParams.translation, defaultParams.book, defaultParams.chapter);
         return loadDefaultPassage(defaultParams);
     }
     if (urlParams) {

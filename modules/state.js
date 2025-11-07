@@ -430,12 +430,15 @@ export function updateURL(translation, book, chapter) {
     }
     const cleanBook = bookAbbr.toLowerCase();
     const cleanChapter = Math.max(1, parseInt(chapter) || 1);
-    const newURL = `#/${cleanTranslation}/${cleanBook}/${cleanChapter}`;
-    window.location.hash = newURL;
+    const newQuery = `?p=${cleanTranslation}/${cleanBook}/${cleanChapter}`;
+    if (window.location.search !== newQuery) {
+        window.history.replaceState({}, '', newQuery);
+    }
 }
 export function parseURL() {
-    const path = window.location.hash ? window.location.hash.substring(1) : window.location.pathname;
-    if (path === '/' || path === '') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const path = urlParams.get('p');
+    if (!path) {
         return null;
     }
     const pathParts = path.split('/').filter(part => part !== '');
@@ -445,19 +448,15 @@ export function parseURL() {
         const chapter = parseInt(pathParts[2], 10);
         const book = ABBREVIATION_TO_BOOK_NAME[bookAbbreviation];
         if (!book) {
-            console.warn('Invalid book abbreviation in URL:', bookAbbreviation);
+            console.warn('Invalid book abbreviation in query:', bookAbbreviation);
             return null;
         }
         if (!AVAILABLE_TRANSLATIONS.includes(translation)) {
-            console.warn('Invalid translation in URL:', translation);
-            return null;
-        }
-        if (!BOOKS_ABBREVIATED.includes(bookAbbreviation)) {
-            console.warn('Invalid book in URL:', book);
+            console.warn('Invalid translation in query:', translation);
             return null;
         }
         if (isNaN(chapter) || chapter <= 0 || chapter > 150) {
-            console.warn('Invalid chapter in URL:', chapter);
+            console.warn('Invalid chapter in query:', chapter);
             return null;
         }
         return { translation, book, chapter };
