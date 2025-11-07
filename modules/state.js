@@ -424,14 +424,18 @@ export function updateBibleGatewayVersion() {
 export function updateURL(translation, book, chapter) {
     const cleanTranslation = translation.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
-    const cleanBook = bookAbbr ? bookAbbr.toLowerCase() : book.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    if (!bookAbbr) {
+        console.warn('No abbreviation found for book:', book);
+        return;
+    }
+    const cleanBook = bookAbbr.toLowerCase();
     const cleanChapter = Math.max(1, parseInt(chapter) || 1);
-    const newURL = `/${cleanTranslation}/${cleanBook}/${cleanChapter}`;
-    window.history.pushState({ translation, book, chapter }, '', newURL);
+    const newURL = `#/${cleanTranslation}/${cleanBook}/${cleanChapter}`;
+    window.location.hash = newURL;
 }
 export function parseURL() {
-    const path = window.location.pathname;
-    if (path === '/') {
+    const path = window.location.hash ? window.location.hash.substring(1) : window.location.pathname;
+    if (path === '/' || path === '') {
         return null;
     }
     const pathParts = path.split('/').filter(part => part !== '');
