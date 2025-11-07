@@ -22,21 +22,14 @@ import { getStepBibleUrl } from './ui.js'
 ==================================================================== */
 
 /* Show Strong's reference popup for a verse */
-export function showStrongsReference(verseEl) {    
+export function showStrongsReference(verseEl) {
     const ref = verseEl.dataset.verse;
-    
-    // Store the current verse element for navigation
     state.currentVerseElement = verseEl;
-    
-    // Get the verse text with footnotes included
     const textSpan = verseEl.querySelector('.verse-text');
     let verseText = '';
     
     if (textSpan) {
-        // Get the actual HTML content that includes footnote references
         verseText = textSpan.innerHTML;
-        
-        // If empty content, try getting the text content
         if (!verseText || verseText.trim() === '') {
             verseText = textSpan.textContent || '';
             
@@ -46,11 +39,9 @@ export function showStrongsReference(verseEl) {
             }
         }
     } else {
-        // Fallback to data attribute if text span not found
         verseText = verseEl.dataset.verseText || '';
     }
     
-    // If still have no text, provide a default message
     if (!verseText || verseText.trim() === '') {
         verseText = '<em>Verse text not available</em>';
     }
@@ -130,14 +121,13 @@ export function showStrongsReference(verseEl) {
 
             <div style="margin-top:15px;">
                 <a href="https://biblehub.com/strongs.htm" target="_blank"
-                   style="color:var(--accent-color);">BibleHub Strong's Exhaustive Concordance</a><br>
+                   style="color:var(--accent-color);">BibleHub Strong's Concordance</a><br>
                 <a href="https://netbible.org/bible/${encodeURIComponent(ref)}"
                    target="_blank" style="color:var(--accent-color);">NET Bible (with comprehensive notes)</a><br>
             </div>
         </div>
     `;
 
-    // Populate footnotes for the Strong's popup - use the current ref
     populateStrongsFootnotes(ref);
 
     document.getElementById('strongsPopup').classList.add('active');
@@ -149,7 +139,6 @@ export function showStrongsReference(verseEl) {
             copyBtn.addEventListener('click', copyVerseText);
         }
         
-        // Setup navigation buttons
         const prevBtn = document.getElementById('prevVerseBtn');
         const nextBtn = document.getElementById('nextVerseBtn');
         
@@ -161,7 +150,6 @@ export function showStrongsReference(verseEl) {
             nextBtn.addEventListener('click', navigateToNextVerse);
         }
 
-        // Setup popout buttons
         document.querySelectorAll('.resource-frame-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const url = this.dataset.url;
@@ -170,7 +158,6 @@ export function showStrongsReference(verseEl) {
         });
     });
         
-        // Setup footnote handlers for the Strong's popup
         setupStrongsFootnoteHandlers();
     }, 0);
 }
@@ -184,7 +171,6 @@ function navigateToPreviousVerse() {
     const currentIndex = allVerses.indexOf(currentVerseEl);
     
     if (currentIndex > 0) {
-        // Navigate to previous verse in same chapter
         const prevVerseEl = allVerses[currentIndex - 1];
         showStrongsReference(prevVerseEl);
     }
@@ -199,7 +185,6 @@ function navigateToNextVerse() {
     const currentIndex = allVerses.indexOf(currentVerseEl);
     
     if (currentIndex < allVerses.length - 1) {
-        // Navigate to next verse in same chapter
         const nextVerseEl = allVerses[currentIndex + 1];
         showStrongsReference(nextVerseEl);
     }
@@ -261,7 +246,6 @@ function populateStrongsFootnotes(verseRef) {
 
     container.innerHTML = '';
 
-    // Get footnotes from the stored state
     const verseFootnotes = state.footnotes[verseRef];
 
     if (!verseFootnotes || verseFootnotes.length === 0) {
@@ -269,9 +253,6 @@ function populateStrongsFootnotes(verseRef) {
         return;
     }
 
-    console.log('Found stored footnotes:', verseFootnotes);
-
-    // Create footnotes section
     container.innerHTML = `
         <hr class="footnotes-separator">
         <h4 class="footnotes-heading">Footnotes</h4>
@@ -288,40 +269,20 @@ function populateStrongsFootnotes(verseRef) {
         container.appendChild(footnoteDiv);
     });
 
-    // Make sure the container is visible
     container.style.display = 'block';
 }
 
 /* Setup footnote click handlers for the Strong's popup */
 function setupStrongsFootnoteHandlers() {
-    // Remove any existing handlers first
     document.querySelectorAll('#strongsFootnotesContainer .footnote-ref').forEach(ref => {
         const newRef = ref.cloneNode(true);
         ref.parentNode.replaceChild(newRef, ref);
     });
 
-    // Attach click handlers to footnote references in Strong's popup
     document.querySelectorAll('#strongsFootnotesContainer .footnote-ref').forEach(ref => {
         ref.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
-            const footnoteNumber = this.dataset.footnoteNumber;
-            const footnoteElement = document.querySelector(`#strongsFootnotesContainer .footnote[data-footnote-number="${footnoteNumber}"]`);
-            
-            if (footnoteElement) {
-                // Scroll to the footnote in the Strong's popup
-                footnoteElement.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'nearest' 
-                });
-                
-                // Visual feedback
-                footnoteElement.style.backgroundColor = 'var(--verse-hover)';
-                setTimeout(() => {
-                    footnoteElement.style.backgroundColor = '';
-                }, 2000);
-            }
         });
     });
 }

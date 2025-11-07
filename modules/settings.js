@@ -5,7 +5,6 @@
     handleError,
     showLoading
 } from '../main.js'
-import { getCurrentTranslation } from './navigation.js'
 import { loadPassage } from './passage.js'
 import {
     deletePDFFromIndexedDB,
@@ -143,20 +142,26 @@ export async function saveSettings() {
     } 
 }
 export async function clearCache() {
-    if (confirm('Clear all cached Bible data? This will remove offline access to previously viewed passages.')) {
-        try {
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
-            }
-            const db = await openDB();
-            const tx = db.transaction([STORE_NAME], 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            await store.clear();
-            alert('Cache cleared successfully');
-        } catch (err) {
-            handleError(err, 'clearCache');
-            alert('Error clearing cache: ' + err.message);
+    if (!confirm('Clear all cached Bible data? This will remove offline access to previously viewed passages.')) {
+        return;
+    }
+    try {
+        showLoading(true);
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
+        const db = await openDB();
+        const tx = db.transaction([STORE_NAME], 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        await store.clear();
+        await tx.done;
+        alert('Cache cleared successfully');
+    } catch (err) {
+        handleError(err, 'clearCache');
+        alert('Error clearing cache: ' + err.message);
+    } finally {
+        showLoading(false);
     }
 }
 export async function deleteAllData() {
@@ -223,6 +228,12 @@ export async function deleteAllData() {
         if (zoomDisplay) {
             zoomDisplay.textContent = '100%';
         }
+        const defaultParams = {
+            translation: 'BSB',
+            book: 'Genesis',
+            chapter: 1
+        };
+        updateURL(defaultParams.translation, defaultParams.book, defaultParams.chapter);
         await loadPassage();
         clearError();
         closeSettings();

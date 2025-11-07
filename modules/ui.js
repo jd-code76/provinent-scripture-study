@@ -88,9 +88,6 @@ export function exportNotes(ext) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-export function toggleNotes() {
-    document.getElementById('notesSection').classList.toggle('hidden');
-}
 export function togglePanelCollapse(panelId) {
     const panel = document.getElementById(panelId);
     const collapsed = panel.classList.contains('panel-collapsed');

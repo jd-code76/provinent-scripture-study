@@ -86,7 +86,6 @@ import {
     restorePanelStates,
     restoreSidebarState,
     switchNotesView,
-    toggleNotes,
     togglePanelCollapse,
     toggleReferencePanel,
     toggleSection,
@@ -184,8 +183,6 @@ function setupEventListeners() {
             });
     document.getElementById('importFile')
             .addEventListener('change', importData);
-    document.querySelector('.toggle-notes')
-            .addEventListener('click', toggleNotes);
 
     // Toolbar Navigation
     document.getElementById('prevPassageBtn')

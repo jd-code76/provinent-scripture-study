@@ -121,7 +121,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:va
 .passage-header h2{font-size:1.5em;margin-bottom:5px;color:white;border:none}
 .passage-header .date{opacity:0.9;font-size:0.9em}
 .passage-reference{font-weight:bold;font-size:1.2em;margin-bottom:15px;color:var(--accent-color)}
-.plan-label{font-size:1.1rem;font-weight:500;color:var(--accent-color);margin-top:8px;margin-bottom:12px}
 .verse{margin-bottom:8px;padding:var(--spacing-sm);border-radius:var(--radius-sm);cursor:pointer;transition:background-color var(--transition-fast);position:relative;contain:content}
 .verse:hover,.verse:active{background-color:var(--verse-hover);will-change:background-color}
 .verse:focus{outline:2px solid var(--accent-color);outline-offset:2px}
@@ -146,20 +145,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:va
 .footnote:hover .footnote-number{background-color:var(--accent-color);color:white}
 .footnote-content{color:var(--text-color);font-size:0.9em;line-height:1.4;opacity:0.95}
 .footnote.highlighted{background-color:var(--verse-hover);border-left-color:var(--accent-color)}
-.strongs-footnotes-container{display:block!important;max-height:200px;overflow-y:auto;padding:2px;background-color:var(--toolbar-background)}
-.strongs-footnotes-container .footnotes-heading{color:var(--text-color);margin-bottom:15px;font-size:1.1em;font-weight:600}
-.strongs-footnotes-container .footnote{margin-bottom:12px;padding:10px;border-radius:4px;transition:all 0.3s ease}
-.strongs-footnotes-container .footnote:hover{background-color:rgba(0,0,0,0.03)}
-.strongs-footnotes-container .footnote-number{color:var(--accent-color);font-weight:bold;margin-right:8px;font-size:0.85em;background-color:rgba(0,0,0,0.08);padding:3px 6px;border-radius:3px}
-.strongs-footnotes-container .footnote-content{color:var(--text-color);font-size:0.9em;line-height:1.4;opacity:0.95}
-.strongs-footnotes-container .footnote-ref{color:var(--accent-color);font-size:0.75em;vertical-align:super;cursor:pointer;margin:0 1px;text-decoration:none;font-weight:bold;background-color:rgba(0,0,0,0.08);padding:1px 4px;border-radius:3px;line-height:1;transition:all 0.2s ease}
-.strongs-footnotes-container .footnote-ref:hover{background-color:var(--accent-color);color:white;transform:scale(1.1)}
-#strongsFootnotesContainer .footnote{margin-bottom:12px;padding:10px;background-color:var(--toolbar-background);border-radius:4px}
-#strongsFootnotesContainer .footnote-number{font-weight:bold;color:var(--accent-color);margin-right:8px}
-#strongsFootnotesContainer .footnote-content{display:inline}
-#strongsPopup .footnote{cursor:pointer;transition:all 0.2s ease}
-#strongsPopup .footnote:hover{background-color:var(--verse-hover)}
-#strongsPopup .footnote:hover .footnote-number{background-color:var(--accent-color);color:white}
 .verse-navigation{display:flex;align-items:center;gap:10px;margin-right:auto}
 .nav-btn{background:var(--button-bg);border:1px solid var(--border-color);border-radius:4px;padding:6px 10px;cursor:pointer;font-size:12px;color:var(--text-color);transition:all 0.2s ease}
 .nav-btn:hover{background:var(--button-hover-bg);border-color:var(--accent-color)}
@@ -231,6 +216,20 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:va
 .popup-close:hover{background-color:var(--verse-hover)}
 .popup-close:focus{outline:2px solid var(--accent-color);outline-offset:2px}
 .strongs-content{line-height:1.8;color:var(--text-color)}
+.strongs-footnotes-container{display:block!important;max-height:200px;overflow-y:auto;padding:2px;background-color:var(--toolbar-background)}
+.strongs-footnotes-container .footnotes-heading{color:var(--text-color);margin-bottom:15px;font-size:1.1em;font-weight:600}
+.strongs-footnotes-container .footnote{margin-bottom:12px;padding:10px;border-radius:4px;transition:all 0.3s ease}
+.strongs-footnotes-container .footnote:hover{background-color:rgba(0,0,0,0.03)}
+.strongs-footnotes-container .footnote-number{color:var(--accent-color);font-weight:bold;margin-right:8px;font-size:0.85em;background-color:rgba(0,0,0,0.08);padding:3px 6px;border-radius:3px}
+.strongs-footnotes-container .footnote-content{color:var(--text-color);font-size:0.9em;line-height:1.4;opacity:0.95}
+.strongs-footnotes-container .footnote-ref{color:var(--accent-color);font-size:0.75em;vertical-align:super;cursor:pointer;margin:0 1px;text-decoration:none;font-weight:bold;background-color:rgba(0,0,0,0.08);padding:1px 4px;border-radius:3px;line-height:1;transition:all 0.2s ease}
+.strongs-footnotes-container .footnote-ref:hover{background-color:var(--accent-color);color:white;transform:scale(1.1)}
+#strongsFootnotesContainer .footnote{margin-bottom:12px;padding:10px;background-color:var(--toolbar-background);border-radius:4px}
+#strongsFootnotesContainer .footnote-number{font-weight:bold;color:var(--accent-color);margin-right:8px}
+#strongsFootnotesContainer .footnote-content{display:inline}
+#strongsPopup .footnote{cursor:pointer;transition:all 0.2s ease}
+#strongsPopup .footnote:hover{background-color:var(--verse-hover)}
+#strongsPopup .footnote:hover .footnote-number{background-color:var(--accent-color);color:white}
 .verse-reference-display{font-size:1.2em;font-weight:bold;color:var(--accent-color);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
 .verse-text-display{padding:15px;background-color:var(--toolbar-background);border-left:4px solid var(--accent-color);border-radius:4px;margin-bottom:20px;font-size:1.1em;line-height:1.6}
 .copy-verse-btn{padding:6px 12px;background-color:var(--accent-color);color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;transition:all 0.2s}
@@ -350,23 +349,27 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:va
 @container(max-width:768px){.feature-grid{grid-template-columns:1fr}
 .toolbar{flex-direction:column;gap:15px}
 }
-.toggle-notes{display:none}
-@media(max-width:768px){.toggle-notes{display:inline-block}
-.header{padding:2px 3px}
-*{}
+@media(max-width:768px){.header{padding:2px 3px}
+.header h1{font-size:1em}
 .toolbar{gap:2px}
-.notes-section{padding:4px;width:250px}
+.toolbar-info{display:none}
+.notes-section{padding:4px;width:250px;display:none}
 .collapse-toggle{width:60px;height:60px}
 .notes-controls button{font-size:14px}
 .notes-header h3{font-size:20px}
-.sidebar{padding:10px}
-.btn{padding:8px 2px;font-size:14px}
+.sidebar{display:none}
+.btn{padding:8px 8px;font-size:14px}
 .passage-header{padding:8px;margin-bottom:6px}
 .embedded-resources{grid-template-columns:auto}
 .reference-panel-header{padding:2px}
+.reference-panel-toggle{display:none}
+label[for="referenceVersionSetting"]{display:none}
+.settings-group #referenceVersionSetting{display:none}
+#settingsPdfUploadBtn{display:none}
+#customPdfInfo{display:none}
 .toolbar-divider{margin:0 3px}
 .toolbar button{padding:5px 5px;font-size:14px}
-.highlights-modal{width:95%;max-width:none;margin:10px;padding:20px}
+.highlights-modal{width:90%;max-width:none;margin:10px 0px;padding:10px}
 .highlights-filters{justify-content:center}
 .highlight-filter-btn{padding:6px 12px;font-size:11px}
 .highlight-item{padding:12px}

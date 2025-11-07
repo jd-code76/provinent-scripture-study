@@ -56,16 +56,6 @@
     color: var(--accent-color);
 }
 
-/* Plan label */
-
-.plan-label {
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--accent-color);
-    margin-top: 8px;
-    margin-bottom: 12px;
-}
-
 /* Verse Display & Styling */
 
 .verse {
@@ -234,103 +224,6 @@
 .footnote.highlighted {
     background-color: var(--verse-hover);
     border-left-color: var(--accent-color);
-}
-
-/* Strong's Popup Footnote Styles */
-
-.strongs-footnotes-container {
-    display: block !important;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 2px;
-    background-color: var(--toolbar-background);
-}
-
-.strongs-footnotes-container .footnotes-heading {
-    color: var(--text-color);
-    margin-bottom: 15px;
-    font-size: 1.1em;
-    font-weight: 600;
-}
-
-.strongs-footnotes-container .footnote {
-    margin-bottom: 12px;
-    padding: 10px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-}
-
-.strongs-footnotes-container .footnote:hover {
-    background-color: rgba(0, 0, 0, 0.03);
-}
-
-.strongs-footnotes-container .footnote-number {
-    color: var(--accent-color);
-    font-weight: bold;
-    margin-right: 8px;
-    font-size: 0.85em;
-    background-color: rgba(0, 0, 0, 0.08);
-    padding: 3px 6px;
-    border-radius: 3px;
-}
-
-.strongs-footnotes-container .footnote-content {
-    color: var(--text-color);
-    font-size: 0.9em;
-    line-height: 1.4;
-    opacity: 0.95;
-}
-
-.strongs-footnotes-container .footnote-ref {
-    color: var(--accent-color);
-    font-size: 0.75em;
-    vertical-align: super;
-    cursor: pointer;
-    margin: 0 1px;
-    text-decoration: none;
-    font-weight: bold;
-    background-color: rgba(0, 0, 0, 0.08);
-    padding: 1px 4px;
-    border-radius: 3px;
-    line-height: 1;
-    transition: all 0.2s ease;
-}
-
-.strongs-footnotes-container .footnote-ref:hover {
-    background-color: var(--accent-color);
-    color: white;
-    transform: scale(1.1);
-}
-
-#strongsFootnotesContainer .footnote {
-    margin-bottom: 12px;
-    padding: 10px;
-    background-color: var(--toolbar-background);
-    border-radius: 4px;
-}
-
-#strongsFootnotesContainer .footnote-number {
-    font-weight: bold;
-    color: var(--accent-color);
-    margin-right: 8px;
-}
-
-#strongsFootnotesContainer .footnote-content {
-    display: inline;
-}
-
-#strongsPopup .footnote {
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-#strongsPopup .footnote:hover {
-    background-color: var(--verse-hover);
-}
-
-#strongsPopup .footnote:hover .footnote-number {
-    background-color: var(--accent-color);
-    color: white;
 }
 
 .verse-navigation {

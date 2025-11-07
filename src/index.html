@@ -364,10 +364,7 @@
                     <button class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle dark mode">
                         <span id="themeIcon" aria-hidden="true"><i class="fas fa-moon"></i></span>
                     </button>
-                    <button class="btn toggle-notes" aria-label="Toggle notes">Notes</button>
                     <button class="btn" id="openSettingsBtn">Settings</button>
-                    <button class="btn btn-secondary" id="exportDataBtn" aria-label="Export data"><i class="fas fa-download" aria-hidden="true"></i> Export</button>
-                    <button class="btn btn-secondary" id="importDataBtn" aria-label="Import data"><i class="fas fa-upload" aria-hidden="true"></i> Import</button>
                     <input type="file" id="importFile" style="display: none;" accept=".json">
                 </div>
             </header>
@@ -547,10 +544,10 @@
                 <option value="BSB">Berean Standard Bible (BSB)</option>
                 <option value="NET">New English Translation (NET)</option>
             </select>
-            <small>This sets the translation for the Passage of the Day.</small>
+            <small>Set the translation for the main Scripture area.</small>
         </div>
 
-        <div class="settings-group">
+        <div class="settings-group" id="referenceVersionSetting">
             <label for="referenceVersionSetting">Reference Panel Bible Version</label>
             <select id="referenceVersionSetting">
                 <option value="NASB1995">NASB 1995 (Strictly literal)</option>
@@ -567,21 +564,36 @@
                 <option value="NLT">NLT (Thought‑for‑thought)</option>
             </select>
             <small>
-                This sets the translation only for the side‑panel Reference Bible and the Bible Gateway search.
+                Set the translation only for the side‑panel Reference Bible and the Bible Gateway search (desktop/tablet only).
                 Please note that the BSB translation is not supported by Bible Gateway.
             </small>
         </div>
 
         <div class="settings-group">
-            <label>Offline Storage</label>
+            <label>Data Management</label>
+                <div class="settings-group">
+                    <button class="btn btn-secondary" id="exportDataBtn" aria-label="Export data"><i class="fas fa-download" aria-hidden="true"></i> Export</button>
+                    <small style="display:block;margin-top:5px;">
+                        Export your highlights, notes, and settings as a JSON file.
+                    </small>
+                </div>
+                <div class="settings-group">
+                    <button class="btn btn-secondary" id="importDataBtn" aria-label="Import data"><i class="fas fa-upload" aria-hidden="true"></i> Import</button>
+                    <small style="display:block;margin-top:5px;">
+                        Import your data (overwrites existing).
+                    </small>
+                </div>
+            </label>
+        </div>
 
+        <div class="settings-group">
+            <label>Local Storage</label>
             <div class="settings-group">
                 <button class="btn btn-secondary" id="clearHighlightsBtn">Clear Highlights</button>
                 <small style="display:block;margin-top:5px;">
-                    Removes all verse‑highlight colors. Your notes stay intact.
+                    Removes all highlighted verses.
                 </small>
             </div>
-            
             <div class="settings-group">
                 <button class="btn btn-secondary" id="clearCacheBtn">Clear Cached Data</button>
                 <small style="display:block;margin-top:5px;">
@@ -591,16 +603,17 @@
             </div>
         </div>
 
-        <div>
-            <div class="settings-group">
-                <button class="btn btn-danger" id="deleteAllDataBtn">
-                    <i class="fas fa-trash" aria-hidden="true"></i> Delete All Stored Data
-                </button>
-                <small style="display:block;margin-top:5px;color:#f44336;">
-                    <strong>Warning:</strong> This will permanently delete all your highlights, notes, 
-                    uploaded PDF, and settings. This action cannot be undone.
-                </small>
-            </div>
+        <div class="settings-group">
+            <label>Reset Application</label>
+                <div class="settings-group">
+                    <button class="btn btn-danger" id="deleteAllDataBtn">
+                        <i class="fas fa-trash" aria-hidden="true"></i> Delete All Stored Data
+                    </button>
+                    <small style="display:block;margin-top:5px;color:#f44336;">
+                        <strong>Warning:</strong> This will permanently delete all your highlights, notes, 
+                        settings, and uploaded PDF. This action cannot be undone.
+                    </small>
+                </div>
         </div>
 
         <div class="settings-group">
@@ -608,7 +621,9 @@
             <small style="margin-bottom: 10px;">
                 Download a free Berean Standard Bible PDF for offline use. After downloading,
                 upload it here. Other PDFs may work but only the BSB ones below have been tested.
-                Uploading a new PDF overwrites the existing one.
+                Uploading a new PDF overwrites the existing one. Please note this is only for the
+                desktop/tablet application; mobile devices can only upload custom PDFs if in 
+                desktop view.
             </small>
 
             <div class="pdf-download-options">

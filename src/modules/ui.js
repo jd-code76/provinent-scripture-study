@@ -129,11 +129,6 @@ export function exportNotes(ext) {
     URL.revokeObjectURL(url);
 }
 
-/* Toggle notes panel visibility (mobile) */
-export function toggleNotes() {
-    document.getElementById('notesSection').classList.toggle('hidden');
-}
-
 
 /* ====================================================================
    PANEL COLLAPSE / SECTION TOGGLE

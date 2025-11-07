@@ -1,6 +1,6 @@
 ﻿import { state } from './state.js'
 import { getStepBibleUrl } from './ui.js'
-export function showStrongsReference(verseEl) {    
+export function showStrongsReference(verseEl) {
     const ref = verseEl.dataset.verse;
     state.currentVerseElement = verseEl;
     const textSpan = verseEl.querySelector('.verse-text');
@@ -84,7 +84,7 @@ export function showStrongsReference(verseEl) {
             <h3>Quick Links</h3>
             <div style="margin-top:15px;">
                 <a href="https://biblehub.com/strongs.htm" target="_blank"
-                   style="color:var(--accent-color);">BibleHub Strong's Exhaustive Concordance</a><br>
+                   style="color:var(--accent-color);">BibleHub Strong's Concordance</a><br>
                 <a href="https://netbible.org/bible/${encodeURIComponent(ref)}"
                    target="_blank" style="color:var(--accent-color);">NET Bible (with comprehensive notes)</a><br>
             </div>
@@ -181,7 +181,6 @@ function populateStrongsFootnotes(verseRef) {
         container.innerHTML = '<p style="opacity:0.7;text-align:center;padding:20px;">No footnotes available for this verse</p>';
         return;
     }
-    console.log('Found stored footnotes:', verseFootnotes);
     container.innerHTML = `
         <hr class="footnotes-separator">
         <h4 class="footnotes-heading">Footnotes</h4>
@@ -206,18 +205,6 @@ function setupStrongsFootnoteHandlers() {
         ref.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            const footnoteNumber = this.dataset.footnoteNumber;
-            const footnoteElement = document.querySelector(`#strongsFootnotesContainer .footnote[data-footnote-number="${footnoteNumber}"]`);
-            if (footnoteElement) {
-                footnoteElement.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'nearest' 
-                });
-                footnoteElement.style.backgroundColor = 'var(--verse-hover)';
-                setTimeout(() => {
-                    footnoteElement.style.backgroundColor = '';
-                }, 2000);
-            }
         });
     });
 }
