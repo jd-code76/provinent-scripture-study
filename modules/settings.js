@@ -95,6 +95,8 @@ export function resumeReadingPlan() {
     const curBook    = state.settings.manualBook;
     const curChapter = state.settings.manualChapter;
     const idx        = findReadingPlanIndex(curBook, curChapter);
+    const translation = getCurrentTranslation();
+    updateURL(translation, curBook, curChapter);
     if (idx !== -1) {
         state.settings.currentPassageIndex = idx;
     }

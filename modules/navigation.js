@@ -54,6 +54,7 @@ export async function loadSelectedChapter(book = null, chapter = null) {
     const selBook = book || document.getElementById('bookSelect').value;
     const selChapter = chapter || document.getElementById('chapterSelect').value;
     const apiBook = getApiBookCode(selBook);
+    document.title = `${selBook} ${selChapter} - Provinent Scripture Study`;
     try {
         showLoading(true);
         const apiTranslation = apiTranslationCode(state.settings.bibleTranslation);

@@ -135,6 +135,11 @@ export function resumeReadingPlan() {
     const curBook    = state.settings.manualBook;
     const curChapter = state.settings.manualChapter;
     const idx        = findReadingPlanIndex(curBook, curChapter);
+
+    // Update URL
+    const translation = getCurrentTranslation();
+    updateURL(translation, curBook, curChapter);
+
     if (idx !== -1) {
         // Found a matching entry – make it the active reading‑plan index
         state.settings.currentPassageIndex = idx;

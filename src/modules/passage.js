@@ -432,6 +432,8 @@ export async function loadPassage(book = null, chapter = null, translation = nul
             
             document.getElementById('passageReference').textContent = passage.displayRef;
             state.currentPassageReference = passage.displayRef;
+
+            document.title = `${passage.displayRef} - Provinent Scripture Study`;
             
             await loadPassageFromAPI(passage);
             syncSelectorsToReadingPlan();
