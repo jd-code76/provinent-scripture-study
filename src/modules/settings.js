@@ -20,6 +20,8 @@ import {
     showLoading
 } from '../main.js'
 
+import { getCurrentTranslation } from './navigation.js'
+
 import { loadPassage } from './passage.js'
 
 import {
