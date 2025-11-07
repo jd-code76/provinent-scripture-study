@@ -507,7 +507,7 @@ function renderHighlights(filterColor = 'all') {
             `;
         });
     });
-    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter.</div>';
+    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter</div>';
     document.querySelectorAll('.highlight-item').forEach(item => {
         item.addEventListener('click', () => {
             const reference = item.dataset.reference;

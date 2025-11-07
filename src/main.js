@@ -214,14 +214,12 @@ function setupEventListeners() {
 
     // Bible Gateway search button (dynamic translation searching)
     document.getElementById('referenceTranslation').addEventListener('change', function() {
-        // Update the state temporarily for Bible Gateway
         const tempTranslation = this.value;
         const oldTranslation = state.settings.referenceVersion;
         state.settings.referenceVersion = tempTranslation;
         
         updateBibleGatewayVersion();
         
-        // Restore the original translation (since settings aren't saved yet)
         state.settings.referenceVersion = oldTranslation;
     });
 
@@ -248,7 +246,6 @@ function setupEventListeners() {
         if (!state.pdf.doc || state.pdf.currentPage <= 1) return;
         
         try {
-            // Cancel any current rendering
             if (state.pdf.renderTask) {
                 await state.pdf.renderTask.cancel();
                 state.pdf.renderTask = null;
@@ -258,7 +255,6 @@ function setupEventListeners() {
             await renderPage(state.pdf.currentPage);
         } catch (err) {
             console.warn('Error navigating to previous page:', err);
-            // If there's an error, reload the PDF
             await loadPDF();
         }
     });
@@ -711,7 +707,7 @@ function renderHighlights(filterColor = 'all') {
         });
     });
     
-    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter.</div>';
+    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter</div>';
     
     // Add click handlers to navigate to verses
     document.querySelectorAll('.highlight-item').forEach(item => {
@@ -874,11 +870,8 @@ async function init() {
     // Start periodic updates
     setInterval(updateDateTime, 1_000);
     
-    // Only load default passage if we didn't navigate from URL
     const navigatedFromURL = navigateFromURL();
     if (!navigatedFromURL) {
-        // Only load default passage if URL navigation didn't happen
-        // AND we're not at the root path (which should have been redirected)
         if (window.location.pathname !== '/') {
             loadPassage();
         }

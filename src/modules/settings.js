@@ -133,12 +133,9 @@ export function importData(ev) {
 
 /* Resume reading plan from saved position */
 export function resumeReadingPlan() {
-    // Try to locate the current manual book/chapter inside the plan
     const curBook    = state.settings.manualBook;
     const curChapter = state.settings.manualChapter;
     const idx        = findReadingPlanIndex(curBook, curChapter);
-
-    // Update URL
     const translation = getCurrentTranslation();
     updateURL(translation, curBook, curChapter);
 
@@ -146,9 +143,8 @@ export function resumeReadingPlan() {
         // Found a matching entry – make it the active reading‑plan index
         state.settings.currentPassageIndex = idx;
     }
-    // Switch back to reading‑plan mode and load the passage
     state.settings.readingMode = 'readingPlan';
-    loadPassage();   // loadPassage() will also sync the selectors
+    loadPassage();
 }
 
 /**
@@ -265,6 +261,11 @@ export function restartReadingPlan() {
         saveToStorage();
         loadPassage();
         alert('Reading plan restarted – you are now at the beginning.');
+        
+        const curBook    = state.settings.manualBook;
+        const curChapter = state.settings.manualChapter;
+        const translation = getCurrentTranslation();
+        updateURL(translation, curBook, curChapter);
     }
 }
 

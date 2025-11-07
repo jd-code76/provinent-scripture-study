@@ -102,7 +102,7 @@ export function resumeReadingPlan() {
         state.settings.currentPassageIndex = idx;
     }
     state.settings.readingMode = 'readingPlan';
-    loadPassage();   
+    loadPassage();
 }
 function findReadingPlanIndex(book, chapter) {
    for (let i = 0; i < readingPlan.length; i++) {
@@ -180,6 +180,10 @@ export function restartReadingPlan() {
         saveToStorage();
         loadPassage();
         alert('Reading plan restarted – you are now at the beginning.');
+        const curBook    = state.settings.manualBook;
+        const curChapter = state.settings.manualChapter;
+        const translation = getCurrentTranslation();
+        updateURL(translation, curBook, curChapter);
     }
 }
 export async function clearCache() {

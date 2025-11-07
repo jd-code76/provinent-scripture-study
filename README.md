@@ -12,7 +12,7 @@ Access the site here: [https://provinent.org](https://provinent.org)
 - **Multi-Translation Support**: ASV, KJV, GNV, BSB, NET
 - **Verse Highlighting**: Right-click verses to highlight in 6 different colors for study emphasis
 - **Study Notes**: Full Markdown support with live preview and export capabilities
-- **Original Language Tools**: Click any verse for Strong's Concordance data (provided by [STEP Bible](https://www.stepbible.org))and Greek/Hebrew interlinear analysis (provided by [Bible Hub](https://biblehub.com/interlinear/))
+- **Original Language Tools**: Click any verse for Strong's Concordance data (provided by [STEP Bible](https://www.stepbible.org)) and Greek/Hebrew interlinear analysis (provided by [Bible Hub](https://biblehub.com/interlinear/))
 - **Reference Panel**: Side-by-side Bible comparison with multiple translation options (NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT)
 
 ### Advanced Features
