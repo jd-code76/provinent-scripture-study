@@ -130,6 +130,39 @@ export function importData(ev) {
     ev.target.value = '';
 }
 
+<<<<<<< HEAD
+=======
+/* Resume reading plan from saved position */
+export function resumeReadingPlan() {
+    const curBook    = state.settings.manualBook;
+    const curChapter = state.settings.manualChapter;
+    const idx        = findReadingPlanIndex(curBook, curChapter);
+    const translation = getCurrentTranslation();
+    updateURL(translation, curBook, curChapter);
+
+    if (idx !== -1) {
+        // Found a matching entry – make it the active reading‑plan index
+        state.settings.currentPassageIndex = idx;
+    }
+    state.settings.readingMode = 'readingPlan';
+    loadPassage();
+}
+
+/**
+ * Find the index of a reading‑plan entry that matches a given book 
+ * and chapter. Returns ‑1 if the combination isn’t part of the plan.
+ */
+function findReadingPlanIndex(book, chapter) {
+   for (let i = 0; i < readingPlan.length; i++) {
+       const p = readingPlan[i];
+       if (p.book === book && p.chapter === chapter) {
+           return i;
+       }
+   }
+   return -1;   // not found
+}
+
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
 
 /* ====================================================================
    SETTINGS MODAL
@@ -202,6 +235,25 @@ export async function saveSettings() {
     } 
 }
 
+<<<<<<< HEAD
+=======
+/* Restart reading plan from day 1 */
+export function restartReadingPlan() {
+    if (confirm('Reset the reading plan to the very first passage? Highlights and notes will stay unchanged.')) {
+        state.settings.currentPassageIndex = 0;
+        state.settings.readingMode = 'readingPlan';
+        saveToStorage();
+        loadPassage();
+        alert('Reading plan restarted – you are now at the beginning.');
+        
+        const curBook    = state.settings.manualBook;
+        const curChapter = state.settings.manualChapter;
+        const translation = getCurrentTranslation();
+        updateURL(translation, curBook, curChapter);
+    }
+}
+
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
 /* Clear cached (offline) data only */
 export async function clearCache() {
     if (confirm('Clear all cached Bible data? This will remove offline access to previously viewed passages.')) {

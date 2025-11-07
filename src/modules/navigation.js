@@ -115,6 +115,15 @@ export async function loadSelectedChapter(book = null, chapter = null) {
             updateReferencePanel();
         }
         
+<<<<<<< HEAD
+=======
+        if (book && chapter) {
+            state.settings.readingMode = 'manual';
+            state.settings.manualBook = selBook;
+            state.settings.manualChapter = Number(selChapter);
+        }
+        
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
         saveToStorage();
     } catch (err) {
         handleError(err, 'loadSelectedChapter');
@@ -130,6 +139,10 @@ export function initBookChapterControls() {
 
     document.getElementById('bookSelect').addEventListener('change', e => {
         const book = e.target.value;
+<<<<<<< HEAD
+=======
+        state.settings.readingMode = 'manual';
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
         populateChapterDropdown(book);
         state.settings.manualBook = book;
         state.settings.manualChapter = 1;
@@ -144,6 +157,10 @@ export function initBookChapterControls() {
     document.getElementById('chapterSelect').addEventListener('change', () => {
         const book = document.getElementById('bookSelect').value;
         const chap = Number(document.getElementById('chapterSelect').value);
+<<<<<<< HEAD
+=======
+        state.settings.readingMode = 'manual';
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
         state.settings.manualBook = book;
         state.settings.manualChapter = chap;
 
@@ -160,6 +177,11 @@ export function initBookChapterControls() {
  */
 export async function randomPassage() {
     try {
+<<<<<<< HEAD
+=======
+        state.settings.readingMode = 'manual';
+
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
         const randomLoc = await getRandomBibleLocation();
 
         state.settings.manualBook = randomLoc.book;
@@ -170,8 +192,12 @@ export async function randomPassage() {
 
         saveToStorage();
 
+<<<<<<< HEAD
         // Load and render the passage
         await loadSelectedChapter(randomLoc.book, randomLoc.chapter);
+=======
+        await loadPassageFromAPI(randomLoc);
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
         document.getElementById('passageReference').textContent = randomLoc.displayRef;
         state.currentPassageReference = randomLoc.displayRef;
 
@@ -188,6 +214,7 @@ export async function randomPassage() {
 
 /* Navigate to next passage/chapter based on current mode */
 export function nextPassage() {
+<<<<<<< HEAD
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
     const maxCh = CHAPTER_COUNTS[state.settings.manualBook];
@@ -205,10 +232,49 @@ export function nextPassage() {
     }
 
     updateManualNavigation(nextBook, nextChapter);
+=======
+    if (state.settings.readingMode === 'readingPlan') {
+        const plan = getActivePlan();
+        const len = plan.length;
+        let newIndex = (state.settings.currentPassageIndex + 1) % len;
+        if (newIndex < 0) newIndex = len - 1;
+        state.settings.currentPassageIndex = newIndex;
+        
+        const passage = plan[newIndex];
+        const translation = getCurrentTranslation();
+        
+        updateURL(translation, passage.book, passage.chapter);
+        updateUIMode('readingPlan', translation, passage.displayRef);
+        
+        loadPassage(passage.book, passage.chapter, translation);
+        syncSelectorsToReadingPlan();
+    } else {
+        let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
+        let chap = state.settings.manualChapter;
+        const maxCh = CHAPTER_COUNTS[state.settings.manualBook];
+        
+        let nextBook = state.settings.manualBook;
+        let nextChapter = chap;
+        
+        if (chap < maxCh) {
+            nextChapter = chap + 1;
+        } else if (bookIdx < BOOK_ORDER.length - 1) {
+            nextBook = BOOK_ORDER[bookIdx + 1];
+            nextChapter = 1;
+        } else {
+            return;
+        }
+
+        updateManualNavigation(nextBook, nextChapter);
+    }
+    
+    document.getElementById('scriptureSection').scrollTop = 0;
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
 }
 
 /* Navigate to previous passage/chapter based on current mode */
 export function prevPassage() {
+<<<<<<< HEAD
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
     
@@ -226,10 +292,51 @@ export function prevPassage() {
     }
 
     updateManualNavigation(nextBook, nextChapter);
+=======
+    if (state.settings.readingMode === 'readingPlan') {
+        const plan = getActivePlan();
+        const len = plan.length;
+        let newIndex = (state.settings.currentPassageIndex - 1 + len) % len;
+        state.settings.currentPassageIndex = newIndex;
+        
+        const passage = plan[newIndex];
+        const translation = getCurrentTranslation();
+        
+        updateURL(translation, passage.book, passage.chapter);
+        updateUIMode('readingPlan', translation, passage.displayRef);
+        
+        loadPassage(passage.book, passage.chapter, translation);
+        syncSelectorsToReadingPlan();
+    } else {
+        let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
+        let chap = state.settings.manualChapter;
+        
+        let nextBook = state.settings.manualBook;
+        let nextChapter = chap;
+        
+        if (chap > 1) {
+            nextChapter = chap - 1;
+        } else if (bookIdx > 0) {
+            const prevBook = BOOK_ORDER[bookIdx - 1];
+            nextBook = prevBook;
+            nextChapter = CHAPTER_COUNTS[prevBook];
+        } else {
+            return;
+        }
+
+        updateManualNavigation(nextBook, nextChapter);
+    }
+    
+    document.getElementById('scriptureSection').scrollTop = 0;
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
 }
 
 /* Common function to handle manual navigation updates */
 function updateManualNavigation(book, chapter) {
+<<<<<<< HEAD
+=======
+    state.settings.readingMode = 'manual';
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
     state.settings.manualBook = book;
     state.settings.manualChapter = chapter;
     
@@ -237,7 +344,11 @@ function updateManualNavigation(book, chapter) {
     updateURL(translation, book, chapter);
     
     const displayRef = `${book} ${chapter}`;
+<<<<<<< HEAD
     updateUIMode(translation, displayRef);
+=======
+    updateUIMode('manual', translation, displayRef);
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
     
     loadSelectedChapter(book, chapter);
     syncBookChapterSelectors();
@@ -249,8 +360,14 @@ function updateManualNavigation(book, chapter) {
 }
 
 /* Update UI elements to reflect current mode */
+<<<<<<< HEAD
 function updateUIMode(translation, displayRef) {
     const headerTitleEl = document.getElementById('passageHeaderTitle');
+=======
+function updateUIMode(mode, translation, displayRef) {
+    const headerTitleEl = document.getElementById('passageHeaderTitle');
+    const planLabelEl = document.getElementById('planLabel');
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
     const passageRefElement = document.getElementById('passageReference');
     
     if (headerTitleEl) {
@@ -261,6 +378,17 @@ function updateUIMode(translation, displayRef) {
         passageRefElement.textContent = displayRef;
         state.currentPassageReference = displayRef;
     }
+<<<<<<< HEAD
+=======
+    
+    if (planLabelEl) {
+        if (mode === 'readingPlan') {
+            planLabelEl.textContent = `Reading plan: ${getCurrentPlanLabel()}`;
+        } else {
+            planLabelEl.textContent = '';
+        }
+    }
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
 }
 
 /**
@@ -350,6 +478,11 @@ export function navigateFromURL() {
         const isValidChapter = urlParams.chapter > 0 && urlParams.chapter < 151;
         
         if (isValidTranslation && isValidBook && isValidChapter) {
+<<<<<<< HEAD
+=======
+            state.settings.readingMode = 'manual';
+            
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
             state.settings.manualBook = urlParams.book;
             state.settings.manualChapter = urlParams.chapter;
             state.settings.bibleTranslation = urlParams.translation;
@@ -374,6 +507,14 @@ export function navigateFromURL() {
                 headerTitleEl.textContent = `Holy Bible: ${urlParams.translation}`;
             }
             
+<<<<<<< HEAD
+=======
+            const planLabelEl = document.getElementById('planLabel');
+            if (planLabelEl) {
+                planLabelEl.textContent = '';
+            }
+            
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
             loadSelectedChapter(urlParams.book, urlParams.chapter);
             return true;
         }
@@ -383,6 +524,10 @@ export function navigateFromURL() {
 
 /* Load default passage for root URL */
 function loadDefaultPassage(params) {
+<<<<<<< HEAD
+=======
+    state.settings.readingMode = 'readingPlan';
+>>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
     state.settings.manualBook = params.book;
     state.settings.manualChapter = params.chapter;
     state.settings.bibleTranslation = params.translation;

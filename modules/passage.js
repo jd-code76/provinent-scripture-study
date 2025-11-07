@@ -240,6 +240,9 @@ export async function loadPassage(book = null, chapter = null, translation = nul
     if (window._isLoadingPassage) {
         return;
     }
+    if (!book && !chapter && state.settings.readingMode === 'manual') {
+        return;
+    }
     window._isLoadingPassage = true;
     try {
         state.settings.manualBook = book || state.settings.manualBook;
