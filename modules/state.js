@@ -1,10 +1,6 @@
 ﻿import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
-<<<<<<< HEAD
 export const APP_VERSION = '1.1.05.2025.11.06';
-=======
-export const APP_VERSION = '1.1.04.2025.11.06';
->>>>>>> d11be95798768600c1b682f2957094b98cdb2d61
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 export const BOOK_ORDER = [
