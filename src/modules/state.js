@@ -20,7 +20,7 @@ import { handleError } from '../main.js'
 import { loadPDFFromIndexedDB } from './pdf.js'
 
 /* Global constants */
-export const APP_VERSION = '1.1.01.2025.11.06';
+export const APP_VERSION = '1.1.02.2025.11.06';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
