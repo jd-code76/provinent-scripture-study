@@ -36,7 +36,6 @@
     <meta name="msapplication-TileColor" content="#600">
 
     <!-- THIRD‑PARTY LIBRARIES - Loaded asynchronously -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
 
     <!-- STYLE SHEET -->
@@ -291,23 +290,22 @@
                         <option value="biblehub">Bible Hub</option>
                         <option value="stepbible">STEP Bible</option>
                         <option value="ebibleorg">eBible.org</option>
-                        <option value="pdf">Custom PDF (Offline)</option>
                     </select>
 
                     <label for="referenceTranslation" class="sr-only">Reference Translation</label>
                     <select id="referenceTranslation">
-                        <option value="NASB1995">NASB 1995</option>
-                        <option value="NASB">NASB 2020</option>
-                        <option value="ASV">ASV</option>
-                        <option value="ESV">ESV</option>
-                        <option value="KJV">KJV</option>
-                        <option value="GNV">GNV</option>
-                        <option value="NKJV">NKJV</option>
-                        <option value="BSB">BSB</option>
-                        <option value="CSB">CSB</option>
-                        <option value="NET">NET</option>
-                        <option value="NIV">NIV</option>
-                        <option value="NLT">NLT</option>
+                        <option value="NASB1995">NASB 1995 (Strictly literal)</option>
+                        <option value="NASB">NASB 2020 (Updated literal)</option>
+                        <option value="ASV">ASV (Rigorously literal)</option>
+                        <option value="ESV">ESV (Elegant literal)</option>
+                        <option value="KJV">KJV (Classic literal)</option>
+                        <option value="GNV">GNV (Scholarly literal; Old English)</option>
+                        <option value="NKJV">NKJV (Modernized classic)</option>
+                        <option value="BSB">BSB (Study‑focused)</option>
+                        <option value="CSB">CSB (Optimal balance)</option>
+                        <option value="NET">NET (Scholarly transparent)</option>
+                        <option value="NIV">NIV (Readable dynamic)</option>
+                        <option value="NLT">NLT (Thought‑for‑thought)</option>
                     </select>
 
                     <button class="reference-panel-close" aria-label="Close reference panel">×</button>
@@ -410,6 +408,27 @@
                 <span class="toolbar-info">
                     Click a verse to study • Right‑click to highlight
                 </span>
+
+                <!-- Audio Controls -->
+                <div id="audioControls" style="display: none; margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: bold;">Audio:</span>
+                        <select class="narrator-select" style="padding: 5px; border-radius: 3px;">
+                            <option value="gilbert">Gilbert</option>
+                            <option value="hays">Hays</option>
+                            <option value="souer">Souer</option>
+                        </select>
+                        <button class="play-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            <i class="fas fa-play"></i> Play
+                        </button>
+                        <button class="pause-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer; display: none;">
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                        <button class="stop-audio-btn" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                    </div>
+                </div>
             </div>   <!-- end .toolbar -->
 
             <!-- MAIN CONTENT AREA (scripture + notes) -->
@@ -536,7 +555,7 @@
         </div>
 
         <div class="settings-group">
-            <label for="bibleTranslationSetting">Daily Passage Bible Translation</label>
+            <label for="bibleTranslationSetting">Primary Bible Translation</label>
             <select id="bibleTranslationSetting">
                 <option value="ASV">American Standard Version (ASV)</option>
                 <option value="KJV">King James Version (KJV)</option>
@@ -544,29 +563,7 @@
                 <option value="BSB">Berean Standard Bible (BSB)</option>
                 <option value="NET">New English Translation (NET)</option>
             </select>
-            <small>Set the translation for the main Scripture area.</small>
-        </div>
-
-        <div class="settings-group" id="referenceVersionSetting">
-            <label for="referenceVersionSetting">Reference Panel Bible Version</label>
-            <select id="referenceVersionSetting">
-                <option value="NASB1995">NASB 1995 (Strictly literal)</option>
-                <option value="NASB">NASB 2020 (Updated literal)</option>
-                <option value="ASV">ASV (Rigorously literal)</option>
-                <option value="ESV">ESV (Elegant literal)</option>
-                <option value="KJV">KJV (Classic literal)</option>
-                <option value="GNV">GNV (Scholarly literal; Old English)</option>
-                <option value="NKJV">NKJV (Modernized classic)</option>
-                <option value="BSB">BSB (Study‑focused)</option>
-                <option value="CSB">CSB (Optimal balance)</option>
-                <option value="NET">NET (Scholarly transparent)</option>
-                <option value="NIV">NIV (Readable dynamic)</option>
-                <option value="NLT">NLT (Thought‑for‑thought)</option>
-            </select>
-            <small>
-                Set the translation only for the side‑panel Reference Bible and the Bible Gateway search (desktop/tablet only).
-                Please note that the BSB translation is not supported by Bible Gateway.
-            </small>
+            <small>Set the translation for the main Scripture, "Passage of the Day" area.</small>
         </div>
 
         <div class="settings-group">
@@ -617,40 +614,29 @@
         </div>
 
         <div class="settings-group">
-            <label>Offline Bible PDF (Berean Standard Bible)</label>
+            <label>Bible PDF Downloads</label>
             <small style="margin-bottom: 10px;">
-                Download a free Berean Standard Bible PDF for offline use. After downloading,
-                upload it here. Other PDFs may work but only the BSB ones below have been tested.
-                Uploading a new PDF overwrites the existing one. Please note this is only for the
-                desktop/tablet application; mobile devices can only upload custom PDFs if in 
-                desktop view.
+                Download free PDF Bibles for offline use.
             </small>
 
             <div class="pdf-download-options">
-                <a href="https://bereanbible.com/bsb-book-9.5.pdf"
-                   class="pdf-download-link" target="_blank" rel="noopener noreferrer" download>
-                    <div><i class="fas fa-download" aria-hidden="true"></i> BSB Standard Print (9.5pt) – Recommended</div>
-                </a>
-                <a href="https://bereanbible.com/bsb-vbv-book-9.5.pdf"
-                   class="pdf-download-link" target="_blank" rel="noopener noreferrer" download>
-                    <div><i class="fas fa-download" aria-hidden="true"></i> BSB Standard Print, verse‑by‑verse (9.5pt)</div>
-                </a>
                 <a href="https://bereanbible.com/bsb-book-11.pdf"
                    class="pdf-download-link" target="_blank" rel="noopener noreferrer" download>
-                    <div><i class="fas fa-download" aria-hidden="true"></i> BSB Large Print (11pt)</div>
+                    <div><i class="fas fa-download" aria-hidden="true"></i> Berean Standard Bible (BSB) – Recommended</div>
                 </a>
-                <a href="https://bereanbible.com/bsb-vbv-book-11.pdf"
+                <a href="https://bibles.dbs.org/ENGASV/pdf/ENGASV.pdf"
                    class="pdf-download-link" target="_blank" rel="noopener noreferrer" download>
-                    <div><i class="fas fa-download" aria-hidden="true"></i> BSB Large Print, verse‑by‑verse (11pt)</div>
+                    <div><i class="fas fa-download" aria-hidden="true"></i> American Standard Version (ASV)</div>
+                </a>
+                <a href="https://bibles.dbs.org/ENGKJV/pdf/ENGKJV.pdf"
+                   class="pdf-download-link" target="_blank" rel="noopener noreferrer" download>
+                    <div><i class="fas fa-download" aria-hidden="true"></i> King James Version (KJV)</div>
+                </a>
+                <a href="https://bibles.dbs.org/ENGNET/pdf/ENGNET.pdf"
+                   class="pdf-download-link" target="_blank" rel="noopener noreferrer" download>
+                    <div><i class="fas fa-download" aria-hidden="true"></i> New English Translation (NET)</div>
                 </a>
             </div>
-
-            <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;"
-                    id="settingsPdfUploadBtn">
-                <div><i class="fas fa-upload" aria-hidden="true"></i> Upload PDF</div>
-            </button>
-            <input type="file" id="settingsPdfUpload" style="display: none;" accept=".pdf">
-            <div id="customPdfInfo"></div>
         </div>
 
         <div class="settings-group">

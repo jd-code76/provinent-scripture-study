@@ -1,6 +1,5 @@
 ﻿import { handleError } from '../main.js'
-import { loadPDFFromIndexedDB } from './pdf.js'
-export const APP_VERSION = '1.1.07.2025.11.07';
+export const APP_VERSION = '1.2.2025.11.10';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 export const BOOK_ORDER = [
@@ -76,6 +75,7 @@ export const state = {
         bibleTranslation: 'BSB',
         referenceVersion: 'NASB1995',
         footnotes: {},
+        audioNarrator: 'gilbert', 
         manualBook: BOOK_ORDER[0],
         manualChapter: 1,
         theme: 'light',
@@ -90,17 +90,11 @@ export const state = {
             referencePanel: 400,
             scriptureSection: null,
             notesSection: 400
-        },
-        customPdf: null,
-        pdfZoom: 1
+        }
     },
     currentPassageReference: '',
-    pdf: {
-        doc: null,
-        currentPage: 1,
-        renderTask: null,
-        zoomLevel: 1
-    }
+    audioPlayer: null,
+    currentChapterData: null
 };
 export function formatBookNameForSource(bookName, source) {
     const book = bookName.toLowerCase();
@@ -145,16 +139,8 @@ export function saveToStorage() {
                 highlights: state.highlights,
                 notes: state.notes,
                 settings: { ...state.settings },
-                currentPassageReference: state.currentPassageReference,
-                pdf: {
-                    currentPage: state.pdf.currentPage,
-                    zoomLevel: state.pdf.zoomLevel
-                }
+                currentPassageReference: state.currentPassageReference
             };
-            if (cleanState.settings.customPdf && cleanState.settings.customPdf.data) {
-                const { data, ...meta } = cleanState.settings.customPdf;
-                cleanState.settings.customPdf = { ...meta, storedInDB: true };
-            }
             localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
             saveToCookies();
         } catch (e) {
@@ -162,34 +148,22 @@ export function saveToStorage() {
         }
     }, SAVE_DEBOUNCE_MS);
 }
-export async function loadFromStorage() {
+export function loadFromStorage() {
     const raw = localStorage.getItem('bibleStudyState');
     if (!raw) return;
     try {
         const parsed = JSON.parse(raw);
         Object.assign(state, parsed);
-        if (parsed.pdf) {
-            state.pdf.currentPage = parsed.pdf.currentPage || 1;
-            state.pdf.zoomLevel = parsed.pdf.zoomLevel || state.settings.pdfZoom;
-        }
-        if (state.settings.customPdf && state.settings.customPdf.storedInDB) {
-            const pdfMeta = await loadPDFFromIndexedDB();
-            if (!pdfMeta) {
-                console.warn('PDF metadata present but DB entry missing');
-                state.settings.customPdf = null;
-            }
-        }
         document.getElementById('notesInput').value = state.notes;
     } catch (e) {
-        handleError(err, 'loadFromStorage');
+        handleError(e, 'loadFromStorage');
     }
 }
 export function saveToCookies() {
     const exp = new Date();
     exp.setFullYear(exp.getFullYear() + 10);
     const cookieVal = encodeURIComponent(JSON.stringify({
-        ...state.settings,
-        customPdf: undefined
+        ...state.settings
     }));
     document.cookie = `bibleStudySettings=${cookieVal}; expires=${exp.toUTCString()}; path=/; SameSite=Strict`;
 }

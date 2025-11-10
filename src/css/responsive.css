@@ -42,6 +42,11 @@
     .header h1 {
         font-size: 1em;
     }
+
+    .theme-toggle {
+        width: 33px;
+        height: 33px;
+    }
         
     .toolbar {
         gap: 2px;
@@ -93,22 +98,6 @@
     }
 
     .reference-panel-toggle {
-        display: none;
-    }
-
-    label[for="referenceVersionSetting"] {
-        display: none;
-    }
-
-    .settings-group #referenceVersionSetting {
-        display: none;
-    }
-
-    #settingsPdfUploadBtn {
-        display: none;
-    }
-
-    #customPdfInfo {
         display: none;
     }
 

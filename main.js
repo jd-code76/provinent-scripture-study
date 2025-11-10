@@ -1,5 +1,10 @@
 ﻿import {
-    getCurrentTranslation,
+    playChapterAudio,
+    pauseChapterAudio,
+    resumeChapterAudio,
+    stopChapterAudio
+} from './modules/api.js';
+import {
     initBookChapterControls,
     loadSelectedChapter,
     navigateFromURL,
@@ -14,17 +19,6 @@ import {
     scrollToVerse, 
     setupFootnoteHandlers 
 } from './modules/passage.js'
-import {
-    clearSearch,
-    currentSearch,
-    handlePDFUpload,
-    navigateToSearchResult,
-    renderPage,
-    searchPDF,
-    setupPDFCleanup,
-    updateCustomPdfInfo,
-    updatePDFZoom
-} from './modules/pdf.js'
 import {
     clearCache,
     closeSettings,
@@ -41,8 +35,7 @@ import {
     loadFromStorage,
     saveToCookies,
     saveToStorage,
-    state,
-    updateURL
+    state
 } from './modules/state.js'
 import { closeStrongsPopup } from './modules/strongs.js'
 import {
@@ -60,10 +53,6 @@ import {
     updateMarkdownPreview,
     updateReferencePanel
 } from './modules/ui.js'
-if (typeof pdfjsLib !== 'undefined') {
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-}
 if (typeof marked !== 'undefined') {
     marked.setOptions({ 
         breaks: true,       
@@ -117,6 +106,39 @@ function setupEventListeners() {
             .addEventListener('click', nextPassage);
     document.getElementById('randomPassageBtn')
             .addEventListener('click', randomPassage);
+    const playBtn = document.querySelector('.play-audio-btn');
+    const pauseBtn = document.querySelector('.pause-audio-btn');
+    const stopBtn = document.querySelector('.stop-audio-btn');
+    const narratorSelect = document.querySelector('.narrator-select');
+    if (playBtn) {
+        playBtn.addEventListener('click', () => {
+            if (state.audioPlayer?.isPaused) {
+                resumeChapterAudio();
+            } else if (state.audioPlayer?.isPlaying) {
+                pauseChapterAudio();
+            } else {
+                const narrator = narratorSelect?.value || state.settings.audioNarrator || 'gilbert';
+                playChapterAudio(narrator);
+            }
+        });
+    }
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', pauseChapterAudio);
+    }
+    if (stopBtn) {
+        stopBtn.addEventListener('click', stopChapterAudio);
+    }
+    if (narratorSelect) {
+        narratorSelect.addEventListener('change', (e) => {
+            const newNarrator = e.target.value;
+            state.settings.audioNarrator = newNarrator;
+            saveToStorage();
+            if (state.audioPlayer) {
+                stopChapterAudio();
+            }
+            playChapterAudio(newNarrator);
+        });
+    }
     document.getElementById('referencePanelToggle')
             .addEventListener('click', toggleReferencePanel);
     document.querySelectorAll('.sidebar-section-header')
@@ -124,13 +146,6 @@ function setupEventListeners() {
                 const sec = h.dataset.section;
                 toggleSection(sec);
             }));
-    document.getElementById('referenceTranslation').addEventListener('change', function() {
-        const tempTranslation = this.value;
-        const oldTranslation = state.settings.referenceVersion;
-        state.settings.referenceVersion = tempTranslation;
-        updateBibleGatewayVersion();
-        state.settings.referenceVersion = oldTranslation;
-    });
     document.addEventListener('DOMContentLoaded', makeToggleSticky);
     document.querySelectorAll('.collapse-toggle')
             .forEach(btn => btn.addEventListener('click', function () {
@@ -139,86 +154,18 @@ function setupEventListeners() {
             }));
     document.getElementById('referenceSource')
             .addEventListener('change', updateReferencePanel);
-    document.getElementById('referenceTranslation')
-            .addEventListener('change', updateReferencePanel);
+    document.getElementById('referenceTranslation').addEventListener('change', function() {
+        state.settings.referenceVersion = this.value;
+        updateBibleGatewayVersion();
+        saveToStorage();
+        const settingsDropdown = document.getElementById('referenceVersionSetting');
+        if (settingsDropdown) {
+            settingsDropdown.value = this.value;
+        }
+        updateReferencePanel();
+    });
     document.querySelector('.reference-panel-close')
             .addEventListener('click', toggleReferencePanel);
-    document.getElementById('prevPage').addEventListener('click', async () => {
-        if (!state.pdf.doc || state.pdf.currentPage <= 1) return;
-        try {
-            if (state.pdf.renderTask) {
-                await state.pdf.renderTask.cancel();
-                state.pdf.renderTask = null;
-            }
-            state.pdf.currentPage--;
-            await renderPage(state.pdf.currentPage);
-        } catch (err) {
-            console.warn('Error navigating to previous page:', err);
-            await loadPDF();
-        }
-    });
-    document.getElementById('nextPage').addEventListener('click', async () => {
-        if (!state.pdf.doc || state.pdf.currentPage >= state.pdf.doc.numPages) return;
-        try {
-            if (state.pdf.renderTask) {
-                await state.pdf.renderTask.cancel();
-                state.pdf.renderTask = null;
-            }
-            state.pdf.currentPage++;
-            await renderPage(state.pdf.currentPage);
-        } catch (err) {
-            console.warn('Error navigating to next page:', err);
-            await loadPDF();
-        }
-    });
-    document.getElementById('pageInput').addEventListener('change', async () => {
-        if (!state.pdf.doc) {
-            document.getElementById('pageInput').value = state.pdf.currentPage;
-            return;
-        }
-        const inp = document.getElementById('pageInput');
-        let p = parseInt(inp.value, 10);
-        if (Number.isNaN(p)) {
-            inp.value = state.pdf.currentPage;
-            return;
-        }
-        p = Math.max(1, Math.min(p, state.pdf.doc.numPages));
-        try {
-            state.pdf.currentPage = p;
-            await renderPage(p);
-        } catch (err) {
-            console.warn('Error navigating to page:', err);
-            inp.value = state.pdf.currentPage;
-            await loadPDF();
-        }
-    });
-    document.getElementById('zoomIn').addEventListener('click', () => {
-        if (!state.pdf.doc) return;
-        const newZoom = Math.min(state.pdf.zoomLevel + 0.25, 3.0);
-        updatePDFZoom(newZoom);
-    });
-    document.getElementById('zoomOut').addEventListener('click', () => {
-        if (!state.pdf.doc) return;
-        const newZoom = Math.max(state.pdf.zoomLevel - 0.25, 0.5);
-        updatePDFZoom(newZoom);
-    });
-    document.getElementById('pdfSearchBtn').addEventListener('click', searchPDF);
-    document.getElementById('pdfSearchInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') searchPDF();
-    });
-    document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
-    const nextSearchBtn = document.getElementById('nextSearchResult');
-    const prevSearchBtn = document.getElementById('prevSearchResult');
-    if (nextSearchBtn) {
-        nextSearchBtn.addEventListener('click', () => {
-            navigateToSearchResult(currentSearch.currentResult + 1);
-        });
-    }
-    if (prevSearchBtn) {
-        prevSearchBtn.addEventListener('click', () => {
-            navigateToSearchResult(currentSearch.currentResult - 1);
-        });
-    }
     document.getElementById('notesInput')
             .addEventListener('input', e => {
                 state.notes = e.target.value;
@@ -288,12 +235,6 @@ function setupEventListeners() {
         .addEventListener('click', clearCache);
     document.getElementById('deleteAllDataBtn')
         .addEventListener('click', deleteAllData);
-    document.getElementById('settingsPdfUploadBtn')
-            .addEventListener('click', () => {
-                document.getElementById('settingsPdfUpload').click();
-            });
-    document.getElementById('settingsPdfUpload')
-            .addEventListener('change', handlePDFUpload);
     document.querySelectorAll('.color-theme-option')
             .forEach(opt => opt.addEventListener('click', () => {
                 const theme = opt.dataset.theme;
@@ -314,34 +255,6 @@ function setupEventListeners() {
                     break;
             }
         }
-    });
-}
-export function arrayBufferToBase64(buf) {
-    let binary = '';
-    const bytes = new Uint8Array(buf);
-    const chunk = 0x8000;  
-    for (let i = 0; i < bytes.length; i += chunk) {
-        binary += String.fromCharCode.apply(
-            null,
-            Array.from(bytes.subarray(i, i + chunk))
-        );
-    }
-    return btoa(binary);
-}
-export function base64ToArrayBuffer(b64) {
-    const bin = atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) {
-        arr[i] = bin.charCodeAt(i);
-    }
-    return arr.buffer;
-}
-export function readFileAsArrayBuffer(file) {
-    return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = e => resolve(e.target.result);
-        r.onerror = () => reject(new Error('Failed to read file'));
-        r.readAsArrayBuffer(file);
     });
 }
 export function showLoading(flag) {
@@ -550,8 +463,6 @@ function navigateToHighlightedVerse(reference) {
     const [, book, chapter, verse] = match;
     state.settings.manualBook = book;
     state.settings.manualChapter = parseInt(chapter);
-    const translation = getCurrentTranslation();
-    updateURL(translation, book, chapter);
     loadSelectedChapter(book, chapter);
     setTimeout(() => scrollToVerse(verse), 500);
 }
@@ -589,9 +500,9 @@ function refreshHighlightsModalTheme() {
     }
 }
 async function init() {
+    console.log('Initializing app...');
     await loadFromStorage();
     loadFromCookies();
-    setupPDFCleanup();
     const style = document.createElement('style');
     style.textContent = offlineStyles;
     document.head.appendChild(style);
@@ -608,27 +519,10 @@ async function init() {
     restorePanelStates();
     updateDateTime();
     initResizeHandles();
-    updateCustomPdfInfo();
     switchNotesView(state.settings.notesView || 'text');
     updateBibleGatewayVersion();
     setupEventListeners();
     setInterval(updateDateTime, 1_000);
-    const navigatedFromURL = navigateFromURL();
-    if (!navigatedFromURL) {
-        if (window.location.pathname !== '/') {
-            const defaultParams = {
-                translation: 'BSB',
-                book: 'Genesis',
-                chapter: 1
-            };
-            window.history.replaceState(
-                defaultParams,
-                '',
-                `?p=bsb/gen/1`
-            );
-            loadPassage();
-        }
-    }
     console.log('App initialized successfully');
 }
 if (document.readyState === 'loading') {

@@ -2,19 +2,8 @@
   Provinent Scripture Study – passage.js
 =====================================================================*/
 
-
-/* ====================================================================
-   TABLE OF CONTENTS
-   
-	DISPLAY PASSAGE IN MAIN PANEL
-    EXTRACT TEXT FROM VERSE OBJECTS
-    LOAD CURRENT PASSAGE
-==================================================================== */
-
-
 /* Global imports */
 import { loadPassageFromAPI } from './api.js'
-
 import { handleError } from '../main.js'
 
 import { 
@@ -31,56 +20,65 @@ import { showStrongsReference } from './strongs.js'
 
 import { updateReferencePanel } from './ui.js'
 
-
 /* ====================================================================
    DISPLAY PASSAGE IN MAIN PANEL
    Render verses with highlighting and click handlers
 ==================================================================== */
 
-/* Display verses in the scripture content area with footnotes */
-export function displayPassage(verses) {
+/* Display verses and headings in the scripture content area */
+export function displayPassage(contentItems) {
     const container = document.getElementById('scriptureContent');
     
     const fragment = document.createDocumentFragment();
     state.footnotes = {};
     const allFootnotes = [];
     
-    verses.forEach(v => {
-        const verseDiv = document.createElement('div');
-        verseDiv.className = 'verse';
-        verseDiv.dataset.verse = v.reference;
-        verseDiv.dataset.verseNumber = v.number;
+    contentItems.forEach(item => {
+        if (item.type === 'verse') {
+            const v = item;
+            const verseDiv = document.createElement('div');
+            verseDiv.className = 'verse';
+            verseDiv.dataset.verse = v.reference;
+            verseDiv.dataset.verseNumber = v.number;
 
-        let plainText = v.text.text;
-        plainText = plainText.replace(/<[^>]*>/g, '');
-        plainText = plainText.replace(/\s+/g, ' ').trim();
-        verseDiv.dataset.verseText = plainText;
+            let plainText = v.text.text;
+            plainText = plainText.replace(/<[^>]*>/g, '');
+            plainText = plainText.replace(/\s+/g, ' ').trim();
+            verseDiv.dataset.verseText = plainText;
 
-        const key = v.reference;
-        if (state.highlights[key]) {
-            verseDiv.classList.add(`highlight-${state.highlights[key]}`);
+            const key = v.reference;
+            if (state.highlights[key]) {
+                verseDiv.classList.add(`highlight-${state.highlights[key]}`);
+            }
+
+            const numSpan = document.createElement('span');
+            numSpan.className = 'verse-number';
+            numSpan.textContent = v.number;
+
+            const txtSpan = document.createElement('span');
+            txtSpan.className = 'verse-text';
+            txtSpan.innerHTML = v.text.text;
+
+            if (v.text.footnotes && v.text.footnotes.length > 0) {
+                state.footnotes[v.reference] = v.text.footnotes;
+                allFootnotes.push(...v.text.footnotes);
+            }
+
+            verseDiv.appendChild(numSpan);
+            verseDiv.appendChild(txtSpan);
+            fragment.appendChild(verseDiv);
+
+            const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
+            cachedVerses[v.reference] = v.text.text.replace(/<[^>]*>/g, '');
+            localStorage.setItem('cachedVerses', JSON.stringify(cachedVerses));
+            
+        } else if (item.type === 'heading') {
+            const headingDiv = document.createElement('div');
+            headingDiv.className = 'chapter-heading';
+            headingDiv.innerHTML = `<h3>${item.content}</h3>`;
+            fragment.appendChild(headingDiv);
+            
         }
-
-        const numSpan = document.createElement('span');
-        numSpan.className = 'verse-number';
-        numSpan.textContent = v.number;
-
-        const txtSpan = document.createElement('span');
-        txtSpan.className = 'verse-text';
-        txtSpan.innerHTML = v.text.text;
-
-        if (v.text.footnotes && v.text.footnotes.length > 0) {
-            state.footnotes[v.reference] = v.text.footnotes;
-            allFootnotes.push(...v.text.footnotes);
-        }
-
-        verseDiv.appendChild(numSpan);
-        verseDiv.appendChild(txtSpan);
-        fragment.appendChild(verseDiv);
-
-        const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
-        cachedVerses[v.reference] = v.text.text.replace(/<[^>]*>/g, '');
-        localStorage.setItem('cachedVerses', JSON.stringify(cachedVerses));
     });
     
     container.innerHTML = '';
@@ -234,7 +232,6 @@ export function setupFootnoteHandlers() {
     scriptureContent.addEventListener('click', footnoteHandler);
 }
 
-
 /* ====================================================================
    EXTRACT TEXT FROM VERSE OBJECTS
    Parse complex verse structures from API into plain text
@@ -247,9 +244,9 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
     
     for (const item of content) {
         if (typeof item === 'string') {
-            txt += ensureProperSpacing(item);
+            txt += ensureProperSpacing(item) + ' ';
         } else if (item.text) {
-            txt += ensureProperSpacing(item.text);
+            txt += ensureProperSpacing(item.text) + ' ';
         } else if (item.heading) {
             txt += ' ' + ensureProperSpacing(item.heading) + ' ';
         } else if (item.noteId !== undefined) {
@@ -279,11 +276,9 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
         }
     }
     
-    txt = txt.replace(/\s+/g, ' ').trim();
-    txt = txt.replace(/\s+([.,;:!?])/g, '$1');
-    txt = txt.replace(/([.,;:!?])(?=\w)/g, '$1 ');
-    txt = txt.replace(/\s*"\s*/g, '" ');
-    txt = txt.replace(/\s*'\s*/g, "' ");
+    txt = txt
+        .replace(/\s+/g, ' ')
+        .trim();
     
     return { 
         text: txt,
@@ -295,31 +290,8 @@ export function extractVerseText(content, chapterFootnotes = [], footnoteCounter
 function ensureProperSpacing(text) {
     if (!text) return '';
     
-    let cleanedText = text
-        .replace(/\s+/g, ' ')
-        .trim();
-    
-    cleanedText = cleanedText
-        .replace(/([^'"\s])\s+([.,;:!?])/g, '$1$2')
-        .replace(/([.,;:!?])(?=[A-Za-z])/g, '$1 ')
-        .replace(/\s*"\s*/g, (match) => {
-            if (match === '"' || match === ' "') return '"';
-            return '" ';
-        })
-        .replace(/\s*'\s*/g, (match) => {
-            if (match === "'" || match === " '") return "'";
-            return "' ";
-        });
-    
-    cleanedText = cleanedText
-        .replace(/\s+/g, ' ')
-        .replace(/([.,;:!?]) (["'])/g, '$1$2')
-        .replace(/(["']) ([.,;:!?])/g, '$1$2')
-        .trim();
-    
-    return cleanedText;
+    return text.replace(/\s+/g, ' ').trim();
 }
-
 
 /* ====================================================================
    LOAD CURRENT PASSAGE

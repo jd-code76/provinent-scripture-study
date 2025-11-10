@@ -28,7 +28,7 @@ export function getApiBookCode(displayName) {
     const code = bookNameMapping[displayName];
     if (code) return code;
     console.warn('Missing book‑code mapping for:', displayName);
-    showError(`Cannot load “${displayName}” – unknown book code.`);
+    showError(`Cannot load "${displayName}" – unknown book code.`);
     throw new Error('Unknown book code');
 }
 export async function fetchChapter(translation, book, chapter) {
@@ -68,6 +68,125 @@ export async function fetchChapter(translation, book, chapter) {
         handleError(err, 'fetchChapter');
     }
 }
+export function getCurrentChapterAudioLinks() {
+    const book = state.settings.manualBook;
+    const chapter = state.settings.manualChapter;
+    const translation = state.settings.bibleTranslation;
+    if (!book || !chapter || !translation) return null;
+    if (state.currentChapterData?.thisChapterAudioLinks) {
+        return state.currentChapterData.thisChapterAudioLinks;
+    }
+    return null;
+}
+export async function playChapterAudio(narrator = null) {
+    try {
+        const selectedNarrator = narrator || state.settings.audioNarrator || 'gilbert';
+        if (narrator && narrator !== state.settings.audioNarrator) {
+            state.settings.audioNarrator = narrator;
+            saveToStorage();
+        }
+        if (state.audioPlayer?.audio) {
+            state.audioPlayer.audio.pause();
+            state.audioPlayer.audio.currentTime = 0;
+        }
+        const audioLinks = getCurrentChapterAudioLinks();
+        if (!audioLinks || !audioLinks[selectedNarrator]) {
+            throw new Error(`Audio not available for current chapter from ${selectedNarrator}`);
+        }
+        const audioUrl = audioLinks[selectedNarrator];
+        const audio = new Audio(audioUrl);
+        state.audioPlayer = {
+            audio: audio,
+            currentNarrator: selectedNarrator,
+            isPlaying: false,
+            isPaused: false
+        };
+        audio.addEventListener('ended', () => {
+            if (state.audioPlayer) {
+                state.audioPlayer.isPlaying = false;
+                state.audioPlayer.isPaused = false;
+                updateAudioPlayerUI(false, selectedNarrator);
+            }
+        });
+        await audio.play();
+        state.audioPlayer.isPlaying = true;
+        state.audioPlayer.isPaused = false;
+        updateAudioPlayerUI(true, selectedNarrator);
+    } catch (err) {
+        handleError(err, 'playChapterAudio');
+        showError('Could not play audio: ' + err.message);
+    }
+}
+export function pauseChapterAudio() {
+    if (state.audioPlayer?.audio && state.audioPlayer.isPlaying) {
+        state.audioPlayer.audio.pause();
+        state.audioPlayer.isPlaying = false;
+        state.audioPlayer.isPaused = true;
+        updateAudioPlayerUI(false, state.audioPlayer.currentNarrator);
+    }
+}
+export function stopChapterAudio() {
+    if (state.audioPlayer?.audio) {
+        state.audioPlayer.audio.pause();
+        state.audioPlayer.audio.currentTime = 0;
+        state.audioPlayer.isPlaying = false;
+        state.audioPlayer.isPaused = false;
+        updateAudioPlayerUI(false, state.audioPlayer.currentNarrator);
+    }
+}
+export function resumeChapterAudio() {
+    if (state.audioPlayer?.audio && state.audioPlayer.isPaused) {
+        state.audioPlayer.audio.play();
+        state.audioPlayer.isPlaying = true;
+        state.audioPlayer.isPaused = false;
+        updateAudioPlayerUI(true, state.audioPlayer.currentNarrator);
+    }
+}
+function updateAudioPlayerUI(isPlaying, narrator) {
+    const audioControls = document.getElementById('audioControls');
+    if (!audioControls) return;
+    const playBtn = audioControls.querySelector('.play-audio-btn');
+    const pauseBtn = audioControls.querySelector('.pause-audio-btn');
+    if (playBtn) playBtn.style.display = isPlaying ? 'none' : 'inline-block';
+    if (pauseBtn) pauseBtn.style.display = isPlaying ? 'inline-block' : 'none';
+    if (narrator && state.audioPlayer) {
+        const narratorSelect = audioControls.querySelector('.narrator-select');
+        if (narratorSelect) {
+            narratorSelect.value = narrator;
+        }
+    }
+}
+export function updateAudioControls(audioLinks) {
+    const audioControls = document.getElementById('audioControls');
+    if (!audioControls) {
+        console.error('Audio controls element not found!');
+        return;
+    }
+    if (audioLinks && Object.keys(audioLinks).length > 0) {
+        audioControls.style.display = 'block';
+        const narratorSelect = audioControls.querySelector('.narrator-select');
+        if (narratorSelect) {
+            narratorSelect.innerHTML = '';
+            Object.keys(audioLinks).forEach(narrator => {
+                const option = document.createElement('option');
+                option.value = narrator;
+                option.textContent = narrator.charAt(0).toUpperCase() + narrator.slice(1);
+                option.selected = narrator === state.settings.audioNarrator;
+                narratorSelect.appendChild(option);
+            });
+        }
+        updateAudioPlayerUI(state.audioPlayer?.isPlaying || false, state.settings.audioNarrator);
+    } else {
+        audioControls.style.display = 'none';
+    }
+}
+export function cleanupAudioPlayer() {
+    if (state.audioPlayer?.audio) {
+        state.audioPlayer.audio.pause();
+        state.audioPlayer.audio.currentTime = 0;
+    }
+    state.audioPlayer = null;
+}
 export async function loadPassageFromAPI(passageInfo) {
     try {
         showLoading(true);
@@ -80,33 +199,51 @@ export async function loadPassageFromAPI(passageInfo) {
             !Array.isArray(chapterData.chapter.content)) {
             throw new Error('Malformed API response – missing chapter.content');
         }
+        state.currentChapterData = chapterData;
         const chapterFootnotes = chapterData.chapter.footnotes || [];
         const footnoteCounter = { value: 1 };
-        const verses = chapterData.chapter.content
-            .filter(v =>
-                v.type === 'verse' &&
-                v.number >= startVerse &&
-                v.number <= endVerse
-            )
-            .map(v => {
-                const verseData = extractVerseText(v.content, chapterFootnotes, footnoteCounter);
-                return {
-                    number: v.number,
-                    text: verseData,
-                    reference: `${book} ${chapter}:${v.number}`,
-                    rawContent: v.content
-                };
-            });
-        if (verses.length === 0) {
-            throw new Error('No verses found in the requested range');
+        const contentItems = chapterData.chapter.content
+            .filter(item => {
+                if (item.type === 'verse') {
+                    return item.number >= startVerse && item.number <= endVerse;
+                }
+                return true;
+            })
+            .map(item => {
+                if (item.type === 'verse') {
+                    const verseData = extractVerseText(item.content, chapterFootnotes, footnoteCounter);
+                    return {
+                        type: 'verse',
+                        number: item.number,
+                        text: verseData,
+                        reference: `${book} ${chapter}:${item.number}`,
+                        rawContent: item.content
+                    };
+                } else if (item.type === 'heading') {
+                    return {
+                        type: 'heading',
+                        content: item.content.join(' '),
+                        reference: `${book} ${chapter}`
+                    };
+                } else if (item.type === 'line_break') {
+                    return {
+                        type: 'line_break'
+                    };
+                }
+                return null;
+            })
+            .filter(item => item !== null);
+        if (contentItems.length === 0) {
+            throw new Error('No content found in the requested range');
         }
-        displayPassage(verses);
+        displayPassage(contentItems);
         afterContentLoad();
         clearError();
         if (chapterData.translation && chapterData.translation.name) {
             document.getElementById('bibleName').textContent =
                 chapterData.translation.name;
         }
+        updateAudioControls(chapterData.thisChapterAudioLinks);
     } catch (err) {
         handleError(err, 'loadPassageFromAPI');
     } finally {

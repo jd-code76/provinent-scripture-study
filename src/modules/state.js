@@ -2,25 +2,11 @@
   Provinent Scripture Study – state.js
 =====================================================================*/
 
-
-/* ====================================================================
-   TABLE OF CONTENTS
-   
-    APPLICATION STATE
-    BOOK FORMATTING
-    PERSISTENCE
-    BOOK-NAME MAPPINGS
-    URL UPDATES AND PARSING
-==================================================================== */
-
-
 /* Global imports */
 import { handleError } from '../main.js'
 
-import { loadPDFFromIndexedDB } from './pdf.js'
-
 /* Global constants */
-export const APP_VERSION = '1.1.07.2025.11.07';
+export const APP_VERSION = '1.2.2025.11.10';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -150,7 +136,6 @@ export const BOOK_NAME_TO_ABBREVIATION = Object.fromEntries(
     Object.entries(ABBREVIATION_TO_BOOK_NAME).map(([abbr, name]) => [name, abbr])
 );
 
-
 /* ====================================================================
    APPLICATION STATE
    Central state object holding all app data and settings
@@ -171,6 +156,9 @@ export const state = {
         bibleTranslation: 'BSB',
         referenceVersion: 'NASB1995',
         footnotes: {},
+        
+        // Audio settings
+        audioNarrator: 'gilbert', // Default narrator
         
         // Manual navigation only
         manualBook: BOOK_ORDER[0],
@@ -193,25 +181,18 @@ export const state = {
             referencePanel: 400,
             scriptureSection: null,
             notesSection: 400
-        },
-        
-        // PDF settings
-        customPdf: null,
-        pdfZoom: 1
+        }
     },
 
     // Runtime state
     currentPassageReference: '',
     
-    // PDF state
-    pdf: {
-        doc: null,
-        currentPage: 1,
-        renderTask: null,
-        zoomLevel: 1
-    }
+    // Audio state
+    audioPlayer: null,
+    
+    // Current chapter data for audio
+    currentChapterData: null
 };
-
 
 /* ====================================================================
    BOOK FORMATTING
@@ -256,7 +237,6 @@ export function formatBookNameForSource(bookName, source) {
     }
 }
 
-
 /* ====================================================================
    PERSISTENCE
    Save and load state from localStorage and cookies
@@ -278,17 +258,8 @@ export function saveToStorage() {
                 highlights: state.highlights,
                 notes: state.notes,
                 settings: { ...state.settings },
-                currentPassageReference: state.currentPassageReference,
-                pdf: {
-                    currentPage: state.pdf.currentPage,
-                    zoomLevel: state.pdf.zoomLevel
-                }
+                currentPassageReference: state.currentPassageReference
             };
-            
-            if (cleanState.settings.customPdf && cleanState.settings.customPdf.data) {
-                const { data, ...meta } = cleanState.settings.customPdf;
-                cleanState.settings.customPdf = { ...meta, storedInDB: true };
-            }
             
             localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
             saveToCookies();
@@ -299,31 +270,16 @@ export function saveToStorage() {
 }
 
 /* Load state from localStorage */
-export async function loadFromStorage() {
+export function loadFromStorage() {
     const raw = localStorage.getItem('bibleStudyState');
     if (!raw) return;
     
     try {
         const parsed = JSON.parse(raw);
         Object.assign(state, parsed);
-
-        // Restore PDF state if it exists
-        if (parsed.pdf) {
-            state.pdf.currentPage = parsed.pdf.currentPage || 1;
-            state.pdf.zoomLevel = parsed.pdf.zoomLevel || state.settings.pdfZoom;
-        }
-
-        if (state.settings.customPdf && state.settings.customPdf.storedInDB) {
-            const pdfMeta = await loadPDFFromIndexedDB();
-            if (!pdfMeta) {
-                console.warn('PDF metadata present but DB entry missing');
-                state.settings.customPdf = null;
-            }
-        }
-
         document.getElementById('notesInput').value = state.notes;
     } catch (e) {
-        handleError(err, 'loadFromStorage');
+        handleError(e, 'loadFromStorage');
     }
 }
 
@@ -333,8 +289,7 @@ export function saveToCookies() {
     exp.setFullYear(exp.getFullYear() + 10);
     
     const cookieVal = encodeURIComponent(JSON.stringify({
-        ...state.settings,
-        customPdf: undefined
+        ...state.settings
     }));
     
     document.cookie = `bibleStudySettings=${cookieVal}; expires=${exp.toUTCString()}; path=/; SameSite=Strict`;
@@ -356,12 +311,10 @@ export function loadFromCookies() {
     }
 }
 
-
 /* ====================================================================
    BOOK-NAME MAPPINGS
    API book code mappings
 ==================================================================== */
-
 
 /**
  * bookNameMapping
@@ -475,7 +428,6 @@ export function updateBibleGatewayVersion() {
         versionInput.value = versionCode;
     }
 }
-
 
 /* ====================================================================
    URL UPDATES AND PARSING

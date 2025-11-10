@@ -11,7 +11,6 @@ $fileMappings = @(
     @{ Source = "../src/modules/api.js"; Destination = "../www/modules/api.js" },
     @{ Source = "../src/modules/navigation.js"; Destination = "../www/modules/navigation.js" },
     @{ Source = "../src/modules/passage.js"; Destination = "../www/modules/passage.js" },
-    @{ Source = "../src/modules/pdf.js"; Destination = "../www/modules/pdf.js" },
     @{ Source = "../src/modules/settings.js"; Destination = "../www/modules/settings.js" },
     @{ Source = "../src/modules/state.js"; Destination = "../www/modules/state.js" },
     @{ Source = "../src/modules/strongs.js"; Destination = "../www/modules/strongs.js" },

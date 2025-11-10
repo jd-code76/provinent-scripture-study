@@ -9,6 +9,7 @@
     color: var(--sidebar-text);
     padding: 20px;
     overflow-y: auto;
+    overflow-x: hidden;
     flex-shrink: 0;
     border-right: 1px solid var(--border-color);
     position: relative;
@@ -22,6 +23,14 @@
     border-bottom: 2px solid var(--accent-color);
     padding-bottom: 10px;
     color: var(--sidebar-text);
+}
+
+.sidebar .collapse-toggle {
+    position: sticky;
+    top: 10px;
+    z-index: 1000;
+    margin-left: auto;
+    margin-right: 10px;
 }
 
 /* Sidebar Sections & Headers */

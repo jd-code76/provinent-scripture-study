@@ -2,19 +2,10 @@
   Provinent Scripture Study – strongs.js
 =====================================================================*/
 
-
-/* ====================================================================
-   TABLE OF CONTENTS
-
-    STRONG’S POP-UP
-==================================================================== */
-
 /* Global imports */
-
 import { state } from './state.js'
 
 import { getStepBibleUrl } from './ui.js'
-
 
 /* ====================================================================
    STRONG'S POP-UP
@@ -81,7 +72,6 @@ export function showStrongsReference(verseEl) {
             ${verseText}
         </div>
 
-        <!-- Footnotes section for Strong's popup - will be hidden if empty -->
         <div class="strongs-footnotes-container" id="strongsFootnotesContainer" style="display: none;"></div>
 
         <div class="embedded-resources">
@@ -321,4 +311,3 @@ function popOutResource(url, title) {
     window.open(url, title,
         'width=800,height=600,menubar=no,toolbar=no,location=no');
 }
-

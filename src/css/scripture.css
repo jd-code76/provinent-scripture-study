@@ -123,6 +123,93 @@
     color: #000;
 }
 
+.chapter-heading {
+    margin: 20px 0 10px 0;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--accent-color);
+    border-radius: 4px;
+}
+
+.chapter-heading h3 {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Audio Controls Styles */
+#audioControls {
+    margin: 10px 0;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+}
+
+#audioControls > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.narrator-select {
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    color: var(--text-primary);
+}
+
+.play-audio-btn,
+.pause-audio-btn,
+.stop-audio-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    min-width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.play-audio-btn,
+.pause-audio-btn {
+    background: var(--accent-color);
+    color: white;
+}
+
+.stop-audio-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.play-audio-btn:hover,
+.pause-audio-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stop-audio-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.play-audio-btn:active,
+.pause-audio-btn:active,
+.stop-audio-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
 
 /* ====================================================================
    FOOTNOTES SECTION
@@ -166,8 +253,6 @@
     border-radius: 6px;
     border-left: 3px solid var(--accent-color);
     font-size: 0.9em;
-    overflow-y: auto;
-    max-height: 300px;
     position: relative;
     z-index: 100;
 }

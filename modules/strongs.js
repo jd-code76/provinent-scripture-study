@@ -49,7 +49,6 @@ export function showStrongsReference(verseEl) {
         <div class="verse-text-display">
             ${verseText}
         </div>
-        <!-- Footnotes section for Strong's popup - will be hidden if empty -->
         <div class="strongs-footnotes-container" id="strongsFootnotesContainer" style="display: none;"></div>
         <div class="embedded-resources">
             <div class="resource-frame">

@@ -1,7 +1,9 @@
 ﻿import {
     apiTranslationCode,
+    cleanupAudioPlayer,
     fetchChapter,
-    getApiBookCode
+    getApiBookCode,
+    updateAudioControls
 } from './api.js'
 import {
     clearError,
@@ -49,6 +51,9 @@ export function populateChapterDropdown(selectedBook) {
     }
 }
 export async function loadSelectedChapter(book = null, chapter = null) {
+    if (typeof cleanupAudioPlayer === 'function') {
+        cleanupAudioPlayer();
+    }
     const selBook = book || document.getElementById('bookSelect').value;
     const selChapter = chapter || document.getElementById('chapterSelect').value;
     const apiBook = getApiBookCode(selBook);
@@ -60,19 +65,40 @@ export async function loadSelectedChapter(book = null, chapter = null) {
         const chapterData = await fetchChapter(apiTranslation, apiBook, selChapter);
         const chapterFootnotes = chapterData.chapter.footnotes || [];
         const footnoteCounter = { value: 1 };
-        const verses = chapterData.chapter.content
-            .filter(v => v.type === 'verse')
-            .map(v => ({
-                number: v.number,
-                text: extractVerseText(v.content, chapterFootnotes, footnoteCounter),
-                reference: `${selBook} ${selChapter}:${v.number}`
-            }));
+        const contentItems = chapterData.chapter.content
+            .map(item => {
+                if (item.type === 'verse') {
+                    return {
+                        type: 'verse',
+                        number: item.number,
+                        text: extractVerseText(item.content, chapterFootnotes, footnoteCounter),
+                        reference: `${selBook} ${selChapter}:${item.number}`,
+                        rawContent: item.content
+                    };
+                } else if (item.type === 'heading') {
+                    return {
+                        type: 'heading',
+                        content: item.content.join(' '),
+                        reference: `${selBook} ${selChapter}`
+                    };
+                } else if (item.type === 'line_break') {
+                    return {
+                        type: 'line_break'
+                    };
+                }
+                return null;
+            })
+            .filter(item => item !== null);
         state.footnotes = {};
-        displayPassage(verses, `${selBook} ${selChapter}`);
+        displayPassage(contentItems);
         clearError();
         document.getElementById('scriptureSection').scrollTop = 0;
         state.settings.manualBook = selBook;
         state.settings.manualChapter = Number(selChapter);
+        state.currentChapterData = chapterData;
+        if (typeof updateAudioControls === 'function') {
+            updateAudioControls(chapterData.thisChapterAudioLinks);
+        }
         if (state.settings.referencePanelOpen) {
             updateReferencePanel();
         }
@@ -256,29 +282,6 @@ export function navigateFromURL() {
         }
     }
     return false;
-}
-function loadDefaultPassage(params) {
-    state.settings.manualBook = params.book;
-    state.settings.manualChapter = params.chapter;
-    state.settings.bibleTranslation = params.translation;
-    const bookSelect = document.getElementById('bookSelect');
-    const chapterSelect = document.getElementById('chapterSelect');
-    if (bookSelect) bookSelect.value = params.book;
-    if (chapterSelect) {
-        populateChapterDropdown(params.book);
-        chapterSelect.value = params.chapter;
-    }
-    const passageRefElement = document.getElementById('passageReference');
-    if (passageRefElement) {
-        passageRefElement.textContent = `${params.book} ${params.chapter}`;
-        state.currentPassageReference = `${params.book} ${params.chapter}`;
-    }
-    const headerTitleEl = document.getElementById('passageHeaderTitle');
-    if (headerTitleEl) {
-        headerTitleEl.textContent = `Holy Bible: ${params.translation}`;
-    }
-    loadSelectedChapter(params.book, params.chapter);
-    return true;
 }
 export function setupPopStateListener() {
     window.addEventListener('popstate', (event) => {

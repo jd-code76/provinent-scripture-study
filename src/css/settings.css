@@ -121,27 +121,6 @@
     border-bottom: 1px solid var(--border-color);
 }
 
-.pdf-upload-area {
-    border: 2px dashed var(--border-color);
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    background: var(--card-background);
-    margin: 15px 0;
-}
-
-.pdf-upload-area:hover {
-    border-color: var(--accent-color);
-    background-color: rgba(52, 152, 219, 0.05);
-}
-
-.pdf-upload-area.has-file {
-    border-color: var(--accent-color);
-    background-color: rgba(52, 152, 219, 0.1);
-}
-
 .pdf-download-options {
     margin-top: 15px;
     padding: 15px;
@@ -169,28 +148,6 @@
 .pdf-download-link:hover {
     background-color: var(--accent-color);
     color: white;
-}
-
-.pdf-info {
-    padding: 10px;
-    background-color: var(--toolbar-background);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    margin-top: 10px;
-    font-size: 13px;
-}
-
-.pdf-info-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.pdf-remove-btn {
-    padding: 3px 8px;
-    font-size: 11px;
-    background-color: #f44336;
 }
 
 .about-content {

@@ -7,12 +7,6 @@
 } from '../main.js'
 import { loadPassage } from './passage.js'
 import {
-    deletePDFFromIndexedDB,
-    openDB,
-    STORE_NAME,
-    updateCustomPdfInfo
-} from './pdf.js'
-import {
     APP_VERSION,
     BOOK_ORDER,
     saveToCookies,
@@ -36,10 +30,6 @@ export function exportData() {
         notes: state.notes,
         settings: { ...state.settings }
     };
-    if (payload.settings.customPdf && payload.settings.customPdf.data) {
-        const { data, ...meta } = payload.settings.customPdf;
-        payload.settings.customPdf = meta;
-    }
     const blob = new Blob([JSON.stringify(payload, null, 2)], 
                           { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -61,7 +51,7 @@ export function importData(ev) {
             if (!incoming.settings) {
                 throw new Error('Invalid backup format');
             }
-            if (!confirm('Import will overwrite all current data (except any uploaded PDF). Continue?')) {
+            if (!confirm('Import will overwrite all current data. Continue?')) {
                 return;
             }
             Object.assign(state.settings, incoming.settings);
@@ -76,7 +66,6 @@ export function importData(ev) {
             applyColorTheme();
             restoreSidebarState();
             restorePanelStates();
-            updateCustomPdfInfo();
             switchNotesView(state.settings.notesView || 'text');
             await loadPassage();
             document.getElementById('notesInput').value = state.notes;
@@ -93,8 +82,6 @@ export function importData(ev) {
 export function openSettings() {
     document.getElementById('bibleTranslationSetting').value = 
         state.settings.bibleTranslation;
-    document.getElementById('referenceVersionSetting').value = 
-        state.settings.referenceVersion;
     document.querySelectorAll('.color-theme-option')
             .forEach(o => o.classList.toggle('selected',
                 o.dataset.theme === state.settings.colorTheme));
@@ -109,36 +96,30 @@ export function closeSettings() {
 export async function saveSettings() {
     try {
         const newTranslation = document.getElementById('bibleTranslationSetting').value;
-        const newReferenceVersion = document.getElementById('referenceVersionSetting').value;
         const currentBook = state.settings.manualBook;
         const currentChapter = state.settings.manualChapter;
         updateURL(newTranslation, currentBook, currentChapter);
         state.settings.bibleTranslation = newTranslation;
-        state.settings.referenceVersion = newReferenceVersion;
-        if (newReferenceVersion === 'BSB' && state.settings.referenceSource === 'biblegateway') {
-            state.settings.referenceSource = 'biblehub';
-            document.getElementById('referenceSource').value = 'biblehub';
-        } else if (newReferenceVersion === 'NASB1995' && state.settings.referenceSource === 'biblehub') {
-            state.settings.referenceSource = 'biblegateway';
-            document.getElementById('referenceSource').value = 'biblegateway';
+        const referenceTranslationSelect = document.getElementById('referenceTranslation');
+        if (referenceTranslationSelect) {
+            referenceTranslationSelect.value = state.settings.referenceVersion;
         }
         const selectedTheme = document.querySelector('.color-theme-option.selected');
         if (selectedTheme) {
             state.settings.colorTheme = selectedTheme.dataset.theme;
             applyColorTheme();
         }
-        document.getElementById('referenceTranslation').value = state.settings.referenceVersion;
         updateBibleGatewayVersion();
         saveToStorage();
         saveToCookies();
         closeSettings();
         await loadPassage();
         if (state.settings.referencePanelOpen) {
-            updateReferencePanel();
+            await updateReferencePanel();
         }
-        alert('Settings saved!');
     } catch (err) {
         handleError(err, 'saveSettings');
+        alert('Error saving settings: ' + err.message);
     } 
 }
 export async function clearCache() {
@@ -151,11 +132,7 @@ export async function clearCache() {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
-        const db = await openDB();
-        const tx = db.transaction([STORE_NAME], 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        await store.clear();
-        await tx.done;
+        localStorage.removeItem('cachedVerses');
         alert('Cache cleared successfully');
     } catch (err) {
         handleError(err, 'clearCache');
@@ -174,12 +151,8 @@ export async function deleteAllData() {
     try {
         showLoading(true);
         localStorage.removeItem('bibleStudyState');
+        localStorage.removeItem('cachedVerses');
         document.cookie = 'bibleStudySettings=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        try {
-            await deletePDFFromIndexedDB();
-        } catch (e) {
-            console.warn('Could not delete PDF from IndexedDB:', e);
-        }
         const defaultState = {
             currentVerse: null,
             currentVerseData: null,
@@ -203,31 +176,16 @@ export async function deleteAllData() {
                     referencePanel: 400,
                     scriptureSection: null,
                     notesSection: 400
-                },
-                customPdf: null,
-                pdfZoom: 1
+                }
             },
-            currentPassageReference: '',
-            pdf: {
-                doc: null,
-                currentPage: 1,
-                renderTask: null,
-                zoomLevel: 1
-            }
+            currentPassageReference: ''
         };
         Object.assign(state, defaultState);
         document.getElementById('notesInput').value = '';
         updateMarkdownPreview();
-        updateCustomPdfInfo();
         applyTheme();
         applyColorTheme();
         updateBibleGatewayVersion();
-        document.getElementById('pageInput').value = 1;
-        document.getElementById('pageCount').textContent = '?';
-        const zoomDisplay = document.getElementById('zoomLevel');
-        if (zoomDisplay) {
-            zoomDisplay.textContent = '100%';
-        }
         const defaultParams = {
             translation: 'BSB',
             book: 'Genesis',
