@@ -82,16 +82,6 @@ if (typeof marked !== 'undefined') {
         gfm: true          
     });
 }
-function updateDateTime() {
-    const now = new Date();
-    document.getElementById('currentDate').textContent =
-        now.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-}
 class AppError extends Error {
     constructor(message, type, originalError) {
         super(message);
@@ -530,7 +520,7 @@ function renderHighlights(filterColor = 'all') {
         if (filterColor !== 'all' && ref.color !== filterColor) {
             return;
         }
-        const verseText = getVerseTextFromStorage(ref.reference) || 'Verse text not available';
+        const verseText = getVerseTextFromStorage(ref.reference) || 'Text not available, click to refresh';
         html += `
             <div class="highlight-item ${ref.color}" data-reference="${ref.reference}" data-color="${ref.color}">
                 <div class="highlight-ref">${ref.reference}</div>
@@ -621,12 +611,10 @@ async function init() {
     restoreSidebarState();
     restorePanelStates();
     updateHeaderTitle();
-    updateDateTime();
     initResizeHandles();
     switchNotesView(state.settings.notesView || 'text');
     updateBibleGatewayVersion();
     setupEventListeners();
-    setInterval(updateDateTime, 1_000);
     console.log('App initialized successfully');
 }
 if (document.readyState === 'loading') {

@@ -6,7 +6,7 @@
 import { handleError } from '../main.js'
 
 /* Global constants */
-export const APP_VERSION = '1.3.2025.11.11';
+export const APP_VERSION = '1.3.01.2025.11.12';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 

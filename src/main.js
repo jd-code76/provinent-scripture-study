@@ -124,23 +124,6 @@ if (typeof marked !== 'undefined') {
 }
 
 /* ====================================================================
-   DATE / TIME
-   Current date display (updates every second)
-==================================================================== */
-
-/* Update current date display */
-function updateDateTime() {
-    const now = new Date();
-    document.getElementById('currentDate').textContent =
-        now.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-}
-
-/* ====================================================================
    ERROR HANDLING
 ==================================================================== */
 /* Create error handling utility */
@@ -733,7 +716,7 @@ function renderHighlights(filterColor = 'all') {
             return;
         }
         
-        const verseText = getVerseTextFromStorage(ref.reference) || 'Verse text not available';
+        const verseText = getVerseTextFromStorage(ref.reference) || 'Text not available, click to refresh';
         html += `
             <div class="highlight-item ${ref.color}" data-reference="${ref.reference}" data-color="${ref.color}">
                 <div class="highlight-ref">${ref.reference}</div>
@@ -873,12 +856,10 @@ async function init() {
     restoreSidebarState();
     restorePanelStates();
     updateHeaderTitle();
-    updateDateTime();
     initResizeHandles();
     switchNotesView(state.settings.notesView || 'text');
     updateBibleGatewayVersion();
     setupEventListeners();
-    setInterval(updateDateTime, 1_000);
     
     console.log('App initialized successfully');
 }

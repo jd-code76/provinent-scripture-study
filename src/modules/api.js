@@ -302,9 +302,18 @@ function updateAudioPlayerUI(isPlaying, narrator = null) {
     
     const playBtn = audioControls.querySelector('.play-audio-btn');
     const pauseBtn = audioControls.querySelector('.pause-audio-btn');
+    const stopBtn = audioControls.querySelector('.stop-audio-btn');
     
+    // Show play/pause buttons based on playing state
     if (playBtn) playBtn.style.display = isPlaying ? 'none' : 'inline-block';
     if (pauseBtn) pauseBtn.style.display = isPlaying ? 'inline-block' : 'none';
+    
+    // Show stop button only if audio has been started (playing OR paused)
+    if (stopBtn) {
+        const hasAudioStarted = state.audioPlayer && 
+                              (state.audioPlayer.isPlaying || state.audioPlayer.isPaused);
+        stopBtn.style.display = hasAudioStarted ? 'inline-block' : 'none';
+    }
     
     // Only update narrator select for BSB
     if (narrator && !isKJV(state.settings.bibleTranslation)) {
@@ -440,11 +449,6 @@ export async function loadPassageFromAPI(passageInfo) {
         displayPassage(contentItems);
         afterContentLoad();
         clearError();
-
-        if (chapterData.translation && chapterData.translation.name) {
-            document.getElementById('bibleName').textContent =
-                chapterData.translation.name;
-        }
 
         updateAudioControls(chapterData.thisChapterAudioLinks);
 

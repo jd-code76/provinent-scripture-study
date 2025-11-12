@@ -32,7 +32,7 @@
 .passage-header {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-color));
     color: white;
-    padding: 20px;
+    padding: 10px;
     border-radius: 8px;
     margin-bottom: 20px;
 }
@@ -44,16 +44,9 @@
     border: none;
 }
 
-.passage-header .date {
-    opacity: 0.9;
-    font-size: 0.9em;
-}
-
 .passage-reference {
     font-weight: bold;
     font-size: 1.2em;
-    margin-bottom: 15px;
-    color: var(--accent-color);
 }
 
 /* Verse Display & Styling */

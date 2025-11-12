@@ -2,6 +2,7 @@
 
 A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools. 
 The entirety of this project was written using AI tools like [Gab AI](https://gab.ai) and [Lumo](https://lumo.proton.me).
+The meaning of "Provinent" is a portmanteau of "providence" and "covenant", each referring to God's divine sovereignty.
 
 Access the site here: [https://provinent.org](https://provinent.org)
 
@@ -12,7 +13,7 @@ Access the site here: [https://provinent.org](https://provinent.org)
 - **Study Notes**: Full Markdown support with live preview and export capabilities
 - **Verse Analysis**: Left-click any verse for analyis of a single verse with a side-by-side view of Strong's concordance (provided by [STEP Bible](https://www.stepbible.org)) and a Hebrew or Greek interlinear Bible (provided by [Bible Hub](https://biblehub.com/interlinear/))
 - **Verse Highlighting**: Right-click verses to highlight in one of six different colors for study emphasis
-- **Reference Bible**: Use the reference Bible to select from multiple translation options to compare with (NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT)
+- **Reference Bible**: Use the reference Bible to select from multiple translation options to compare with (NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT); this also sets the translation for Bible Gateway searches and the Verse Analysis popup
 
 ### Advanced Features
 - **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality
@@ -35,7 +36,7 @@ The sidebar provides organized access to extensive theological resources (Reform
 - **Libraries**: 
   - Marked.js for Markdown processing
   - Font Awesome for icons
-- **API**: Bible.helloao.org for scripture text
+- **API**: Bible.helloao.org for scripture text, footnotes, and BSB audio
 - **Storage**: LocalStorage for user data persistence
 - **Build**: Use the provided scripts for setup and consistency
 
@@ -78,7 +79,8 @@ Highlights, notes, and settings are stored locally in your browser. Data transmi
 
 - Scripture text provided by [bible.helloao.org](https://bible.helloao.org) API
 - Berean Standard Bible translation by [Berean Bible](https://berean.bible)
-- Icons by Font Awesome
+- Audio files hosted by [Open Bible](https://openbible.com/audio/)
+- Icons by [Font Awesome](https://fontawesome.com)
 - Markdown processing by [Marked.js](https://cdn.jsdelivr.net/npm/marked/)
 
 ## License

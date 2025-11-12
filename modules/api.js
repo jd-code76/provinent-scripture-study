@@ -223,8 +223,14 @@ function updateAudioPlayerUI(isPlaying, narrator = null) {
     if (!audioControls) return;
     const playBtn = audioControls.querySelector('.play-audio-btn');
     const pauseBtn = audioControls.querySelector('.pause-audio-btn');
+    const stopBtn = audioControls.querySelector('.stop-audio-btn');
     if (playBtn) playBtn.style.display = isPlaying ? 'none' : 'inline-block';
     if (pauseBtn) pauseBtn.style.display = isPlaying ? 'inline-block' : 'none';
+    if (stopBtn) {
+        const hasAudioStarted = state.audioPlayer && 
+                              (state.audioPlayer.isPlaying || state.audioPlayer.isPaused);
+        stopBtn.style.display = hasAudioStarted ? 'inline-block' : 'none';
+    }
     if (narrator && !isKJV(state.settings.bibleTranslation)) {
         const narratorSelect = audioControls.querySelector('.narrator-select');
         if (narratorSelect) {
@@ -327,10 +333,6 @@ export async function loadPassageFromAPI(passageInfo) {
         displayPassage(contentItems);
         afterContentLoad();
         clearError();
-        if (chapterData.translation && chapterData.translation.name) {
-            document.getElementById('bibleName').textContent =
-                chapterData.translation.name;
-        }
         updateAudioControls(chapterData.thisChapterAudioLinks);
     } catch (err) {
         handleError(err, 'loadPassageFromAPI');
