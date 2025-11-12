@@ -8,6 +8,8 @@ import {
     cleanupAudioPlayer,
     fetchChapter,
     getApiBookCode,
+    isKJV,
+    stopChapterAudio,
     updateAudioControls
 } from './api.js'
 
@@ -71,6 +73,24 @@ export function populateChapterDropdown(selectedBook) {
     }
 }
 
+/* Update chapter dropdown visibility based on single-chapter books */
+export function updateChapterDropdownVisibility(book) {
+    const singleChapterBooks = [
+        'Obadiah', 'Philemon', '2 John', '3 John', 'Jude'
+    ];
+    
+    const chapterSelect = document.getElementById('chapterSelect');
+    const chapterLabel = document.querySelector('label[for="chapterSelect"]');
+    
+    if (singleChapterBooks.includes(book)) {
+        chapterSelect.style.display = 'none';
+        if (chapterLabel) chapterLabel.style.display = 'none';
+    } else {
+        chapterSelect.style.display = 'block';
+        if (chapterLabel) chapterLabel.style.display = 'block';
+    }
+}
+
 /* Load manually selected chapter */
 export async function loadSelectedChapter(book = null, chapter = null) {
     if (typeof cleanupAudioPlayer === 'function') {
@@ -80,67 +100,135 @@ export async function loadSelectedChapter(book = null, chapter = null) {
     const selBook = book || document.getElementById('bookSelect').value;
     const selChapter = chapter || document.getElementById('chapterSelect').value;
     const apiBook = getApiBookCode(selBook);
-
+    
+    updateChapterDropdownVisibility(selBook);
+    
     document.title = `${selBook} ${selChapter} - Provinent Scripture Study`;
-
     updateDisplayRef(selBook, selChapter);
     
     try {
         showLoading(true);
         const apiTranslation = apiTranslationCode(state.settings.bibleTranslation);
-        const chapterData = await fetchChapter(apiTranslation, apiBook, selChapter);
         
-        const chapterFootnotes = chapterData.chapter.footnotes || [];
-        const footnoteCounter = { value: 1 };
-        
-        const contentItems = chapterData.chapter.content
-            .map(item => {
-                if (item.type === 'verse') {
-                    return {
-                        type: 'verse',
-                        number: item.number,
-                        text: extractVerseText(item.content, chapterFootnotes, footnoteCounter),
-                        reference: `${selBook} ${selChapter}:${item.number}`,
-                        rawContent: item.content
-                    };
-                } else if (item.type === 'heading') {
-                    return {
-                        type: 'heading',
-                        content: item.content.join(' '),
-                        reference: `${selBook} ${selChapter}`
-                    };
-                } else if (item.type === 'line_break') {
-                    return {
-                        type: 'line_break'
-                    };
-                }
-                return null;
-            })
-            .filter(item => item !== null);
-        
-        state.footnotes = {};
-        displayPassage(contentItems);
-        clearError();
-        document.getElementById('scriptureSection').scrollTop = 0;
-        
-        state.settings.manualBook = selBook;
-        state.settings.manualChapter = Number(selChapter);
-        state.currentChapterData = chapterData;
-        
-        if (typeof updateAudioControls === 'function') {
-            updateAudioControls(chapterData.thisChapterAudioLinks);
+        // For KJV, we can load the chapter but don't wait for audio check
+        if (isKJV(state.settings.bibleTranslation)) {
+            if (typeof updateAudioControls === 'function') {
+                updateAudioControls(null);
+            }
+            
+            // Load chapter data asynchronously but don't wait for audio
+            fetchChapter(apiTranslation, apiBook, selChapter)
+                .then(chapterData => {
+                    state.currentChapterData = chapterData;
+                    state.settings.manualBook = selBook;
+                    state.settings.manualChapter = Number(selChapter);
+                    
+                    const chapterFootnotes = chapterData.chapter.footnotes || [];
+                    const footnoteCounter = { value: 1 };
+                    
+                    const contentItems = chapterData.chapter.content
+                        .map(item => {
+                            if (item.type === 'verse') {
+                                return {
+                                    type: 'verse',
+                                    number: item.number,
+                                    text: extractVerseText(item.content, chapterFootnotes, footnoteCounter),
+                                    reference: `${selBook} ${selChapter}:${item.number}`,
+                                    rawContent: item.content
+                                };
+                            } else if (item.type === 'heading') {
+                                return {
+                                    type: 'heading',
+                                    content: item.content.join(' '),
+                                    reference: `${selBook} ${selChapter}`
+                                };
+                            } else if (item.type === 'line_break') {
+                                return {
+                                    type: 'line_break'
+                                };
+                            }
+                            return null;
+                        })
+                        .filter(item => item !== null);
+                    
+                    state.footnotes = {};
+                    displayPassage(contentItems);
+                    clearError();
+                    document.getElementById('scriptureSection').scrollTop = 0;
+                    
+                    if (state.settings.referencePanelOpen) {
+                        updateReferencePanel();
+                    }
+                    
+                    saveToStorage();
+                })
+                .catch(err => {
+                    handleError(err, 'loadSelectedChapter');
+                    showError(`Could not load ${selBook} ${selChapter}: ${err.message}`);
+                })
+                .finally(() => {
+                    showLoading(false);
+                });
+            
+        } else {
+            // Normal loading for other translations
+            const chapterData = await fetchChapter(apiTranslation, apiBook, selChapter);
+            
+            const chapterFootnotes = chapterData.chapter.footnotes || [];
+            const footnoteCounter = { value: 1 };
+            
+            const contentItems = chapterData.chapter.content
+                .map(item => {
+                    if (item.type === 'verse') {
+                        return {
+                            type: 'verse',
+                            number: item.number,
+                            text: extractVerseText(item.content, chapterFootnotes, footnoteCounter),
+                            reference: `${selBook} ${selChapter}:${item.number}`,
+                            rawContent: item.content
+                        };
+                    } else if (item.type === 'heading') {
+                        return {
+                            type: 'heading',
+                            content: item.content.join(' '),
+                            reference: `${selBook} ${selChapter}`
+                        };
+                    } else if (item.type === 'line_break') {
+                        return {
+                            type: 'line_break'
+                        };
+                    }
+                    return null;
+                })
+                .filter(item => item !== null);
+            
+            state.footnotes = {};
+            displayPassage(contentItems);
+            clearError();
+            document.getElementById('scriptureSection').scrollTop = 0;
+            
+            state.settings.manualBook = selBook;
+            state.settings.manualChapter = Number(selChapter);
+            state.currentChapterData = chapterData;
+            
+            if (typeof updateAudioControls === 'function') {
+                updateAudioControls(chapterData.thisChapterAudioLinks);
+            }
+            
+            if (state.settings.referencePanelOpen) {
+                updateReferencePanel();
+            }
+            
+            saveToStorage();
         }
-        
-        if (state.settings.referencePanelOpen) {
-            updateReferencePanel();
-        }
-        
-        saveToStorage();
     } catch (err) {
         handleError(err, 'loadSelectedChapter');
         showError(`Could not load ${selBook} ${selChapter}: ${err.message}`);
     } finally {
-        showLoading(false);
+        if (!isKJV(state.settings.bibleTranslation)) {
+            showLoading(false);
+        }
+        // KJV loading is handled in the promise chain above
     }
 }
 
@@ -149,6 +237,10 @@ export function initBookChapterControls() {
     populateBookDropdown();
 
     document.getElementById('bookSelect').addEventListener('change', e => {
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
+        
         const book = e.target.value;
         populateChapterDropdown(book);
         state.settings.manualBook = book;
@@ -157,11 +249,17 @@ export function initBookChapterControls() {
         const chapterSel = document.getElementById('chapterSelect');
         chapterSel.value = '1';
         
+        updateChapterDropdownVisibility(book);
+        
         loadSelectedChapter(book, 1);
         saveToStorage(); 
     });
 
     document.getElementById('chapterSelect').addEventListener('change', () => {
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
+        
         const book = document.getElementById('bookSelect').value;
         const chap = Number(document.getElementById('chapterSelect').value);
         state.settings.manualBook = book;
@@ -180,6 +278,10 @@ export function initBookChapterControls() {
  */
 export async function randomPassage() {
     try {
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
+        
         const randomLoc = await getRandomBibleLocation();
 
         state.settings.manualBook = randomLoc.book;
@@ -190,10 +292,15 @@ export async function randomPassage() {
 
         saveToStorage();
 
+        const headerTitleEl = document.getElementById('passageHeaderTitle');
+        if (headerTitleEl) {
+            headerTitleEl.textContent = `Holy Bible: ${translation}`;
+        }
+        
         await loadSelectedChapter(randomLoc.book, randomLoc.chapter);
-        document.getElementById('passageReference').textContent = randomLoc.displayRef;
-        state.currentPassageReference = randomLoc.displayRef;
-
+        
+        updateDisplayRef(randomLoc.book, randomLoc.chapter);
+        
         syncBookChapterSelectors();
 
         if (state.settings.referencePanelOpen) {
@@ -207,6 +314,10 @@ export async function randomPassage() {
 
 /* Next chapter button handler */
 export function nextPassage() {
+    if (typeof stopChapterAudio === 'function') {
+        stopChapterAudio();
+    }
+    
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
     const maxCh = CHAPTER_COUNTS[state.settings.manualBook];
@@ -228,6 +339,10 @@ export function nextPassage() {
 
 /* Prev chapter button handler */
 export function prevPassage() {
+    if (typeof stopChapterAudio === 'function') {
+        stopChapterAudio();
+    }
+    
     let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
     let chap = state.settings.manualChapter;
     
@@ -249,6 +364,10 @@ export function prevPassage() {
 
 /* Common function to handle manual navigation updates */
 function updateManualNavigation(book, chapter) {
+    if (typeof stopChapterAudio === 'function') {
+        stopChapterAudio();
+    }
+    
     state.settings.manualBook = book;
     state.settings.manualChapter = chapter;
     
@@ -294,6 +413,8 @@ export function syncBookChapterSelectors() {
     const curChap = state.settings.manualChapter;
     populateChapterDropdown(state.settings.manualBook);
     chapterSel.value = (curChap <= curMax) ? curChap : curMax;
+    
+    updateChapterDropdownVisibility(state.settings.manualBook);
 }
 
 /**
@@ -367,6 +488,13 @@ export function navigateFromURL() {
             if (chapterSelect) {
                 populateChapterDropdown(urlParams.book);
                 chapterSelect.value = urlParams.chapter;
+            }
+            
+            updateChapterDropdownVisibility(urlParams.book);
+            
+            const translationSelect = document.getElementById('bibleTranslationSetting');
+            if (translationSelect) {
+                translationSelect.value = urlParams.translation;
             }
             
             const passageRefElement = document.getElementById('passageReference');

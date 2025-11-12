@@ -85,29 +85,28 @@
 /* Strong's Popup Footnote Styles */
 
 .strongs-footnotes-container {
-    display: block !important;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 2px;
+    display: block;
     background-color: var(--toolbar-background);
+    border-radius: 6px;
+    margin-top: 5px;
 }
 
 .strongs-footnotes-container .footnotes-heading {
     color: var(--text-color);
-    margin-bottom: 15px;
     font-size: 1.1em;
     font-weight: 600;
+    padding-top: 8px;
 }
 
 .strongs-footnotes-container .footnote {
     margin-bottom: 12px;
     padding: 10px;
     border-radius: 4px;
-    transition: all 0.3s ease;
+    background-color: rgba(0, 0, 0, 0.03);
 }
 
-.strongs-footnotes-container .footnote:hover {
-    background-color: rgba(0, 0, 0, 0.03);
+.strongs-footnotes-container .footnote:last-child {
+    margin-bottom: 0;
 }
 
 .strongs-footnotes-container .footnote-number {
@@ -142,12 +141,6 @@
     transition: all 0.2s ease;
 }
 
-.strongs-footnotes-container .footnote-ref:hover {
-    background-color: var(--accent-color);
-    color: white;
-    transform: scale(1.1);
-}
-
 #strongsFootnotesContainer .footnote {
     margin-bottom: 12px;
     padding: 10px;
@@ -170,15 +163,6 @@
     transition: all 0.2s ease;
 }
 
-#strongsPopup .footnote:hover {
-    background-color: var(--verse-hover);
-}
-
-#strongsPopup .footnote:hover .footnote-number {
-    background-color: var(--accent-color);
-    color: white;
-}
-
 .verse-reference-display {
     font-size: 1.2em;
     font-weight: bold;
@@ -192,13 +176,12 @@
 }
 
 .verse-text-display {
-    padding: 15px;
+    padding: 5px;
     background-color: var(--toolbar-background);
-    border-left: 4px solid var(--accent-color);
-    border-radius: 4px;
-    margin-bottom: 20px;
     font-size: 1.1em;
     line-height: 1.6;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 8px;
 }
 
 .copy-verse-btn {
@@ -229,7 +212,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
-    margin-top: 20px;
 }
 
 .resource-frame {
@@ -289,7 +271,6 @@
     margin-top: 15px;
     padding: 15px;
     background-color: var(--toolbar-background);
-    border-left: 4px solid var(--accent-color);
     border-radius: 4px;
 }
 
@@ -298,26 +279,34 @@
     margin-bottom: 10px;
 }
 
-.api-attribution {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: var(--toolbar-background);
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    font-size: 0.85em;
-    opacity: 0.8;
+.strongs-popup .footnote,
+.strongs-popup .footnote-ref,
+.strongs-popup sup.footnote-ref {
+    cursor: default;
+    pointer-events: none;
 }
 
-.api-attribution a {
+.strongs-popup *:hover,
+.strongs-popup .footnote:hover,
+.strongs-popup .footnote-ref:hover,
+.strongs-popup sup.footnote-ref:hover,
+.strongs-popup .footnote-content:hover,
+.strongs-popup .popup-close:hover {
+    background-color: transparent;
+    transform: none;
+    opacity: 1;
+    color: inherit;
+}
+
+.strongs-popup .footnote:hover .footnote-number {
+    background-color: rgba(0, 0, 0, 0.08);
     color: var(--accent-color);
-    text-decoration: none;
 }
 
-.api-attribution a:hover {
-    text-decoration: underline;
+#strongsContent {
+    overflow-anchor: none;
 }
 
-.api-attribution a:focus {
-    outline: 2px solid var(--accent-color);
-    outline-offset: 2px;
+.embedded-resources {
+    overflow-anchor: none;
 }

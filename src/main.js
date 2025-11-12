@@ -23,6 +23,7 @@
 
 /* Global imports */
 import {
+    isKJV,
     playChapterAudio,
     pauseChapterAudio,
     resumeChapterAudio,
@@ -41,7 +42,6 @@ import {
 } from './modules/navigation.js'
 
 import { 
-    loadPassage, 
     scrollToVerse, 
     setupFootnoteHandlers 
 } from './modules/passage.js'
@@ -83,6 +83,34 @@ import {
     updateMarkdownPreview,
     updateReferencePanel
 } from './modules/ui.js'
+
+/* Global constants */
+const offlineStyles = `
+#offlineIndicator {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 5px;
+    z-index: 10000;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+#offlineIndicator.online {
+    background: #51cf66;
+}
+`;
+
+/* Touch event handlers for mobile highlighting */
+let touchStartTime = 0;
+let longPressTimer = null;
+let touchStartY = 0;
+let isScrolling = false;
 
 /* ----------------------------------------------------------------
    Marked.js Configuration
@@ -173,42 +201,61 @@ function setupEventListeners() {
             .addEventListener('click', randomPassage);
 
     // Audio Controls
-    const playBtn = document.querySelector('.play-audio-btn');
-    const pauseBtn = document.querySelector('.pause-audio-btn');
-    const stopBtn = document.querySelector('.stop-audio-btn');
-    const narratorSelect = document.querySelector('.narrator-select');
-    if (playBtn) {
-        playBtn.addEventListener('click', () => {
-            if (state.audioPlayer?.isPaused) {
-                resumeChapterAudio();
-            } else if (state.audioPlayer?.isPlaying) {
-                pauseChapterAudio();
-            } else {
-                const narrator = narratorSelect?.value || state.settings.audioNarrator || 'gilbert';
-                playChapterAudio(narrator);
-            }
-        });
-    }
-    if (pauseBtn) {
-        pauseBtn.addEventListener('click', pauseChapterAudio);
-    }
-    if (stopBtn) {
-        stopBtn.addEventListener('click', stopChapterAudio);
-    }
-    if (narratorSelect) {
-        narratorSelect.addEventListener('change', (e) => {
-            const newNarrator = e.target.value;
-            
-            state.settings.audioNarrator = newNarrator;
-            saveToStorage();
-            
-            if (state.audioPlayer) {
-                stopChapterAudio();
-            }
-            
-            playChapterAudio(newNarrator);
-        });
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const playBtn = document.querySelector('.play-audio-btn');
+        const pauseBtn = document.querySelector('.pause-audio-btn');
+        const stopBtn = document.querySelector('.stop-audio-btn');
+        const narratorSelect = document.querySelector('.narrator-select');
+        
+        if (playBtn) {
+            playBtn.addEventListener('click', () => {
+                const translation = state.settings.bibleTranslation;
+                
+                if (isKJV(translation)) {
+                    // Simple play for KJV
+                    if (state.audioPlayer?.isPaused) {
+                        resumeChapterAudio();
+                    } else if (state.audioPlayer?.isPlaying) {
+                        pauseChapterAudio();
+                    } else {
+                        playChapterAudio();
+                    }
+                } else {
+                    // BSB with narrator selection
+                    if (state.audioPlayer?.isPaused) {
+                        resumeChapterAudio();
+                    } else if (state.audioPlayer?.isPlaying) {
+                        pauseChapterAudio();
+                    } else {
+                        const narrator = narratorSelect?.value || state.settings.audioNarrator || 'gilbert';
+                        playChapterAudio(narrator);
+                    }
+                }
+            });
+        }
+        
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', pauseChapterAudio);
+        }
+        
+        if (stopBtn) {
+            stopBtn.addEventListener('click', stopChapterAudio);
+        }
+        
+        if (narratorSelect) {
+            narratorSelect.addEventListener('change', (e) => {
+                const newNarrator = e.target.value;
+                
+                state.settings.audioNarrator = newNarrator;
+                saveToStorage();
+                
+                if (state.audioPlayer && !isKJV(state.settings.bibleTranslation)) {
+                    stopChapterAudio();
+                    setTimeout(() => playChapterAudio(newNarrator), 100);
+                }
+            });
+        }
+    });
 
     // Sidebar Sections
     document.getElementById('referencePanelToggle')
@@ -364,6 +411,12 @@ function setupEventListeners() {
             }
         }
     });
+
+    // Mobile touch events for highlighting
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchcancel', handleTouchCancel);
 }
 
 /* ====================================================================
@@ -420,27 +473,80 @@ function updateOfflineStatus(isOffline) {
     }
 }
 
-// CSS for the offline indicator
-const offlineStyles = `
-#offlineIndicator {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    padding: 10px 15px;
-    background: #ff6b6b;
-    color: white;
-    border-radius: 5px;
-    z-index: 10000;
-    font-size: 14px;
-    font-weight: bold;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
+/* Update header title with current translation */
+function updateHeaderTitle() {
+    const headerTitleEl = document.getElementById('passageHeaderTitle');
+    if (headerTitleEl) {
+        const translation = state.settings.bibleTranslation || 'BSB';
+        headerTitleEl.textContent = `Holy Bible: ${translation}`;
+    }
 }
 
-#offlineIndicator.online {
-    background: #51cf66;
+/* Touch event handlers for mobile highlighting */
+function handleTouchStart(e) {
+    const verse = e.target.closest('.verse');
+    if (verse) {
+        touchStartTime = Date.now();
+        touchStartY = e.touches[0].clientY;
+        isScrolling = false;
+        
+        longPressTimer = setTimeout(() => {
+            if (!isScrolling) {
+                showColorPicker(e, verse);
+            }
+        }, 500);
+        
+        if (!e.target.closest('.verse')) {
+            e.preventDefault();
+        }
+    }
 }
-`;
+
+/* Handle touch move to detect scrolling */
+function handleTouchMove(e) {
+    if (longPressTimer && e.touches && e.touches[0]) {
+        const currentY = e.touches[0].clientY;
+        if (Math.abs(currentY - touchStartY) > 10) {
+            isScrolling = true;
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+    }
+}
+
+/* Handle touch cancel to clear long-press timer */
+function handleTouchCancel() {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+    isScrolling = false;
+}
+
+/* Handle touch end to differentiate tap vs long-press */
+function handleTouchEnd(e) {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+    
+    const verse = e.target.closest('.verse');
+    const colorPicker = document.getElementById('colorPicker');
+    
+    if (verse && !isScrolling && !e.target.closest('.footnote-ref')) {
+        const touchDuration = Date.now() - touchStartTime;
+        
+        if (!colorPicker.classList.contains('active')) {
+            if (touchDuration < 300 && touchDuration > 50) {
+                showStrongsReference(verse);
+            }
+        }
+    }
+    
+    isScrolling = false;
+}
 
 /* ====================================================================
    HIGHLIGHTING
@@ -451,9 +557,36 @@ const offlineStyles = `
 function showColorPicker(ev, verseEl) {
     const picker = document.getElementById('colorPicker');
     state.currentVerse = verseEl;
-    picker.style.left = ev.pageX + 'px';
-    picker.style.top = ev.pageY + 'px';
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    const pickerWidth = 200;
+    const pickerHeight = 50;
+    
+    const clientX = ev.clientX || (ev.touches && ev.touches[0].clientX) || 0;
+    const clientY = ev.clientY || (ev.touches && ev.touches[0].clientY) || 0;
+    
+    let adjustedX = clientX;
+    let adjustedY = clientY;
+    
+    if (clientX + pickerWidth > viewportWidth) {
+        adjustedX = viewportWidth - pickerWidth - 10;
+    }
+    
+    if (clientY + pickerHeight > viewportHeight) {
+        adjustedY = viewportHeight - pickerHeight - 10;
+    }
+    
+    adjustedX = Math.max(10, adjustedX);
+    adjustedY = Math.max(10, adjustedY);
+    
+    picker.style.left = adjustedX + 'px';
+    picker.style.top = adjustedY + 'px';
     picker.classList.add('active');
+    
+    ev.preventDefault();
+    ev.stopPropagation();
 }
 
 /* Apply highlight color to selected verse */
@@ -715,29 +848,31 @@ function refreshHighlightsModalTheme() {
  * Main entry point called on DOM ready
  */
 async function init() {
-    console.log('Initializing app...');
-    
     await loadFromStorage();
     loadFromCookies();
 
     const style = document.createElement('style');
     style.textContent = offlineStyles;
     document.head.appendChild(style);
-    
     updateOfflineStatus(!navigator.onLine);
-    
     window.addEventListener('online', () => updateOfflineStatus(false));
     window.addEventListener('offline', () => updateOfflineStatus(true));
 
     initBookChapterControls();
     setupNavigationWithURL();
     setupPopStateListener();
-    
+    if (!navigateFromURL()) {
+        loadSelectedChapter(
+            state.settings.manualBook || BOOK_ORDER[0],
+            state.settings.manualChapter || 1
+        );
+    }
     restoreBookChapterUI();
     applyTheme();
     applyColorTheme();
     restoreSidebarState();
     restorePanelStates();
+    updateHeaderTitle();
     updateDateTime();
     initResizeHandles();
     switchNotesView(state.settings.notesView || 'text');

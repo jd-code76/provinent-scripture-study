@@ -275,7 +275,19 @@ export function scrollToVerse(verseNumber) {
     }
 }
 export function updateDisplayRef(book, chapter) {
-    const displayRef = `${book} ${chapter}`;
-    document.getElementById('passageReference').textContent = displayRef;
-    state.currentPassageReference = displayRef;
+    const singleChapterBooks = [
+        'Obadiah', 'Philemon', '2 John', '3 John', 'Jude'
+    ];
+    const chapterSelect = document.getElementById('chapterSelect');
+    if (singleChapterBooks.includes(book)) {
+        chapterSelect.style.display = 'none';
+        const displayRef = `${book}`;
+        document.getElementById('passageReference').textContent = displayRef;
+        state.currentPassageReference = displayRef;
+    } else {
+        chapterSelect.style.display = 'block';
+        const displayRef = `${book} ${chapter}`;
+        document.getElementById('passageReference').textContent = displayRef;
+        state.currentPassageReference = displayRef;
+    }
 }

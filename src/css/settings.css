@@ -69,6 +69,47 @@
     outline-offset: 2px;
 }
 
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 25px;
+}
+
+.settings-section {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+}
+
+.pdf-download-options {
+    margin-top: 15px;
+    padding: 5px;
+    background-color: var(--card-background);
+    border-radius: 5px;
+}
+
+.pdf-download-options h4 {
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.pdf-download-link {
+    display: block;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background-color: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.pdf-download-link:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
 .color-theme-options {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -108,48 +149,6 @@
     margin-bottom: 8px;
 }
 
-.settings-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 25px;
-}
-
-.settings-section {
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.pdf-download-options {
-    margin-top: 15px;
-    padding: 15px;
-    background-color: var(--card-background);
-    border-radius: 5px;
-}
-
-.pdf-download-options h4 {
-    margin-bottom: 10px;
-    color: var(--text-color);
-}
-
-.pdf-download-link {
-    display: block;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    background-color: var(--background);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    color: var(--accent-color);
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.pdf-download-link:hover {
-    background-color: var(--accent-color);
-    color: white;
-}
-
 .about-content {
     line-height: 1.6;
 }
@@ -157,24 +156,6 @@
 .about-creator {
     margin-bottom: 12px;
     font-size: .9em;
-}
-
-.about-description {
-    margin-bottom: 5px;
-    padding: 5px;
-    background-color: var(--bg-secondary);
-    border-radius: 5px;
-}
-
-.about-description p {
-    margin: 0;
-    color: var(--text-color);
-}
-
-.attribution-links {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
 }
 
 .attribution-links h4 {

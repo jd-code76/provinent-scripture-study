@@ -117,51 +117,146 @@ export function getCurrentChapterAudioLinks() {
     return null;
 }
 
+/* Check if current translation is KJV */
+export function isKJV(translation) {
+    return translation === 'KJV';
+}
+
+/* Get KJV audio link for given book and chapter */
+export function getKJVAudioLink(book, chapter) {
+    const bookMap = {
+        'Genesis': '01_Gen', 'Exodus': '02_Exo', 'Leviticus': '03_Lev', 'Numbers': '04_Num', 'Deuteronomy': '05_Deu',
+        'Joshua': '06_Jos', 'Judges': '07_Jdg', 'Ruth': '08_Rut', '1 Samuel': '09_1Sa', '2 Samuel': '10_2Sa',
+        '1 Kings': '11_1Ki', '2 Kings': '12_2Ki', '1 Chronicles': '13_1Ch', '2 Chronicles': '14_2Ch',
+        'Ezra': '15_Ezr', 'Nehemiah': '16_Neh', 'Esther': '17_Est', 'Job': '18_Job', 'Psalms': '19_Psa',
+        'Proverbs': '20_Pro', 'Ecclesiastes': '21_Ecc', 'Song of Solomon': '22_Sng', 
+        'Isaiah': '23_Isa', 'Jeremiah': '24_Jer', 'Lamentations': '25_Lam', 'Ezekiel': '26_Eze', 'Daniel': '27_Dan',
+        'Hosea': '28_Hos', 'Joel': '29_Joe', 'Amos': '30_Amo', 'Obadiah': '31_Oba', 'Jonah': '32_Jon', 
+        'Micah': '33_Mic', 'Nahum': '34_Nah', 'Habakkuk': '35_Hab', 'Zephaniah': '36_Zep', 'Haggai': '37_Hag',
+        'Zechariah': '38_Zec', 'Malachi': '39_Mal', 'Matthew': '40_Mat', 'Mark': '41_Mar', 'Luke': '42_Luk',
+        'John': '43_Joh', 'Acts': '44_Act', 'Romans': '45_Rom', '1 Corinthians': '46_1Co', '2 Corinthians': '47_2Co',
+        'Galatians': '48_Gal', 'Ephesians': '49_Eph', 'Philippians': '50_Php', 'Colossians': '51_Col',
+        '1 Thessalonians': '52_1Th', '2 Thessalonians': '53_2Th', '1 Timothy': '54_1Ti', '2 Timothy': '55_2Ti',
+        'Titus': '56_Tit', 'Philemon': '57_Phm', 'Hebrews': '58_Heb', 'James': '59_Jas', '1 Peter': '60_1Pe',
+        '2 Peter': '61_2Pe', '1 John': '62_1Jn', '2 John': '63_2Jn', '3 John': '64_3Jn', 'Jude': '65_Jud',
+        'Revelation': '66_Rev'
+    };
+    
+    const bookCode = bookMap[book];
+    if (!bookCode) return null;
+    
+    // Format: https://openbible.com/audio/kjv/KJV_01_Gen_001.mp3
+    const paddedChapter = chapter.toString().padStart(3, '0');
+    return `https://openbible.com/audio/kjv/KJV_${bookCode}_${paddedChapter}.mp3`;
+}
+
 /**
- * Play audio for current chapter using specified narrator
+ * Play audio for current chapter using specified narrator (only one for KJV)
  * @param {string} narrator - Narrator key (e.g., 'gilbert', 'hays', 'souer')
  */
 export async function playChapterAudio(narrator = null) {
     try {
-        const selectedNarrator = narrator || state.settings.audioNarrator || 'gilbert';
+        const translation = state.settings.bibleTranslation;
         
-        if (narrator && narrator !== state.settings.audioNarrator) {
-            state.settings.audioNarrator = narrator;
-            saveToStorage();
-        }
-        
-        if (state.audioPlayer?.audio) {
-            state.audioPlayer.audio.pause();
-            state.audioPlayer.audio.currentTime = 0;
-        }
-        
-        const audioLinks = getCurrentChapterAudioLinks();
-        if (!audioLinks || !audioLinks[selectedNarrator]) {
-            throw new Error(`Audio not available for current chapter from ${selectedNarrator}`);
-        }
-        
-        const audioUrl = audioLinks[selectedNarrator];
-        const audio = new Audio(audioUrl);
-        
-        state.audioPlayer = {
-            audio: audio,
-            currentNarrator: selectedNarrator,
-            isPlaying: false,
-            isPaused: false
-        };
-        
-        audio.addEventListener('ended', () => {
-            if (state.audioPlayer) {
-                state.audioPlayer.isPlaying = false;
-                state.audioPlayer.isPaused = false;
-                updateAudioPlayerUI(false, selectedNarrator);
+        if (isKJV(translation)) {
+            // Handle KJV audio with simplified approach
+            if (state.audioPlayer?.audio) {
+                state.audioPlayer.audio.pause();
+                state.audioPlayer.audio.currentTime = 0;
             }
-        });
-        
-        await audio.play();
-        state.audioPlayer.isPlaying = true;
-        state.audioPlayer.isPaused = false;
-        updateAudioPlayerUI(true, selectedNarrator);
+            
+            const book = state.settings.manualBook;
+            const chapter = state.settings.manualChapter;
+            const audioUrl = getKJVAudioLink(book, chapter);
+            
+            if (!audioUrl) {
+                throw new Error('KJV audio not available for this book');
+            }
+            
+            const audio = new Audio(audioUrl);
+            
+            state.audioPlayer = {
+                audio: audio,
+                currentNarrator: 'default',
+                isPlaying: false,
+                isPaused: false
+            };
+            
+            audio.addEventListener('ended', () => {
+                if (state.audioPlayer) {
+                    state.audioPlayer.isPlaying = false;
+                    state.audioPlayer.isPaused = false;
+                    updateAudioPlayerUI(false);
+                }
+            });
+            
+            audio.addEventListener('error', (e) => {
+                console.error('KJV Audio error:', e);
+                showError('Could not play KJV audio. The audio file may not be available for this chapter.');
+                if (state.audioPlayer) {
+                    state.audioPlayer.isPlaying = false;
+                    state.audioPlayer.isPaused = false;
+                    updateAudioPlayerUI(false);
+                }
+            });
+            
+            // Use promise-based play with error handling
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        state.audioPlayer.isPlaying = true;
+                        state.audioPlayer.isPaused = false;
+                        updateAudioPlayerUI(true);
+                    })
+                    .catch(err => {
+                        console.error('Audio play failed:', err);
+                        showError('Could not play audio: ' + err.message);
+                    });
+            }
+            
+        } else {
+            // BSB audio logic (unchanged)
+            const selectedNarrator = narrator || state.settings.audioNarrator || 'gilbert';
+            
+            if (narrator && narrator !== state.settings.audioNarrator) {
+                state.settings.audioNarrator = narrator;
+                saveToStorage();
+            }
+            
+            if (state.audioPlayer?.audio) {
+                state.audioPlayer.audio.pause();
+                state.audioPlayer.audio.currentTime = 0;
+            }
+            
+            const audioLinks = getCurrentChapterAudioLinks();
+            if (!audioLinks || !audioLinks[selectedNarrator]) {
+                throw new Error(`Audio not available for current chapter from ${selectedNarrator}`);
+            }
+            
+            const audioUrl = audioLinks[selectedNarrator];
+            const audio = new Audio(audioUrl);
+            
+            state.audioPlayer = {
+                audio: audio,
+                currentNarrator: selectedNarrator,
+                isPlaying: false,
+                isPaused: false
+            };
+            
+            audio.addEventListener('ended', () => {
+                if (state.audioPlayer) {
+                    state.audioPlayer.isPlaying = false;
+                    state.audioPlayer.isPaused = false;
+                    updateAudioPlayerUI(false, selectedNarrator);
+                }
+            });
+            
+            await audio.play();
+            state.audioPlayer.isPlaying = true;
+            state.audioPlayer.isPaused = false;
+            updateAudioPlayerUI(true, selectedNarrator);
+        }
         
     } catch (err) {
         handleError(err, 'playChapterAudio');
@@ -201,7 +296,7 @@ export function resumeChapterAudio() {
 }
 
 /* Update audio player UI controls */
-function updateAudioPlayerUI(isPlaying, narrator) {
+function updateAudioPlayerUI(isPlaying, narrator = null) {
     const audioControls = document.getElementById('audioControls');
     if (!audioControls) return;
     
@@ -211,7 +306,8 @@ function updateAudioPlayerUI(isPlaying, narrator) {
     if (playBtn) playBtn.style.display = isPlaying ? 'none' : 'inline-block';
     if (pauseBtn) pauseBtn.style.display = isPlaying ? 'inline-block' : 'none';
     
-    if (narrator && state.audioPlayer) {
+    // Only update narrator select for BSB
+    if (narrator && !isKJV(state.settings.bibleTranslation)) {
         const narratorSelect = audioControls.querySelector('.narrator-select');
         if (narratorSelect) {
             narratorSelect.value = narrator;
@@ -222,29 +318,49 @@ function updateAudioPlayerUI(isPlaying, narrator) {
 /* Update audio controls UI based on available audio links */
 export function updateAudioControls(audioLinks) {
     const audioControls = document.getElementById('audioControls');
-    if (!audioControls) {
-        console.error('Audio controls element not found!');
-        return;
-    }
+    const translation = state.settings.bibleTranslation;
     
-    if (audioLinks && Object.keys(audioLinks).length > 0) {
+    if (isKJV(translation)) {
         audioControls.style.display = 'block';
         
         const narratorSelect = audioControls.querySelector('.narrator-select');
-        if (narratorSelect) {
-            narratorSelect.innerHTML = '';
-            Object.keys(audioLinks).forEach(narrator => {
-                const option = document.createElement('option');
-                option.value = narrator;
-                option.textContent = narrator.charAt(0).toUpperCase() + narrator.slice(1);
-                option.selected = narrator === state.settings.audioNarrator;
-                narratorSelect.appendChild(option);
-            });
+        const narratorLabel = audioControls.querySelector('span');
+        
+        if (narratorSelect) narratorSelect.style.display = 'none';
+        if (narratorLabel) narratorLabel.style.display = 'inline';
+        
+    } 
+    else if (translation === 'BSB') {
+        // Use existing API behavior for BSB
+        if (audioLinks && Object.keys(audioLinks).length > 0) {
+            audioControls.style.display = 'block';
+            
+            // Show narrator dropdown for BSB
+            const narratorSelect = audioControls.querySelector('.narrator-select');
+            const narratorLabel = audioControls.querySelector('span');
+            
+            if (narratorSelect) narratorSelect.style.display = 'inline-block';
+            if (narratorLabel) narratorLabel.style.display = 'inline';
+            
+            // Populate narrator options
+            if (narratorSelect) {
+                narratorSelect.innerHTML = '';
+                Object.keys(audioLinks).forEach(narrator => {
+                    const option = document.createElement('option');
+                    option.value = narrator;
+                    option.textContent = narrator.charAt(0).toUpperCase() + narrator.slice(1);
+                    option.selected = narrator === state.settings.audioNarrator;
+                    narratorSelect.appendChild(option);
+                });
+            }
+            
+            updateAudioPlayerUI(state.audioPlayer?.isPlaying || false, state.settings.audioNarrator);
+        } else {
+            audioControls.style.display = 'none';
         }
-        
-        updateAudioPlayerUI(state.audioPlayer?.isPlaying || false, state.settings.audioNarrator);
-        
-    } else {
+    } 
+    else {
+        // Hide audio controls for other translations
         audioControls.style.display = 'none';
     }
 }

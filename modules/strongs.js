@@ -56,22 +56,30 @@ export function showStrongsReference(verseEl) {
                     <h4>BibleHub Interlinear</h4>
                     <div class="resource-frame-actions">
                         <button class="resource-frame-btn" data-url="${greekUrl}" data-title="Interlinear (Hebrew is read right-to-left, Greek left-to-right)">
-                            Pop Out
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Pop Out
                         </button>
                     </div>
                 </div>
-                <iframe src="${greekUrl}"></iframe>
+                <iframe src="${greekUrl}" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer"
+                    style="overflow-anchor: none;">
+                </iframe>
             </div>
             <div class="resource-frame">
                 <div class="resource-frame-header">
                     <h4>STEP Bible Analysis</h4>
                     <div class="resource-frame-actions">
                         <button class="resource-frame-btn" data-url="${stepUrl}" data-title="STEP Bible">
-                            Pop Out
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Pop Out
                         </button>
                     </div>
                 </div>
-                <iframe src="${stepUrl}"></iframe>
+                <iframe src="${stepUrl}" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer"
+                    style="overflow-anchor: none;">
+                </iframe>
             </div>
         </div>
         <p style="margin-bottom:15px;opacity:0.8;font-size:0.9em;">
@@ -79,15 +87,6 @@ export function showStrongsReference(verseEl) {
             Use the "Pop Out" button to open them in a new tab.
             Please support them as they are great resources!</em>
         </p>
-        <div class="strongs-definition">
-            <h3>Quick Links</h3>
-            <div style="margin-top:15px;">
-                <a href="https://biblehub.com/strongs.htm" target="_blank"
-                   style="color:var(--accent-color);">BibleHub Strong's Concordance</a><br>
-                <a href="https://netbible.org/bible/${encodeURIComponent(ref)}"
-                   target="_blank" style="color:var(--accent-color);">NET Bible (with comprehensive notes)</a><br>
-            </div>
-        </div>
     `;
     populateStrongsFootnotes(ref);
     document.getElementById('strongsPopup').classList.add('active');
@@ -182,7 +181,6 @@ function populateStrongsFootnotes(verseRef) {
     }
     container.style.display = 'block';
     container.innerHTML = `
-        <hr class="footnotes-separator">
         <h4 class="footnotes-heading">Footnotes</h4>
     `;
     verseFootnotes.forEach(fn => {

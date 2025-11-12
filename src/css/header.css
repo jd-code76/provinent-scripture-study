@@ -60,14 +60,16 @@
 
 .btn {
     position: relative;
-    padding: 10px 20px;
+    padding: clamp(6px, 1vw, 12px) clamp(8px, 1.5vw, 16px);
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: clamp(14px, 1vw, 16px);
     transition: all 0.3s;
     background-color: var(--accent-color);
     color: white;
+    min-width: min(120px, 15vw);
+    max-width: 200px;
 }
 
 .btn:hover {
@@ -144,8 +146,12 @@
 }
 
 .toolbar button {
-    padding: 8px 15px;
-    font-size: 13px;
+    padding: clamp(6px, 1vw, 10px) clamp(8px, 1.5vw, 14px);
+    font-size: clamp(14px, 0.9vw, 15px);
+    width: auto;
+    flex: 1 0 auto;
+    min-width: min(80px, 12vw);
+    max-width: min(120px, 16vw);
 }
 
 .toolbar-info {
@@ -162,4 +168,102 @@
     background-color: var(--border-color);
     align-self: center;
     opacity: 0.6;
+}
+
+.toolbar select.btn {
+    height: 40px;
+    line-height: 1.2;
+    box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.toolbar button,
+.toolbar select.btn {
+    height: 40px;
+    min-height: 40px;
+    min-width: fit-content;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+#chapterSelect {
+    min-width: fit-content;
+    max-width: 80px;
+    width: auto;
+    padding: 8px 25px 8px 8px;
+    font-size: 14px;
+}
+
+/* Audio Controls Styles */
+#audioControls {
+    margin: 10px 0;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+}
+
+#audioControls > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.narrator-select {
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    color: var(--text-primary);
+}
+
+.play-audio-btn,
+.pause-audio-btn,
+.stop-audio-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    min-width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.play-audio-btn,
+.pause-audio-btn {
+    background: var(--accent-color);
+    color: white;
+}
+
+.stop-audio-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.play-audio-btn:hover,
+.pause-audio-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stop-audio-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.play-audio-btn:active,
+.pause-audio-btn:active,
+.stop-audio-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }

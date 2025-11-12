@@ -1,5 +1,5 @@
 ﻿import { handleError } from '../main.js'
-export const APP_VERSION = '1.2.2025.11.10';
+export const APP_VERSION = '1.3.2025.11.11';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 export const BOOK_ORDER = [
@@ -75,10 +75,10 @@ export const state = {
         bibleTranslation: 'BSB',
         referenceVersion: 'NASB1995',
         footnotes: {},
-        audioNarrator: 'gilbert', 
+        audioNarrator: 'gilbert',
         manualBook: BOOK_ORDER[0],
         manualChapter: 1,
-        theme: 'light',
+        theme: 'dark',
         colorTheme: 'blue',
         notesView: 'text',
         referencePanelOpen: false,

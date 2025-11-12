@@ -3,35 +3,40 @@
    Right-click context menu for highlighting verses
 ==================================================================== */
 
-.color-picker {
-    transform: translateZ(0);
-    display: none;
-    position: absolute;
+#colorPicker {
+    position: fixed;
+    z-index: 10000;
     background: var(--popup-background);
     border: 1px solid var(--border-color);
-    border-radius: 5px;
-    padding: 10px;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
     box-shadow: 0 4px 15px var(--shadow-strong);
-    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    transform: translateZ(0);
+    font-size: 14px;
+    isolation: isolate;
 }
 
-.color-picker.active {
-    display: block;
+#colorPicker.active {
+    display: flex;
 }
 
 .color-options {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(3, 32px);
+    grid-template-rows: repeat(2, 32px);
+    gap: var(--spacing-sm);
 }
 
 .color-option {
-    width: 40px;
-    height: 40px;
-    border-radius: 5px;
-    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     border: 2px solid transparent;
-    transition: all 0.2s;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
 .color-option:hover {
@@ -39,7 +44,85 @@
     transform: scale(1.1);
 }
 
+.color-option:active {
+    transform: scale(0.95);
+}
+
 .color-option:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
+}
+
+/* Specific color styles using your highlight variables */
+.color-option.highlight-yellow {
+    background-color: var(--highlight-yellow);
+}
+
+.color-option.highlight-green {
+    background-color: var(--highlight-green);
+}
+
+.color-option.highlight-blue {
+    background-color: var(--highlight-blue);
+}
+
+.color-option.highlight-pink {
+    background-color: var(--highlight-pink);
+}
+
+.color-option.highlight-orange {
+    background-color: var(--highlight-orange);
+}
+
+.color-option.highlight-purple {
+    background-color: var(--highlight-purple);
+}
+
+/* Remove Highlight button */
+#removeHighlight {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 12px;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    #colorPicker {
+        padding: var(--spacing-sm);
+        gap: var(--spacing-sm);
+    }
+    
+    .color-options {
+        grid-template-columns: repeat(3, 36px);
+        grid-template-rows: repeat(2, 36px);
+        gap: var(--spacing-sm);
+    }
+    
+    .color-option {
+        width: 36px;
+        height: 36px;
+    }
+    
+    #removeHighlight {
+        font-size: 13px;
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Animation for smooth appearance */
+#colorPicker {
+    opacity: 0;
+    transform: translateZ(0) scale(0.95);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#colorPicker.active {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+}
+
+/* Ensure proper stacking context */
+#colorPicker {
+    isolation: isolate;
 }

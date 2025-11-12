@@ -18,6 +18,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Provinent Scripture Study</title>
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
+        frame-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
+        child-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
+    ">
     
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -72,31 +79,26 @@
             <button class="collapse-toggle" title="Collapse Sidebar" aria-label="Collapse sidebar"></button>
             <h2>Bible Study Resources</h2>
 
-            <!-- Bible Gateway embedded search button -->
-            <form id="bibleGatewayForm" action="https://www.biblegateway.com/quicksearch/" target="_blank" method="GET">
-                <input type="hidden" name="version" id="bgVersion" value="NASB1995" />
-                <div style="border: 1px solid #600; border-radius: 4px; overflow: hidden;">
-                    <div style="background-color: #600; color:#fff; text-align: center; padding: 8px 10px; font-weight: bold;">
-                        Lookup a word or passage in the Bible
-                    </div>
-                    <div style="background-color: #fff; text-align: center; padding: 15px 10px;">
-                        <div style="margin-bottom: 10px;">
-                            <input style="margin:5px; padding: 6px; border: 1px solid #ccc; border-radius: 3px; width: 200px;" 
-                                type="text" name="quicksearch" placeholder="Enter search terms" /><br />
-                            <input style="margin:5px; padding: 6px 12px; background-color: #600; color: white; border: none; border-radius: 3px; cursor: pointer;" 
-                                type="submit" value="Search BibleGateway.com" /><br />
-                        </div>
-                        <a href="https://www.biblegateway.com/" title="The Bible in multiple languages, versions, and formats" target="_blank">
-                            <img src="https://www.biblegateway.com/assets/images/logos/bglogo_sm.gif?103106" width="146" height="44" alt="BibleGateway.com" border="0" />
-                        </a><br />
-                        <small style="color: #666666;">
-                            <a href="https://www.biblegateway.com/usage/form/" target="_blank" style="color: #40a1f0; text-decoration: none;">
-                                About
-                            </a><br />
-                        </small>
-                    </div>
+        <!-- Bible Gateway embedded search button -->
+        <form id="bibleGatewayForm" action="https://www.biblegateway.com/quicksearch/" target="_blank" method="GET">
+            <input type="hidden" name="version" id="bgVersion" value="NASB1995" />
+            <div class="bible-gateway-container">
+                <div class="bible-gateway-header">
+                    Lookup a word or passage in the Bible
                 </div>
-            </form>
+                <div class="bible-gateway-content">
+                    <div class="bible-gateway-inputs">
+                        <input type="text" name="quicksearch" placeholder="Enter search terms" />
+                        <input type="submit" value="Search BibleGateway.com" />
+                    </div>
+                    <small>
+                        <a href="https://www.biblegateway.com/usage/form/" target="_blank">
+                            About
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </form>
 
             <!-- Reference‑panel toggle button -->
             <button class="reference-panel-toggle" id="referencePanelToggle">
@@ -107,7 +109,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="bibles">
                     <h3>Online Bibles</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-bibles">
                     <ul class="sidebar-links">
@@ -129,7 +131,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="doctrines">
                     <h3>Christian Doctrine</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-doctrines">
                     <ul class="sidebar-links">
@@ -156,7 +158,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="studyTopics">
                     <h3>Study Topics and FAQs</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-studyTopics">
                     <ul class="sidebar-links">
@@ -187,10 +189,11 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="theological">
                     <h3>Theological Resources</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-theological">
                     <ul class="sidebar-links">
+                        <li><a href="https://www.monergism.com/thethreshold/sdg/calvin/Institutes%20-%20John%20Calvin.pdf" target="_blank" rel="noopener noreferrer">Institutes of the Christian Religion by John Calvin</a></li>
                         <li><a href="https://www.monergism.com/thethreshold/sdg/luther/Bondage%20of%20the%20Will%20-%20Martin%20Luther.pdf" target="_blank" rel="noopener noreferrer">Bondage of the Will by Martin Luther</a></li>
                         <li><a href="https://www.aomin.org" target="_blank" rel="noopener noreferrer">Alpha & Omega Ministries</a></li>
                         <li><a href="https://answersingenesis.org" target="_blank" rel="noopener noreferrer">Answers in Genesis</a></li>
@@ -211,7 +214,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="podcasts">
                     <h3>Podcasts and Radio</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-podcasts">
                     <ul class="sidebar-links">
@@ -227,7 +230,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="devotionals">
                     <h3>Devotionals</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-devotionals">
                     <ul class="sidebar-links">
@@ -244,7 +247,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="studyTools">
                     <h3>Study Tools</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-studyTools">
                     <ul class="sidebar-links">
@@ -265,7 +268,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="commentaries">
                     <h3>Commentaries</h3>
-                    <span class="section-toggle" aria-hidden="true">▼</span>
+                    <span class="section-toggle" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </div>
                 <div class="sidebar-section-content" id="content-commentaries">
                     <ul class="sidebar-links">
@@ -312,42 +315,13 @@
                 </div>
             </div>
 
-            <!-- Two mutually exclusive viewers: iframe (online) or PDF viewer -->
+            <!-- iframe viewer -->
             <div class="reference-panel-content">
                 <iframe id="referenceIframe"
                         class="reference-panel-iframe"
                         src=""
                         title="Reference Bible Content"
                 ></iframe>
-
-                <div class="pdf-viewer" id="pdfViewer">
-                    <div class="pdf-controls">
-                        <button id="prevPage">Previous</button>
-                        <label for="pageInput" class="sr-only">Page Number</label>
-                        <span>Page</span>
-                        <input type="number" id="pageInput" min="1" value="1">
-                        <span>of <span id="pageCount">0</span></span>
-                        <button id="nextPage">Next</button>
-
-                        <span style="margin-left: 10px;">Zoom:</span>
-                        <button id="zoomOut" aria-label="Zoom out">-</button>
-                        <span id="zoomLevel">100%</span>
-                        <button id="zoomIn" aria-label="Zoom in">+</button>
-
-                        <!-- Search controls -->
-                        <label for="pdfSearchInput" class="sr-only">Search in PDF</label>
-                        <input type="text" id="pdfSearchInput" placeholder="Search in PDF..." style="margin-left: 15px; padding: 5px 10px;">
-                        <button id="pdfSearchBtn">Search</button>
-                        <button id="prevSearchResult" style="display: none;" aria-label="Previous result">◀</button>
-                        <button id="nextSearchResult" style="display: none;" aria-label="Next result">▶</button>
-                        <span id="pdfSearchResults" style="margin-left: 10px; font-size: 12px;"></span>
-                        <button id="clearSearchBtn" style="display: none; margin-left: 5px;">Clear</button>
-                    </div>
-
-                    <div class="pdf-canvas-container">
-                        <canvas id="pdfCanvas"></canvas>
-                    </div>
-                </div>
             </div>
 
             <div class="resize-handle resize-handle-right" data-panel="referencePanel" aria-label="Resize reference panel"></div>
@@ -371,18 +345,17 @@
             <div class="toolbar">
                 <!-- Prev / Next / Resume -->
                 <button class="btn btn-secondary" id="prevPassageBtn" title="Previous passage">
-                    Prev
+                    <i class="fas fa-arrow-left"></i>
                 </button>
                 <button class="btn btn-secondary" id="nextPassageBtn" title="Next passage">
-                    Next
+                    <i class="fas fa-arrow-right"></i>
                 </button>
 
                 <span class="toolbar-divider" aria-hidden="true"></span>
 
                 <!-- Random passage -->
-                <button class="btn btn-secondary" id="randomPassageBtn"
-                        title="Random passage">
-                    Random Passage
+                <button class="btn btn-secondary" id="randomPassageBtn" title="View a random passage of Scripture">
+                    <i class="fas fa-shuffle"></i> Random
                 </button>
 
                 <span class="toolbar-divider" aria-hidden="true"></span>
@@ -404,15 +377,10 @@
                     <i class="fas fa-highlighter"></i> Highlights
                 </button>
 
-                <!-- Small help text -->
-                <span class="toolbar-info">
-                    Click a verse to study • Right‑click to highlight
-                </span>
-
                 <!-- Audio Controls -->
                 <div id="audioControls" style="display: none; margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-weight: bold;">Audio:</span>
+                        <span style="font-weight: bold;">Audio</span>
                         <select class="narrator-select" style="padding: 5px; border-radius: 3px;">
                             <option value="gilbert">Gilbert</option>
                             <option value="hays">Hays</option>
@@ -429,7 +397,7 @@
                         </button>
                     </div>
                 </div>
-            </div>   <!-- end .toolbar -->
+            </div>
 
             <!-- MAIN CONTENT AREA (scripture + notes) -->
             <div class="content-area">
@@ -449,7 +417,7 @@
                         <p>Scripture quotations are provided by API from <a href="https://bible.helloao.org" target="_blank" rel="noopener noreferrer">bible.helloao.org</a>,
                             without which this app would not have been possible.
                             And a thank you to <a href="https://berean.bible" target="_blank" rel="noopener noreferrer">Berean Bible</a> for their excellent translation work.
-                           All copyrights reserved by their respective owners. Currently selected translation: <span id="bibleName">Berean Standard Bible</span>®</p>
+                           All copyrights reserved by their respective owners. Currently selected translation: <span id="bibleName">Berean Standard Bible</span>&copy</p>
                         <p style="margin-top: 10px;">
                             
                         </p>
@@ -462,8 +430,8 @@
                     <div class= "notes-header">
                         <h3>Study Notes</h3>
                         <div class="notes-controls">
-                            <button class="btn btn-secondary" data-format="md" aria-label="Export as markdown"><i class="fas fa-download" aria-hidden="true"></i> Export .md</button>
-                            <button class="btn btn-secondary" data-format="txt" aria-label="Export as text"><i class="fas fa-download" aria-hidden="true"></i> Export .txt</button>
+                            <button class="btn btn-secondary" data-format="md" aria-label="Export as markdown" title="Export notes in Markdown format"><i class="fas fa-download" aria-hidden="true"></i> Export .md</button>
+                            <button class="btn btn-secondary" data-format="txt" aria-label="Export as text" title="Export notes in plaintext format"><i class="fas fa-download" aria-hidden="true"></i> Export .txt</button>
                         </div>
                     </div>
 
@@ -484,10 +452,10 @@
                         <button class="markdown-btn" data-format="ol"    title="Numbered List" aria-label="Numbered list">1. List</button>
                         <button class="markdown-btn" data-format="quote" title="Quote" aria-label="Quote">" Quote</button>
                         <button class="markdown-btn" data-format="code"  title="Code" aria-label="Code">&lt;/&gt;</button>
-                        <button class="markdown-btn" data-format="link"  title="Link" aria-label="Insert link">🔗 Link</button>
+                        <button class="markdown-btn" data-format="link"  title="Link" aria-label="Insert link"><i class="fas fa-link"></i> Link</button>
                     </div>
 
-                    <!-- Textarea for raw notes (visible in Text mode) -->
+                    <!-- Text area for raw notes (visible in Text mode) -->
                     <textarea id="notesInput" aria-label="Study notes" placeholder="Write your study notes here..."></textarea>
 
                     <!-- Rendered markdown preview (visible in Markdown mode) -->
@@ -495,9 +463,9 @@
 
                     <div class="resize-handle resize-handle-left" data-panel="notesSection" aria-label="Resize notes panel"></div>
                 </section>
-            </div>   <!-- end .content-area -->
-        </main>   <!-- end .main-content -->
-    </div>       <!-- end #mainContainer -->
+            </div>
+        </main>
+    </div>
 
     <!-- COLOR PICKER (highlight menu) -->
     <div class="color-picker" id="colorPicker" role="menu" aria-label="Highlight color options">
@@ -555,7 +523,7 @@
         </div>
 
         <div class="settings-group">
-            <label for="bibleTranslationSetting">Primary Bible Translation</label>
+            <label for="bibleTranslationSetting">Bible Translation</label>
             <select id="bibleTranslationSetting">
                 <option value="ASV">American Standard Version (ASV)</option>
                 <option value="KJV">King James Version (KJV)</option>
@@ -563,7 +531,7 @@
                 <option value="BSB">Berean Standard Bible (BSB)</option>
                 <option value="NET">New English Translation (NET)</option>
             </select>
-            <small>Set the translation for the main Scripture, "Passage of the Day" area.</small>
+            <small>Set the translation for the "Passage of the Day" area.</small>
         </div>
 
         <div class="settings-group">
@@ -571,7 +539,7 @@
                 <div class="settings-group">
                     <button class="btn btn-secondary" id="exportDataBtn" aria-label="Export data"><i class="fas fa-download" aria-hidden="true"></i> Export</button>
                     <small style="display:block;margin-top:5px;">
-                        Export your highlights, notes, and settings as a JSON file.
+                        Export your highlights, notes, and settings.
                     </small>
                 </div>
                 <div class="settings-group">
@@ -586,16 +554,16 @@
         <div class="settings-group">
             <label>Local Storage</label>
             <div class="settings-group">
-                <button class="btn btn-secondary" id="clearHighlightsBtn">Clear Highlights</button>
+                <button class="btn btn-secondary" id="clearHighlightsBtn"><i class="fas fa-eraser"></i> Clear Highlights</button>
                 <small style="display:block;margin-top:5px;">
                     Removes all highlighted verses.
                 </small>
             </div>
             <div class="settings-group">
-                <button class="btn btn-secondary" id="clearCacheBtn">Clear Cached Data</button>
+                <button class="btn btn-secondary" id="clearCacheBtn"><i class="fas fa-broom"></i> Clear Cached Data</button>
                 <small style="display:block;margin-top:5px;">
                     Clear all cached Bible passages and resources. This will free up storage space
-                    but remove offline access to previously viewed content including any uploaded PDF.
+                    but remove offline access to previously viewed content.
                 </small>
             </div>
         </div>
@@ -604,11 +572,11 @@
             <label>Reset Application</label>
                 <div class="settings-group">
                     <button class="btn btn-danger" id="deleteAllDataBtn">
-                        <i class="fas fa-trash" aria-hidden="true"></i> Delete All Stored Data
+                        <i class="fas fa-trash" aria-hidden="true"></i> Delete All Data
                     </button>
                     <small style="display:block;margin-top:5px;color:#f44336;">
                         <strong>Warning:</strong> This will permanently delete all your highlights, notes, 
-                        settings, and uploaded PDF. This action cannot be undone.
+                        and settings. This action cannot be undone!
                     </small>
                 </div>
         </div>
@@ -679,10 +647,9 @@
             <h3>About Provinent Scripture Study</h3>
             <div class="about-content">
                 <div class="about-creator">
-                    <strong>Created by:</strong> Jordan DiPasquale
+                    Created by: Jordan DiPasquale (code written using AI tools)
                 </div>
                 <div class="attribution-links">
-                    <div class="about-description">Code written using AI tools</div> 
                     <a href="https://github.com/jd-code76/provinent-scripture-study" target="_blank" class="attribution-link github">
                         <div>
                             <strong>Source Code</strong>

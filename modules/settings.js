@@ -1,14 +1,14 @@
-﻿import {
+﻿import { stopChapterAudio } from './api.js' 
+import {
     applyColorTheme,
     applyTheme,
-    clearError,
     handleError,
     showLoading
 } from '../main.js'
+import { populateChapterDropdown, updateChapterDropdownVisibility } from './navigation.js'
 import { loadPassage } from './passage.js'
 import {
     APP_VERSION,
-    BOOK_ORDER,
     saveToCookies,
     saveToStorage,
     state,
@@ -54,23 +54,39 @@ export function importData(ev) {
             if (!confirm('Import will overwrite all current data. Continue?')) {
                 return;
             }
-            Object.assign(state.settings, incoming.settings);
-            if (incoming.highlights) {
-                state.highlights = incoming.highlights;
-            }
-            if (incoming.notes) {
-                state.notes = incoming.notes;
-            }
+            const importedSettings = { ...incoming.settings };
+            const importedHighlights = incoming.highlights || {};
+            const importedNotes = incoming.notes || '';
+            Object.assign(state.settings, importedSettings);
+            state.highlights = importedHighlights;
+            state.notes = importedNotes;
             saveToStorage();
+            updateURL(
+                importedSettings.bibleTranslation || state.settings.bibleTranslation,
+                importedSettings.manualBook || state.settings.manualBook,
+                importedSettings.manualChapter || state.settings.manualChapter
+            );
             applyTheme();
             applyColorTheme();
             restoreSidebarState();
             restorePanelStates();
             switchNotesView(state.settings.notesView || 'text');
-            await loadPassage();
             document.getElementById('notesInput').value = state.notes;
             updateMarkdownPreview();
-            alert('Backup imported successfully!');
+            const bookSelect = document.getElementById('bookSelect');
+            const chapterSelect = document.getElementById('chapterSelect');
+            if (bookSelect && importedSettings.manualBook) {
+                bookSelect.value = importedSettings.manualBook;
+                populateChapterDropdown(importedSettings.manualBook);
+            }
+            if (chapterSelect && importedSettings.manualChapter) {
+                chapterSelect.value = importedSettings.manualChapter;
+            }
+            updateChapterDropdownVisibility(importedSettings.manualBook);
+            alert('Backup imported successfully! Page will refresh to apply all changes.');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } catch (err) {
             console.error('Import error:', err);
             alert('Failed to import backup – see console for details.');
@@ -98,6 +114,9 @@ export async function saveSettings() {
         const newTranslation = document.getElementById('bibleTranslationSetting').value;
         const currentBook = state.settings.manualBook;
         const currentChapter = state.settings.manualChapter;
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
         updateURL(newTranslation, currentBook, currentChapter);
         state.settings.bibleTranslation = newTranslation;
         const referenceTranslationSelect = document.getElementById('referenceTranslation');
@@ -128,12 +147,18 @@ export async function clearCache() {
     }
     try {
         showLoading(true);
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
         if ('caches' in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
         localStorage.removeItem('cachedVerses');
-        alert('Cache cleared successfully');
+        alert('Cache cleared successfully. Page will refresh to apply changes.');
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     } catch (err) {
         handleError(err, 'clearCache');
         alert('Error clearing cache: ' + err.message);
@@ -150,52 +175,19 @@ export async function deleteAllData() {
     }
     try {
         showLoading(true);
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
         localStorage.removeItem('bibleStudyState');
         localStorage.removeItem('cachedVerses');
         document.cookie = 'bibleStudySettings=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        const defaultState = {
-            currentVerse: null,
-            currentVerseData: null,
-            highlights: {},
-            notes: '',
-            settings: {
-                bibleTranslation: 'BSB',
-                referenceVersion: 'NASB1995',
-                manualBook: BOOK_ORDER[0],
-                manualChapter: 1,
-                lastUpdate: null,
-                theme: 'light',
-                colorTheme: 'blue',
-                notesView: 'text',
-                referencePanelOpen: false,
-                referenceSource: 'biblegateway',
-                collapsedSections: {},
-                collapsedPanels: {},
-                panelWidths: {
-                    sidebar: 280,
-                    referencePanel: 400,
-                    scriptureSection: null,
-                    notesSection: 400
-                }
-            },
-            currentPassageReference: ''
-        };
-        Object.assign(state, defaultState);
-        document.getElementById('notesInput').value = '';
-        updateMarkdownPreview();
-        applyTheme();
-        applyColorTheme();
-        updateBibleGatewayVersion();
-        const defaultParams = {
-            translation: 'BSB',
-            book: 'Genesis',
-            chapter: 1
-        };
-        updateURL(defaultParams.translation, defaultParams.book, defaultParams.chapter);
-        await loadPassage();
-        clearError();
-        closeSettings();
-        alert('All data has been deleted. The app has been reset to defaults.');
+        alert('All data has been deleted. The app will now reset to the default passage (Genesis 1, BSB).');
+        const defaultTranslation = 'BSB';
+        const defaultBook = 'Genesis';
+        const defaultChapter = '1';
+        setTimeout(() => {
+            window.location.replace(`/?p=${defaultTranslation.toLowerCase()}/${defaultBook.toLowerCase().substring(0, 3)}/${defaultChapter}`);
+        }, 1000);
     } catch (err) {
         handleError(err, 'deleteAllData');
         alert('Error deleting data. See console for details.');

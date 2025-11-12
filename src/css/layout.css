@@ -73,28 +73,28 @@ body {
 }
 
 .collapse-toggle::before {
-    content: '\25C0'; /* ◀ */
+    content: '\2B9C'; /*   (left circle chevron) */
     transition: transform 0.3s ease;
 }
 
 .panel-collapsed .collapse-toggle::before {
-    content: '\25B6'; /* ▶ */
+    content: '\2B9E'; /*  ⮞ (right circle chevron) */
 }
 
 #scriptureSection .collapse-toggle::before {
-    content: '\25B6'; /* ▶ */
+    content: '\2B9E'; /*  ⮞ (right circle chevron) */
 }
 
 #scriptureSection.panel-collapsed .collapse-toggle::before {
-    content: '\25C0'; /* ◀ */
+    content: '\2B9C'; /*  ⮜ (left circle chevron) */
 }
 
 #notesSection .collapse-toggle::before {
-    content: '\25B6'; /* ▶ */
+    content: '\2B9E'; /*  (right circle chevron) */
 }
 
 #notesSection.panel-collapsed .collapse-toggle::before {
-    content: '\25C0'; /* ◀ */
+    content: '\2B9C'; /*  ⮜ (left circle chevron) */
 }
 
 .scripture-section {

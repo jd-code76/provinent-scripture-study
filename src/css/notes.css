@@ -241,3 +241,18 @@
     background-color: var(--toolbar-background);
     font-weight: bold;
 }
+
+.notes-controls .btn {
+    min-width: 120px;
+    padding: 8px 12px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.notes-controls .btn i {
+    font-size: 12px;
+    opacity: 0.9;
+}

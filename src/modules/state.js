@@ -6,7 +6,7 @@
 import { handleError } from '../main.js'
 
 /* Global constants */
-export const APP_VERSION = '1.2.2025.11.10';
+export const APP_VERSION = '1.3.2025.11.11';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -158,14 +158,14 @@ export const state = {
         footnotes: {},
         
         // Audio settings
-        audioNarrator: 'gilbert', // Default narrator
+        audioNarrator: 'gilbert',
         
         // Manual navigation only
         manualBook: BOOK_ORDER[0],
         manualChapter: 1,
         
         // UI preferences
-        theme: 'light',
+        theme: 'dark',
         colorTheme: 'blue',
         notesView: 'text',
         
