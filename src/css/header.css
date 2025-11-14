@@ -193,22 +193,23 @@
     width: auto;
     padding: 8px 25px 8px 8px;
     font-size: 14px;
+    margin-left: 4px;
 }
 
 /* Audio Controls Styles */
+.audio-controls-hidden {
+    display: none !important;
+}
+
 #audioControls {
     margin: 10px 0;
     padding: 10px;
     background: var(--bg-secondary);
     border-radius: 5px;
     border: 1px solid var(--border-color);
-}
-
-#audioControls > div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    transform: scale(0.9);
+    transform-origin: left center;
+    display: block;
 }
 
 .narrator-select {

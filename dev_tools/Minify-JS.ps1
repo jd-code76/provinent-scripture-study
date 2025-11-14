@@ -1,251 +1,157 @@
-# JavaScript Minifier for Provinent Scripture Study
-# Conservative approach: removes comments only, preserves code structure and UTF-8 encoding
+param([switch]$NoMinify)
 
-param(
-    [switch]$NoMinify = $false  # Optional: skip processing
+$files = @(
+    "../src/main.js",
+    "../src/sw.js",
+    "../src/modules/api.js",
+    "../src/modules/highlights.js", 
+    "../src/modules/hotkeys.js",
+    "../src/modules/navigation.js",
+    "../src/modules/passage.js",
+    "../src/modules/settings.js",
+    "../src/modules/state.js",
+    "../src/modules/strongs.js",
+    "../src/modules/ui.js"
 )
 
-# Define file mappings
-$fileMappings = @(
-    @{ Source = "../src/main.js"; Destination = "../www/main.js" },
-    @{ Source = "../src/modules/api.js"; Destination = "../www/modules/api.js" },
-    @{ Source = "../src/modules/navigation.js"; Destination = "../www/modules/navigation.js" },
-    @{ Source = "../src/modules/passage.js"; Destination = "../www/modules/passage.js" },
-    @{ Source = "../src/modules/settings.js"; Destination = "../www/modules/settings.js" },
-    @{ Source = "../src/modules/state.js"; Destination = "../www/modules/state.js" },
-    @{ Source = "../src/modules/strongs.js"; Destination = "../www/modules/strongs.js" },
-    @{ Source = "../src/modules/ui.js"; Destination = "../www/modules/ui.js" },
-    @{ Source = "../src/sw.js"; Destination = "../www/sw.js" }
-)
+Write-Host "Checking files..." -ForegroundColor Yellow
 
-# Check if JS files exist
-Write-Host "Checking file dependencies..." -ForegroundColor Yellow
+Write-Host "Checking files..." -ForegroundColor Yellow
 
-$missingFiles = @()
-foreach ($mapping in $fileMappings) {
-    if (-not (Test-Path $mapping.Source)) {
-        $missingFiles += (Split-Path $mapping.Source -Leaf)
+$missing = @()
+foreach ($file in $files) {
+    if (!(Test-Path $file)) {
+        $missing += [System.IO.Path]::GetFileName($file)
     }
 }
 
-if ($missingFiles.Count -gt 0) {
-    Write-Host "Missing files:" -ForegroundColor Red
-    $missingFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
+if ($missing.Count -gt 0) {
+    Write-Host "Missing:" -ForegroundColor Red
+    $missing | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
     exit 1
 }
 
 Write-Host "All files found" -ForegroundColor Green
 
-function Remove-JSComments {
-    param([string]$Content)
-    
-    # Process line by line to avoid encoding issues
+function Remove-Comments([string]$Content) {
     $lines = $Content -split "`r?`n"
-    $processedLines = @()
-    
-    $inBlockComment = $false
+    $result = @()
+    $inBlock = $false
     
     foreach ($line in $lines) {
-        $currentLine = $line
+        $current = $line
         
-        # Handle block comments spanning multiple lines
-        if ($inBlockComment) {
-            $endIndex = $currentLine.IndexOf('*/')
-            if ($endIndex -ge 0) {
-                # End of block comment found
-                $currentLine = $currentLine.Substring($endIndex + 2)
-                $inBlockComment = $false
-                # Don't add the line if it only contained the comment end
-                if (-not [string]::IsNullOrWhiteSpace($currentLine)) {
-                    $processedLines += $currentLine
-                }
-                continue
+        if ($inBlock) {
+            $end = $current.IndexOf('*/')
+            if ($end -ge 0) {
+                $current = $current.Substring($end + 2)
+                $inBlock = $false
+                if ([string]::IsNullOrWhiteSpace($current)) { continue }
             } else {
-                # Still inside block comment, skip this line
                 continue
             }
         }
         
-        # Check for block comments
-        $blockStartIndex = $currentLine.IndexOf('/*')
-        if ($blockStartIndex -ge 0) {
-            $blockEndIndex = $currentLine.IndexOf('*/', $blockStartIndex + 2)
-            if ($blockEndIndex -ge 0) {
-                # Block comment starts and ends on same line
-                $beforeComment = $currentLine.Substring(0, $blockStartIndex)
-                $afterComment = $currentLine.Substring($blockEndIndex + 2)
-                $currentLine = $beforeComment + $afterComment
-                # Check if line is now empty
-                if ([string]::IsNullOrWhiteSpace($currentLine)) {
-                    continue
-                }
+        $blockStart = $current.IndexOf('/*')
+        if ($blockStart -ge 0) {
+            $blockEnd = $current.IndexOf('*/', $blockStart + 2)
+            if ($blockEnd -ge 0) {
+                $before = $current.Substring(0, $blockStart)
+                $after = $current.Substring($blockEnd + 2)
+                $current = $before + $after
+                if ([string]::IsNullOrWhiteSpace($current)) { continue }
             } else {
-                # Block comment starts on this line but continues
-                $beforeComment = $currentLine.Substring(0, $blockStartIndex)
-                # Only keep content before comment if it's not just whitespace
-                if (-not [string]::IsNullOrWhiteSpace($beforeComment)) {
-                    $currentLine = $beforeComment
-                } else {
-                    $currentLine = ''
-                }
-                $inBlockComment = $true
+                $current = $current.Substring(0, $blockStart)
+                if ([string]::IsNullOrWhiteSpace($current)) { $current = '' }
+                $inBlock = $true
             }
         }
         
-        # Handle single-line comments only if not in block comment
-        if (-not $inBlockComment -and -not [string]::IsNullOrEmpty($currentLine)) {
-            $commentIndex = $currentLine.IndexOf('//')
-            
-            if ($commentIndex -ge 0) {
-                # Check if it's likely a URL or special pattern that should be preserved
-                $beforeComment = $currentLine.Substring(0, $commentIndex)
-                
-                # Skip if it's a URL, regex, or quoted string containing //
-                $isUrl = $beforeComment -match 'https?:$|://$|["'']$' -or 
-                         $currentLine -match '"[^"]*//[^"]*"' -or 
-                         $currentLine -match "'[^']*//[^']*'" -or
-                         $currentLine -match '\/[^\/]*\/[gmiyus]*\s*//'  # regex pattern followed by comment
-                
-                if (-not $isUrl) {
-                    # Remove the single-line comment and everything after it
-                    $currentLine = $beforeComment
-                }
+        if (!$inBlock -and ![string]::IsNullOrEmpty($current)) {
+            $commentPos = $current.IndexOf('//')
+            if ($commentPos -ge 0) {
+                $before = $current.Substring(0, $commentPos)
+                $isSpecial = $before -match 'https?:$|://$|["'']$' -or 
+                            $current -match '"[^"]*//[^"]*"' -or 
+                            $current -match "'[^']*//[^']*'" -or
+                            $current -match '\/[^\/]*\/[gmiyus]*\s*//'
+                if (!$isSpecial) { $current = $before }
             }
         }
         
-        # Only add non-empty lines (or lines that only had trailing whitespace before comment)
-        $trimmedLine = $currentLine.Trim()
-        if (-not [string]::IsNullOrEmpty($trimmedLine)) {
-            $processedLines += $currentLine
+        if (![string]::IsNullOrEmpty($current.Trim())) {
+            $result += $current
         }
     }
     
-    # Rejoin with original line endings
-    return $processedLines -join "`r`n"
+    return $result -join "`r`n"
 }
 
-function Get-File-Size-Stats {
-    param(
-        [string]$originalContent,
-        [string]$processedContent,
-        [string]$fileName
-    )
+New-Item "../src/modules" -ItemType Directory -Force | Out-Null
+$totalOrigSize = 0
+$totalProcSize = 0
+$totalOrigLines = 0
+$totalProcLines = 0
+
+Write-Host "Processing files..." -ForegroundColor Yellow
+
+foreach ($src in $files) {
+    $file = [System.IO.Path]::GetFileName($src)
+    $dst = $src -replace '^\.\./src', '../www'
     
-    $originalSize = [System.Text.Encoding]::UTF8.GetByteCount($originalContent)
-    $processedSize = [System.Text.Encoding]::UTF8.GetByteCount($processedContent)
-    $savings = if ($originalSize -gt 0) { [math]::Round((1 - $processedSize / $originalSize) * 100, 1) } else { 0 }
+    Write-Host "  $file" -ForegroundColor Cyan
     
-    # Count lines
-    $originalLines = ($originalContent -split "`r`n").Count
-    $processedLines = ($processedContent -split "`r`n").Count
-    $linesReduction = if ($originalLines -gt 0) { [math]::Round((1 - $processedLines / $originalLines) * 100, 1) } else { 0 }
-    
-    return @{
-        OriginalSize = $originalSize
-        ProcessedSize = $processedSize
-        SavingsPercent = $savings
-        OriginalLines = $originalLines
-        ProcessedLines = $processedLines
-        LinesReduction = $linesReduction
-        FileName = $fileName
+    if (Test-Path $dst) {
+        $backup = "../src/modules/$file.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+        Write-Host "    Backup: $backup" -ForegroundColor Yellow
+        Copy-Item $dst $backup -Force
     }
-}
-
-# Track statistics
-$totalOriginalSize = 0
-$totalProcessedSize = 0
-$totalOriginalLines = 0
-$totalProcessedLines = 0
-$fileStats = @()
-
-# Ensure backup directory exists
-$backupDir = "../src/modules"
-if (!(Test-Path $backupDir)) {
-    New-Item -ItemType Directory -Path $backupDir -Force
-}
-
-Write-Host "Processing JavaScript files..." -ForegroundColor Yellow
-
-# Process each file
-foreach ($mapping in $fileMappings) {
-    $sourceFile = $mapping.Source
-    $destFile = $mapping.Destination
-    $fileName = Split-Path $sourceFile -Leaf
     
-    Write-Host "  Processing: $fileName" -ForegroundColor Cyan
+    $orig = [System.IO.File]::ReadAllText($src, [System.Text.Encoding]::UTF8)
+    $proc = if ($NoMinify) { $orig } else { Remove-Comments $orig }
     
-    if (Test-Path $sourceFile) {
-        # Backup destination file if it exists
-        if (Test-Path $destFile) {
-            $backupPath = Join-Path $backupDir "$fileName.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-            Write-Host "    Backing up existing file to: $backupPath" -ForegroundColor Yellow
-            Copy-Item $destFile $backupPath -Force
-        }
-        
-        # Read source file with proper UTF-8 encoding using .NET methods
-        $originalContent = [System.IO.File]::ReadAllText($sourceFile, [System.Text.Encoding]::UTF8)
-        $processedContent = $originalContent
-        
-        if (-not $NoMinify) {
-            # Remove comments only (conservative approach)
-            $processedContent = Remove-JSComments -Content $processedContent
-        }
-        
-        # Get file statistics
-        $stats = Get-File-Size-Stats -originalContent $originalContent -processedContent $processedContent -fileName $fileName
-        $totalOriginalSize += $stats.OriginalSize
-        $totalProcessedSize += $stats.ProcessedSize
-        $totalOriginalLines += $stats.OriginalLines
-        $totalProcessedLines += $stats.ProcessedLines
-        $fileStats += $stats
-        
-        if (-not $NoMinify) {
-            Write-Host "    Processed: $([math]::Round($stats.OriginalSize/1KB,1))KB -> $([math]::Round($stats.ProcessedSize/1KB,1))KB ($($stats.SavingsPercent)%)" -ForegroundColor White
-            Write-Host "    Lines: $($stats.OriginalLines) -> $($stats.ProcessedLines) ($($stats.LinesReduction)%)" -ForegroundColor Gray
-        } else {
-            Write-Host "    Copied: $([math]::Round($stats.OriginalSize/1KB,1))KB, $($stats.OriginalLines) lines" -ForegroundColor White
-        }
-        
-        # Ensure destination directory exists
-        $destDir = Split-Path $destFile -Parent
-        if (!(Test-Path $destDir)) {
-            New-Item -ItemType Directory -Path $destDir -Force
-        }
-        
-        # Write processed content with proper UTF-8 encoding using .NET methods
-        [System.IO.File]::WriteAllText($destFile, $processedContent, [System.Text.Encoding]::UTF8)
+    $origSize = [System.Text.Encoding]::UTF8.GetByteCount($orig)
+    $procSize = [System.Text.Encoding]::UTF8.GetByteCount($proc)
+    $origLines = ($orig -split "`r`n").Count
+    $procLines = ($proc -split "`r`n").Count
+    
+    $totalOrigSize += $origSize
+    $totalProcSize += $procSize
+    $totalOrigLines += $origLines
+    $totalProcLines += $procLines
+    
+    if (!$NoMinify) {
+        $savings = if ($origSize -gt 0) { [math]::Round((1 - $procSize / $origSize) * 100, 1) } else { 0 }
+        $lineReduction = if ($origLines -gt 0) { [math]::Round((1 - $procLines / $origLines) * 100, 1) } else { 0 }
+        Write-Host "    Size: $([math]::Round($origSize/1KB,1))KB -> $([math]::Round($procSize/1KB,1))KB ($savings%)" -ForegroundColor White
+        Write-Host "    Lines: $origLines -> $procLines ($lineReduction%)" -ForegroundColor Gray
+    } else {
+        Write-Host "    Copied: $([math]::Round($origSize/1KB,1))KB, $origLines lines" -ForegroundColor White
     }
+    
+    $dstDir = [System.IO.Path]::GetDirectoryName($dst)
+    if (!(Test-Path $dstDir)) { New-Item $dstDir -ItemType Directory -Force | Out-Null }
+    [System.IO.File]::WriteAllText($dst, $proc, [System.Text.Encoding]::UTF8)
 }
 
-# Calculate total savings
-$totalSavings = if ($totalOriginalSize -gt 0) { [math]::Round((1 - $totalProcessedSize / $totalOriginalSize) * 100, 1) } else { 0 }
-$totalLinesReduction = if ($totalOriginalLines -gt 0) { [math]::Round((1 - $totalProcessedLines / $totalOriginalLines) * 100, 1) } else { 0 }
+Write-Host "`nComplete!" -ForegroundColor Green
 
-Write-Host "`nProcessing complete!" -ForegroundColor Green
+$origKB = [math]::Round($totalOrigSize / 1KB, 1)
+$procKB = [math]::Round($totalProcSize / 1KB, 1)
 
-# Display statistics
-$finalSizeKB = [math]::Round($totalProcessedSize / 1KB, 1)
-$originalSizeKB = [math]::Round($totalOriginalSize / 1KB, 1)
+Write-Host "Totals:" -ForegroundColor Yellow
+Write-Host "  Original: $origKB KB" -ForegroundColor Gray
+Write-Host "  Final: $procKB KB" -ForegroundColor Green
 
-Write-Host "File size statistics:" -ForegroundColor Yellow
-Write-Host "  Original total: $originalSizeKB KB" -ForegroundColor Gray
-Write-Host "  Final size:     $finalSizeKB KB" -ForegroundColor Green
-
-if (-not $NoMinify) {
-    $savedKB = [math]::Round(($totalOriginalSize - $totalProcessedSize) / 1KB, 1)
-    Write-Host "  Space saved:    $totalSavings% ($savedKB KB)" -ForegroundColor Green
-    Write-Host "  Lines reduced:  $totalOriginalLines -> $totalProcessedLines ($totalLinesReduction%)" -ForegroundColor Cyan
+if (!$NoMinify) {
+    $savedKB = [math]::Round(($totalOrigSize - $totalProcSize) / 1KB, 1)
+    $savedPct = if ($totalOrigSize -gt 0) { [math]::Round((1 - $totalProcSize / $totalOrigSize) * 100, 1) } else { 0 }
+    $linesPct = if ($totalOrigLines -gt 0) { [math]::Round((1 - $totalProcLines / $totalOrigLines) * 100, 1) } else { 0 }
+    Write-Host "  Saved: $savedPct% ($savedKB KB)" -ForegroundColor Green
+    Write-Host "  Lines: $totalOrigLines -> $totalProcLines ($linesPct%)" -ForegroundColor Cyan
 }
 
-Write-Host "`nBackups stored in: $backupDir" -ForegroundColor Gray
-Write-Host "UTF-8 encoding preserved for all special characters" -ForegroundColor Green
+Write-Host "`nBackups: ../src/modules/" -ForegroundColor Gray
+Write-Host "UTF-8 preserved" -ForegroundColor Green
 
-# Usage examples
-Write-Host "`nUsage examples:" -ForegroundColor Gray
-Write-Host "  .\Build-JS.ps1           # Remove comments only (conservative)"
-Write-Host "  .\Build-JS.ps1 -NoMinify # Copy files only (no modification)"
-
-if (-not $NoMinify) {
-    Write-Host "`nNote: Conservative minification - only comments removed, UTF-8 and code structure preserved" -ForegroundColor Yellow
-    Write-Host "Removes: // single-line comments, /* */ block comments, preserves URLs and special patterns" -ForegroundColor Gray
-}
+Write-Host "`nUse: .\Build-JS.ps1 [-NoMinify]" -ForegroundColor Gray

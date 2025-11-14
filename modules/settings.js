@@ -98,6 +98,8 @@ export function importData(ev) {
 export function openSettings() {
     document.getElementById('bibleTranslationSetting').value = 
         state.settings.bibleTranslation;
+    document.getElementById('audioControlsToggle').checked = 
+        state.settings.audioControlsVisible;
     document.querySelectorAll('.color-theme-option')
             .forEach(o => o.classList.toggle('selected',
                 o.dataset.theme === state.settings.colorTheme));
@@ -112,6 +114,7 @@ export function closeSettings() {
 export async function saveSettings() {
     try {
         const newTranslation = document.getElementById('bibleTranslationSetting').value;
+        const audioControlsVisible = document.getElementById('audioControlsToggle').checked;
         const currentBook = state.settings.manualBook;
         const currentChapter = state.settings.manualChapter;
         if (typeof stopChapterAudio === 'function') {
@@ -119,6 +122,8 @@ export async function saveSettings() {
         }
         updateURL(newTranslation, currentBook, currentChapter);
         state.settings.bibleTranslation = newTranslation;
+        state.settings.audioControlsVisible = audioControlsVisible;
+        updateAudioControlsVisibility();
         const referenceTranslationSelect = document.getElementById('referenceTranslation');
         if (referenceTranslationSelect) {
             referenceTranslationSelect.value = state.settings.referenceVersion;
@@ -193,5 +198,39 @@ export async function deleteAllData() {
         alert('Error deleting data. See console for details.');
     } finally {
         showLoading(false);
+    }
+}
+function updateAudioControlsVisibility() {
+    const audioControls = document.getElementById('audioControls');
+    const audioDivider = document.getElementById('audio-tb-divider');
+    if (audioControls && audioDivider) {
+        const isVisible = Boolean(state.settings.audioControlsVisible);
+        if (isVisible) {
+            audioControls.classList.remove('audio-controls-hidden');
+        } else {
+            audioControls.classList.add('audio-controls-hidden');
+        }
+        audioDivider.style.display = isVisible ? 'inline' : 'none';
+        const audioCheckbox = document.getElementById('audioControlsToggle');
+        if (audioCheckbox) {
+            audioCheckbox.checked = isVisible;
+        }
+    }
+}
+export function initializeAudioControls() {
+    if (typeof state.settings.audioControlsVisible === 'undefined') {
+        state.settings.audioControlsVisible = true;
+    }
+    const audioControls = document.getElementById('audioControls');
+    if (audioControls) {
+        if (state.settings.audioControlsVisible) {
+            audioControls.classList.remove('audio-controls-hidden');
+        } else {
+            audioControls.classList.add('audio-controls-hidden');
+        }
+    }
+    updateAudioControlsVisibility();
+    if (typeof state.settings.audioControlsVisible === 'undefined') {
+        saveToStorage();
     }
 }

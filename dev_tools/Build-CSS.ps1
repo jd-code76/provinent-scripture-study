@@ -23,7 +23,8 @@ $FileOrder = @(
     "loading.css",
     "error.css",
     "responsive.css",
-    "scrollbars.css"
+    "scrollbars.css",
+    "hotkeys.css"
 )
 
 $SourceDir = "../src/css"

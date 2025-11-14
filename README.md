@@ -9,16 +9,18 @@ Access the site here: [https://provinent.org](https://provinent.org)
 ## Features
 
 ### Core Functionality
-- **Multi-Translation Support**: ASV, KJV, GNV, BSB, NET
+- **Multi-Translation Support**: ASV, BSB, GNV, KJV, NET
 - **Study Notes**: Full Markdown support with live preview and export capabilities
-- **Verse Analysis**: Left-click any verse for analyis of a single verse with a side-by-side view of Strong's concordance (provided by [STEP Bible](https://www.stepbible.org)) and a Hebrew or Greek interlinear Bible (provided by [Bible Hub](https://biblehub.com/interlinear/))
+- **Verse Analysis**: Left-click any verse for analysis of a single verse with a side-by-side view of Strong's concordance (provided by [STEP Bible](https://www.stepbible.org)) and a Hebrew or Greek interlinear Bible (provided by [Bible Hub](https://biblehub.com/interlinear/))
 - **Verse Highlighting**: Right-click verses to highlight in one of six different colors for study emphasis
-- **Reference Bible**: Use the reference Bible to select from multiple translation options to compare with (NASB 1995, NASB 2020, ASV, KJV, ESV, GNV, BSB, NET, CSB, NIV, NKJV, and NLT); this also sets the translation for Bible Gateway searches and the Verse Analysis popup
+- **Reference Bible**: Use the reference Bible to select from multiple translation options to compare with (ASV, BSB, CSB, ESV, GNV, KJV, LSB, NASB 1995, NASB 2020, NET, NIV, NKJV, NLT); this also sets the translation for Bible Gateway searches and the Verse Analysis popup
 
 ### Advanced Features
 - **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality
+- **Highlight Search**: Search through all highlighted verses by content
+- **Keyboard Navigation**: Extensive keyboard shortcuts (F1 to toggle help)
 - **Data Management**: Import/export highlights, notes, and settings
-- **Responsive Design**: Useable on any device with a web browser (desktop recommended for best experience)
+- **Responsive Design**: Optimized for both desktop and mobile devices (desktop is preferred though)
 - **Dark/Light Mode**: Toggle between dark or light mode
 - **Color Themes**: Choose from one of six different color themes
 
@@ -49,15 +51,11 @@ The sidebar provides organized access to extensive theological resources (Reform
 ## Usage
 
 ### Basic Navigation
-- Use Prev/Next arrow buttons to navigate passages
+- Use Prev/Next arrow buttons to navigate passages (hidden on mobile for cleaner UI)
 - Use "Random Passage" to study from any canon passage of Holy Scripture
 - Select specific books/chapters from dropdown menus
 - Select a narrator and play audio for any chapter of the Bible in the BSB or KJV translations
-
-### Data Management
-- Export/import your highlights and notes via JSON files
-- Export notes as Markdown or plain text
-- Clear cache or perform complete reset in settings
+- Press F1 to view or change keyboard shortcuts
 
 ## Browser Support
 
@@ -82,6 +80,7 @@ Highlights, notes, and settings are stored locally in your browser. Data transmi
 - Audio files hosted by [Open Bible](https://openbible.com/audio/)
 - Icons by [Font Awesome](https://fontawesome.com)
 - Markdown processing by [Marked.js](https://cdn.jsdelivr.net/npm/marked/)
+- All copyrights, trademarks, and attributions belong to their respective owners
 
 ## License
 

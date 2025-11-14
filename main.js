@@ -5,6 +5,15 @@
     resumeChapterAudio,
     stopChapterAudio
 } from './modules/api.js';
+import { handleKeyPress, showHelpModal } from './modules/hotkeys.js';
+import { 
+    applyHighlight,
+    clearHighlights,
+    closeHighlightsModal,
+    renderHighlights,
+    showColorPicker,
+    showHighlightsModal
+} from './modules/highlights.js';
 import {
     initBookChapterControls,
     loadSelectedChapter,
@@ -15,16 +24,14 @@ import {
     setupNavigationWithURL,
     setupPopStateListener
 } from './modules/navigation.js'
-import { 
-    scrollToVerse, 
-    setupFootnoteHandlers 
-} from './modules/passage.js'
+import { setupFootnoteHandlers } from './modules/passage.js'
 import {
     clearCache,
     closeSettings,
     deleteAllData,
     exportData,
     importData,
+    initializeAudioControls,
     openSettings,
     saveSettings
 } from './modules/settings.js'
@@ -100,6 +107,13 @@ export function handleError(error, context) {
         window.errorTracker.log(error, context);
     }
 }
+export function showError(msg) {
+    document.getElementById('errorContainer').innerHTML =
+        `<div class="error-message">${msg}</div>`;
+}
+export function clearError() {
+    document.getElementById('errorContainer').innerHTML = '';
+}
 function setupEventListeners() {
     document.querySelector('.theme-toggle')
             .addEventListener('click', toggleTheme);
@@ -164,6 +178,10 @@ function setupEventListeners() {
                 }
             });
         }
+    });
+    document.getElementById('keyboardShortcutsBtn').addEventListener('click', () => {
+        closeSettings();
+        showHelpModal();
     });
     document.getElementById('referencePanelToggle')
             .addEventListener('click', toggleReferencePanel);
@@ -290,13 +308,6 @@ function setupEventListeners() {
 export function showLoading(flag) {
     document.getElementById('loadingOverlay').classList.toggle('active', flag);
 }
-export function showError(msg) {
-    document.getElementById('errorContainer').innerHTML =
-        `<div class="error-message">${msg}</div>`;
-}
-export function clearError() {
-    document.getElementById('errorContainer').innerHTML = '';
-}
 function updateOfflineStatus(isOffline) {
     const indicator = document.getElementById('offlineIndicator');
     if (!indicator) {
@@ -384,176 +395,6 @@ function handleTouchEnd(e) {
     }
     isScrolling = false;
 }
-function showColorPicker(ev, verseEl) {
-    const picker = document.getElementById('colorPicker');
-    state.currentVerse = verseEl;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const pickerWidth = 200;
-    const pickerHeight = 50;
-    const clientX = ev.clientX || (ev.touches && ev.touches[0].clientX) || 0;
-    const clientY = ev.clientY || (ev.touches && ev.touches[0].clientY) || 0;
-    let adjustedX = clientX;
-    let adjustedY = clientY;
-    if (clientX + pickerWidth > viewportWidth) {
-        adjustedX = viewportWidth - pickerWidth - 10;
-    }
-    if (clientY + pickerHeight > viewportHeight) {
-        adjustedY = viewportHeight - pickerHeight - 10;
-    }
-    adjustedX = Math.max(10, adjustedX);
-    adjustedY = Math.max(10, adjustedY);
-    picker.style.left = adjustedX + 'px';
-    picker.style.top = adjustedY + 'px';
-    picker.classList.add('active');
-    ev.preventDefault();
-    ev.stopPropagation();
-}
-function applyHighlight(col) {
-    if (!state.currentVerse) return;
-    const verseRef = state.currentVerse.dataset.verse;
-    state.currentVerse.classList.remove(
-        'highlight-yellow', 'highlight-green', 'highlight-blue',
-        'highlight-pink', 'highlight-orange', 'highlight-purple'
-    );
-    if (col !== 'none') {
-        state.currentVerse.classList.add(`highlight-${col}`);
-        state.highlights[verseRef] = col;
-    } else {
-        delete state.highlights[verseRef];
-    }
-    saveToStorage();
-    document.getElementById('colorPicker').classList.remove('active');
-}
-function clearHighlights() {
-    if (!confirm('Delete ALL highlights?')) return;
-    state.highlights = {};
-    document.querySelectorAll('.verse')
-            .forEach(v => v.classList.remove(
-                'highlight-yellow', 'highlight-green', 'highlight-blue',
-                'highlight-pink', 'highlight-orange', 'highlight-purple'
-            ));
-    saveToStorage();
-}
-function showHighlightsModal() {
-    const overlay = document.getElementById('highlightsOverlay');
-    const modal = document.getElementById('highlightsModal');
-    overlay.classList.add('active');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    const filterButtons = document.querySelectorAll('.highlight-filter-btn');
-    filterButtons.forEach(btn => btn.classList.remove('active'));
-    const allButton = document.querySelector('.highlight-filter-btn[data-color="all"]');
-    if (allButton) {
-        allButton.classList.add('active');
-    }
-    renderHighlights('all');
-    document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            renderHighlights(this.dataset.color);
-        });
-    });
-}
-function closeHighlightsModal() {
-    const overlay = document.getElementById('highlightsOverlay');
-    const modal = document.getElementById('highlightsModal');
-    overlay.classList.remove('active');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-}
-function renderHighlights(filterColor = 'all') {
-    const highlightsList = document.getElementById('highlightsList');
-    const highlights = state.highlights || {};
-    if (Object.keys(highlights).length === 0) {
-        highlightsList.innerHTML = '<div class="no-highlights">No verses have been highlighted yet</div>';
-        return;
-    }
-    let html = '';
-    const sortableReferences = Object.keys(highlights).map(reference => {
-        const match = reference.match(/^(\d*\s*\w+)\s+(\d+):(\d+)$/);
-        if (!match) return null;
-        let bookName = match[1].trim();
-        const chapter = parseInt(match[2]);
-        const verse = parseInt(match[3]);
-        const color = highlights[reference];
-        const bookParts = bookName.split(' ');
-        let baseBookName = bookName;
-        let bookNumber = '';
-        if (bookParts.length > 1 && /^\d+$/.test(bookParts[0])) {
-            bookNumber = bookParts[0];
-            baseBookName = bookParts.slice(1).join(' ');
-        }
-        const bookIndex = BOOK_ORDER.findIndex(book => {
-            const orderParts = book.split(' ');
-            let orderBaseName = book;
-            let orderNumber = '';
-            if (orderParts.length > 1 && /^\d+$/.test(orderParts[0])) {
-                orderNumber = orderParts[0];
-                orderBaseName = orderParts.slice(1).join(' ');
-            }
-            return orderBaseName.toLowerCase() === baseBookName.toLowerCase() && 
-                   orderNumber === bookNumber;
-        });
-        return {
-            reference,
-            bookName,
-            baseBookName,
-            bookNumber,
-            bookIndex,
-            chapter,
-            verse,
-            color
-        };
-    }).filter(ref => ref !== null && ref.bookIndex !== -1);
-    sortableReferences.sort((a, b) => {
-        if (a.bookIndex !== b.bookIndex) {
-            return a.bookIndex - b.bookIndex;
-        }
-        if (a.chapter !== b.chapter) {
-            return a.chapter - b.chapter;
-        }
-        return a.verse - b.verse;
-    });
-    sortableReferences.forEach(ref => {
-        if (filterColor !== 'all' && ref.color !== filterColor) {
-            return;
-        }
-        const verseText = getVerseTextFromStorage(ref.reference) || 'Text not available, click to refresh';
-        html += `
-            <div class="highlight-item ${ref.color}" data-reference="${ref.reference}" data-color="${ref.color}">
-                <div class="highlight-ref">${ref.reference}</div>
-                <div class="highlight-text">${verseText}</div>
-            </div>
-        `;
-    });
-    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter</div>';
-    document.querySelectorAll('.highlight-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const reference = item.dataset.reference;
-            navigateToHighlightedVerse(reference);
-            closeHighlightsModal();
-        });
-    });
-}
-function getVerseTextFromStorage(reference) {
-    try {
-        const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
-        return cachedVerses[reference];
-    } catch (e) {
-        return null;
-    }
-}
-function navigateToHighlightedVerse(reference) {
-    const match = reference.match(/^(.+?) (\d+):(\d+)$/);
-    if (!match) return;
-    const [, book, chapter, verse] = match;
-    state.settings.manualBook = book;
-    state.settings.manualChapter = parseInt(chapter);
-    loadSelectedChapter(book, chapter);
-    setTimeout(() => scrollToVerse(verse), 500);
-}
 function toggleTheme() {
     state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light';
     applyTheme();
@@ -597,6 +438,7 @@ async function init() {
     window.addEventListener('online', () => updateOfflineStatus(false));
     window.addEventListener('offline', () => updateOfflineStatus(true));
     initBookChapterControls();
+    initializeAudioControls();
     setupNavigationWithURL();
     setupPopStateListener();
     if (!navigateFromURL()) {

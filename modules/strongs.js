@@ -53,7 +53,7 @@ export function showStrongsReference(verseEl) {
         <div class="embedded-resources">
             <div class="resource-frame">
                 <div class="resource-frame-header">
-                    <h4>BibleHub Interlinear</h4>
+                    <h4>Bible Hub Interlinear</h4>
                     <div class="resource-frame-actions">
                         <button class="resource-frame-btn" data-url="${greekUrl}" data-title="Interlinear (Hebrew is read right-to-left, Greek left-to-right)">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> Pop Out

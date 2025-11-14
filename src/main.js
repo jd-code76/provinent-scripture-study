@@ -2,25 +2,6 @@
   Provinent Scripture Study – main.js
 =====================================================================*/
 
-/* ====================================================================
-   TABLE OF CONTENTS
-   
-    DATE / TIME
-    ERROR HANDLING
-    EVENT LISTENERS
-    GENERAL UTILITIES
-    GLOBAL SETUP
-    HIGHLIGHTING
-    INITIALIZATION
-    START THE APP
-    THEMING
-==================================================================== */
-
-/* ====================================================================
-   GLOBAL SETUP
-   Configure external libraries and define API constants
-==================================================================== */
-
 /* Global imports */
 import {
     isKJV,
@@ -29,6 +10,17 @@ import {
     resumeChapterAudio,
     stopChapterAudio
 } from './modules/api.js';
+
+import { handleKeyPress, showHelpModal } from './modules/hotkeys.js';
+
+import { 
+    applyHighlight,
+    clearHighlights,
+    closeHighlightsModal,
+    renderHighlights,
+    showColorPicker,
+    showHighlightsModal
+} from './modules/highlights.js';
 
 import {
     initBookChapterControls,
@@ -41,10 +33,7 @@ import {
     setupPopStateListener
 } from './modules/navigation.js'
 
-import { 
-    scrollToVerse, 
-    setupFootnoteHandlers 
-} from './modules/passage.js'
+import { setupFootnoteHandlers } from './modules/passage.js'
 
 import {
     clearCache,
@@ -52,6 +41,7 @@ import {
     deleteAllData,
     exportData,
     importData,
+    initializeAudioControls,
     openSettings,
     saveSettings
 } from './modules/settings.js'
@@ -152,6 +142,17 @@ export function handleError(error, context) {
     }
 }
 
+/* Display error message to user */
+export function showError(msg) {
+    document.getElementById('errorContainer').innerHTML =
+        `<div class="error-message">${msg}</div>`;
+}
+
+/* Clear error message display */
+export function clearError() {
+    document.getElementById('errorContainer').innerHTML = '';
+}
+
 /* ====================================================================
    EVENT LISTENERS
    Wire up all UI interactions
@@ -238,6 +239,12 @@ function setupEventListeners() {
                 }
             });
         }
+    });
+
+    // Keyboard Shortcuts
+    document.getElementById('keyboardShortcutsBtn').addEventListener('click', () => {
+        closeSettings();
+        showHelpModal();
     });
 
     // Sidebar Sections
@@ -412,17 +419,6 @@ export function showLoading(flag) {
     document.getElementById('loadingOverlay').classList.toggle('active', flag);
 }
 
-/* Display error message to user */
-export function showError(msg) {
-    document.getElementById('errorContainer').innerHTML =
-        `<div class="error-message">${msg}</div>`;
-}
-
-/* Clear error message display */
-export function clearError() {
-    document.getElementById('errorContainer').innerHTML = '';
-}
-
 /* Checks the offline status of the app functions */
 function updateOfflineStatus(isOffline) {
     const indicator = document.getElementById('offlineIndicator');
@@ -532,240 +528,6 @@ function handleTouchEnd(e) {
 }
 
 /* ====================================================================
-   HIGHLIGHTING
-   Right-click color picker for verse highlighting
-==================================================================== */
-
-/* Show color picker at mouse position */
-function showColorPicker(ev, verseEl) {
-    const picker = document.getElementById('colorPicker');
-    state.currentVerse = verseEl;
-    
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    const pickerWidth = 200;
-    const pickerHeight = 50;
-    
-    const clientX = ev.clientX || (ev.touches && ev.touches[0].clientX) || 0;
-    const clientY = ev.clientY || (ev.touches && ev.touches[0].clientY) || 0;
-    
-    let adjustedX = clientX;
-    let adjustedY = clientY;
-    
-    if (clientX + pickerWidth > viewportWidth) {
-        adjustedX = viewportWidth - pickerWidth - 10;
-    }
-    
-    if (clientY + pickerHeight > viewportHeight) {
-        adjustedY = viewportHeight - pickerHeight - 10;
-    }
-    
-    adjustedX = Math.max(10, adjustedX);
-    adjustedY = Math.max(10, adjustedY);
-    
-    picker.style.left = adjustedX + 'px';
-    picker.style.top = adjustedY + 'px';
-    picker.classList.add('active');
-    
-    ev.preventDefault();
-    ev.stopPropagation();
-}
-
-/* Apply highlight color to selected verse */
-function applyHighlight(col) {
-    if (!state.currentVerse) return;
-
-    const verseRef = state.currentVerse.dataset.verse;
-    
-    state.currentVerse.classList.remove(
-        'highlight-yellow', 'highlight-green', 'highlight-blue',
-        'highlight-pink', 'highlight-orange', 'highlight-purple'
-    );
-    
-    if (col !== 'none') {
-        state.currentVerse.classList.add(`highlight-${col}`);
-        state.highlights[verseRef] = col;
-    } else {
-        delete state.highlights[verseRef];
-    }
-    
-    saveToStorage();
-    document.getElementById('colorPicker').classList.remove('active');
-}
-
-/* Clear all verse highlights */
-function clearHighlights() {
-    if (!confirm('Delete ALL highlights?')) return;
-    
-    state.highlights = {};
-    document.querySelectorAll('.verse')
-            .forEach(v => v.classList.remove(
-                'highlight-yellow', 'highlight-green', 'highlight-blue',
-                'highlight-pink', 'highlight-orange', 'highlight-purple'
-            ));
-    saveToStorage();
-}
-
-/* Open highlights modal */
-function showHighlightsModal() {
-    const overlay = document.getElementById('highlightsOverlay');
-    const modal = document.getElementById('highlightsModal');
-    
-    overlay.classList.add('active');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    const filterButtons = document.querySelectorAll('.highlight-filter-btn');
-    filterButtons.forEach(btn => btn.classList.remove('active'));
-    
-    const allButton = document.querySelector('.highlight-filter-btn[data-color="all"]');
-    if (allButton) {
-        allButton.classList.add('active');
-    }
-    
-    renderHighlights('all');
-    
-    document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            renderHighlights(this.dataset.color);
-        });
-    });
-}
-
-/* Close highlights modal */
-function closeHighlightsModal() {
-    const overlay = document.getElementById('highlightsOverlay');
-    const modal = document.getElementById('highlightsModal');
-    
-    overlay.classList.remove('active');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-/* Render highlights list in modal */
-function renderHighlights(filterColor = 'all') {
-    const highlightsList = document.getElementById('highlightsList');
-    const highlights = state.highlights || {};
-    
-    if (Object.keys(highlights).length === 0) {
-        highlightsList.innerHTML = '<div class="no-highlights">No verses have been highlighted yet</div>';
-        return;
-    }
-    
-    let html = '';
-    
-    const sortableReferences = Object.keys(highlights).map(reference => {
-        const match = reference.match(/^(\d*\s*\w+)\s+(\d+):(\d+)$/);
-        if (!match) return null;
-        
-        let bookName = match[1].trim();
-        const chapter = parseInt(match[2]);
-        const verse = parseInt(match[3]);
-        const color = highlights[reference];
-        
-        const bookParts = bookName.split(' ');
-        let baseBookName = bookName;
-        let bookNumber = '';
-        
-        if (bookParts.length > 1 && /^\d+$/.test(bookParts[0])) {
-            bookNumber = bookParts[0];
-            baseBookName = bookParts.slice(1).join(' ');
-        }
-        
-        const bookIndex = BOOK_ORDER.findIndex(book => {
-            const orderParts = book.split(' ');
-            let orderBaseName = book;
-            let orderNumber = '';
-            
-            if (orderParts.length > 1 && /^\d+$/.test(orderParts[0])) {
-                orderNumber = orderParts[0];
-                orderBaseName = orderParts.slice(1).join(' ');
-            }
-            
-            return orderBaseName.toLowerCase() === baseBookName.toLowerCase() && 
-                   orderNumber === bookNumber;
-        });
-        
-        return {
-            reference,
-            bookName,
-            baseBookName,
-            bookNumber,
-            bookIndex,
-            chapter,
-            verse,
-            color
-        };
-    }).filter(ref => ref !== null && ref.bookIndex !== -1);
-    
-    sortableReferences.sort((a, b) => {
-        if (a.bookIndex !== b.bookIndex) {
-            return a.bookIndex - b.bookIndex;
-        }
-        if (a.chapter !== b.chapter) {
-            return a.chapter - b.chapter;
-        }
-        return a.verse - b.verse;
-    });
-    
-    sortableReferences.forEach(ref => {
-        if (filterColor !== 'all' && ref.color !== filterColor) {
-            return;
-        }
-        
-        const verseText = getVerseTextFromStorage(ref.reference) || 'Text not available, click to refresh';
-        html += `
-            <div class="highlight-item ${ref.color}" data-reference="${ref.reference}" data-color="${ref.color}">
-                <div class="highlight-ref">${ref.reference}</div>
-                <div class="highlight-text">${verseText}</div>
-            </div>
-        `;
-    });
-    
-    highlightsList.innerHTML = html || '<div class="no-highlights">No highlights match the selected filter</div>';
-    
-    document.querySelectorAll('.highlight-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const reference = item.dataset.reference;
-            navigateToHighlightedVerse(reference);
-            closeHighlightsModal();
-        });
-    });
-}
-
-/* Retrieve verse text from localStorage cache */
-function getVerseTextFromStorage(reference) {
-    try {
-        const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
-        return cachedVerses[reference];
-    } catch (e) {
-        return null;
-    }
-}
-
-/* Navigate to the highlighted verse in the main passage when selected from highlights modal */
-function navigateToHighlightedVerse(reference) {
-    // Parse reference format: "Book Chapter:Verse"
-    const match = reference.match(/^(.+?) (\d+):(\d+)$/);
-    if (!match) return;
-    
-    const [, book, chapter, verse] = match;
-    
-    // Update navigation
-    state.settings.manualBook = book;
-    state.settings.manualChapter = parseInt(chapter);
-    
-    // Load the chapter
-    loadSelectedChapter(book, chapter);
-    
-    // Scroll to the specific verse
-    setTimeout(() => scrollToVerse(verse), 500);
-}
-
-/* ====================================================================
    THEMING
    Light/dark mode and color palette selection
 ==================================================================== */
@@ -785,7 +547,6 @@ export function applyTheme() {
     themeIcon.textContent = '';
     themeIcon.className = state.settings.theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
     
-    // Refresh highlights modal if open
     refreshHighlightsModalTheme();
 }
 
@@ -799,7 +560,6 @@ export function selectColorTheme(t) {
     document.querySelector(`.color-theme-option[data-theme="${t}"]`)
             .classList.add('selected');
     
-    // Refresh highlights modal if open
     refreshHighlightsModalTheme();
 }
 
@@ -807,7 +567,6 @@ export function selectColorTheme(t) {
 export function applyColorTheme() {
     document.documentElement.setAttribute('data-color-theme', state.settings.colorTheme);
     
-    // Refresh highlights modal if open
     refreshHighlightsModalTheme();
 }
 
@@ -815,7 +574,6 @@ export function applyColorTheme() {
 function refreshHighlightsModalTheme() {
     const modal = document.getElementById('highlightsModal');
     if (modal.classList.contains('show')) {
-        // Re-render highlights to apply new theme
         const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
         renderHighlights(activeFilter);
     }
@@ -833,15 +591,14 @@ function refreshHighlightsModalTheme() {
 async function init() {
     await loadFromStorage();
     loadFromCookies();
-
     const style = document.createElement('style');
     style.textContent = offlineStyles;
     document.head.appendChild(style);
     updateOfflineStatus(!navigator.onLine);
     window.addEventListener('online', () => updateOfflineStatus(false));
     window.addEventListener('offline', () => updateOfflineStatus(true));
-
     initBookChapterControls();
+    initializeAudioControls();
     setupNavigationWithURL();
     setupPopStateListener();
     if (!navigateFromURL()) {

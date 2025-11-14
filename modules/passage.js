@@ -1,13 +1,7 @@
 ﻿import { loadPassageFromAPI } from './api.js'
 import { handleError } from '../main.js'
-import { 
-    getCurrentTranslation, 
-    syncBookChapterSelectors
-} from './navigation.js'
-import {
-    saveToStorage,
-    state
-} from './state.js'
+import { getCurrentTranslation } from './navigation.js'
+import { saveToStorage, state } from './state.js'
 import { showStrongsReference } from './strongs.js'
 import { updateReferencePanel } from './ui.js'
 export function displayPassage(contentItems) {
@@ -261,18 +255,6 @@ export async function loadPassage(book = null, chapter = null, translation = nul
 export function afterContentLoad() {
     const event = new CustomEvent('contentLoaded');
     document.dispatchEvent(event);
-}
-export function scrollToVerse(verseNumber) {
-    updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
-    syncBookChapterSelectors();
-    const verseElement = document.querySelector(`.verse[data-verse-number="${verseNumber}"]`);
-    if (verseElement) {
-        verseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        verseElement.style.backgroundColor = 'var(--verse-hover)';
-        setTimeout(() => {
-            verseElement.style.backgroundColor = '';
-        }, 1000);
-    }
 }
 export function updateDisplayRef(book, chapter) {
     const singleChapterBooks = [

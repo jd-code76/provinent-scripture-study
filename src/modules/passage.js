@@ -4,17 +4,12 @@
 
 /* Global imports */
 import { loadPassageFromAPI } from './api.js'
+
 import { handleError } from '../main.js'
 
-import { 
-    getCurrentTranslation, 
-    syncBookChapterSelectors
-} from './navigation.js'
+import { getCurrentTranslation } from './navigation.js'
 
-import {
-    saveToStorage,
-    state
-} from './state.js'
+import { saveToStorage, state } from './state.js'
 
 import { showStrongsReference } from './strongs.js'
 
@@ -348,20 +343,6 @@ export async function loadPassage(book = null, chapter = null, translation = nul
 export function afterContentLoad() {
     const event = new CustomEvent('contentLoaded');
     document.dispatchEvent(event);
-}
-
-/* Scroll to a specific verse number in the displayed passage when selected from highlights modal*/
-export function scrollToVerse(verseNumber) {
-    updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
-    syncBookChapterSelectors();
-    const verseElement = document.querySelector(`.verse[data-verse-number="${verseNumber}"]`);
-    if (verseElement) {
-        verseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        verseElement.style.backgroundColor = 'var(--verse-hover)';
-        setTimeout(() => {
-            verseElement.style.backgroundColor = '';
-        }, 1000);
-    }
 }
 
 /* Update the passage reference display and state */

@@ -41,7 +41,7 @@
     }
 
     .header h1 {
-        font-size: 1em;
+        font-size: 1.5em;
     }
 
     .theme-toggle {
@@ -110,6 +110,22 @@
         margin: 0 3px;
     }
 
+    button#nextPassageBtn {
+        display: none;
+    }
+
+    button#prevPassageBtn {
+        display: none;
+    }
+
+    span#chapter-tb-divider {
+        display: none;
+    }
+
+    span#audio-tb-divider {
+        display: none;
+    }
+
     .highlights-modal {
         width: 90%;
         max-width: none;
@@ -157,6 +173,25 @@
         -moz-user-select: text;
         -ms-user-select: text;
         user-select: text;
+    }
+}
+
+/* Smaller Mobile (420px and below) */
+@media (max-width: 420px) {
+    button.stop-audio-btn {
+        display: none !important;
+    }
+
+    span#highlights-tb-divider {
+        display: none;
+    }
+
+    span#audio-tb-divider {
+        display: flex;
+    }
+
+    div#keyboard-shortcuts {
+        display: none;
     }
 }
 

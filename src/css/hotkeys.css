@@ -1,0 +1,207 @@
+/* ====================================================================
+   HOTKEYS AND HELP MODAL
+   Styling for hotkey settings and help modal
+==================================================================== */
+
+.help-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--popup-background);
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 10px 40px var(--shadow-strong);
+    z-index: 2000;
+    max-width: 600px;
+    width: 90%;
+    border: 1px solid var(--border-color);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.help-modal.show {
+    display: block;
+}
+
+.hotkey-settings-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.hotkeys-list {
+    margin-bottom: 20px;
+}
+
+.hotkey-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.hotkey-label {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.hotkey-combination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hotkey-keys {
+    font-family: monospace;
+    background: var(--bg-secondary);
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    min-width: 80px;
+    text-align: center;
+}
+
+.help-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-small {
+    padding: 8px 12px;
+    font-size: 12px;
+    background-color: var(--button-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-small:hover {
+    background-color: var(--button-hover-bg);
+    border-color: var(--accent-color);
+}
+
+.toggle-label input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    background-color: var(--border-color);
+    border-radius: 20px;
+    transition: background-color var(--transition-normal);
+    cursor: pointer;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: transform var(--transition-normal);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+
+.toggle-label input[type="checkbox"]:checked + .toggle-slider {
+    background-color: var(--accent-color);
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+/* Light mode specific styling */
+[data-theme="light"] .toggle-slider {
+    background-color: #ccc;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .toggle-label input[type="checkbox"]:checked + .toggle-slider {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+[data-theme="light"] .toggle-slider::before {
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Hover states */
+.toggle-slider:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-slider:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .toggle-slider {
+    background-color: #555;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .toggle-label input[type="checkbox"]:checked + .toggle-slider {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+[data-theme="dark"] .toggle-slider:hover {
+    background-color: #666;
+}
+
+[data-theme="dark"] .toggle-label input[type="checkbox"]:checked + .toggle-slider:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .help-modal {
+        padding: 20px;
+    }
+    
+    .hotkey-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .hotkey-combination {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .help-actions {
+        flex-direction: column;
+    }
+    
+    .btn-small {
+        width: 100%;
+    }
+}

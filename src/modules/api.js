@@ -2,7 +2,7 @@
   Provinent Scripture Study – api.js
 =====================================================================*/
 
-/*  Global imports */
+/* Global imports */
 import {
     clearError,
     handleError,

@@ -272,10 +272,10 @@ export async function updateReferencePanel() {
 function filterTranslationOptions(source, selectElement) {
     const unsupportedTranslations = {
         biblecom: [],
-        biblehub: ['GNV'],
+        biblehub: [],
         biblegateway: ['BSB'],
         stepbible: ['NKJV', 'CSB', 'NLT'],
-        ebibleorg: ['NASB', 'ASV', 'ESV', 'NKJV', 'CSB', 'NIV', 'NLT']
+        ebibleorg: ['LSB', 'NASB', 'ASV', 'ESV', 'NKJV', 'CSB', 'NIV', 'NLT']
     };
 
     const allOptions = selectElement.querySelectorAll('option');
@@ -314,9 +314,9 @@ function filterTranslationOptions(source, selectElement) {
         state.settings.referenceVersion = 'BSB';
     }
     else if (needsNewSelection) {
-        let fallbackValue = 'NASB1995';
-        if (source === 'biblehub') {
-            fallbackValue = 'NASB';
+        let fallbackValue = 'LSB';
+        if (source === 'ebibleorg') {
+            fallbackValue = 'NASB1995';
         }
         
         selectElement.value = fallbackValue;

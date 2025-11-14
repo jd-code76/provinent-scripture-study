@@ -6,7 +6,7 @@
 import { handleError } from '../main.js'
 
 /* Global constants */
-export const APP_VERSION = '1.3.01.2025.11.12';
+export const APP_VERSION = '1.4.2025.11.13';
 let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -154,10 +154,11 @@ export const state = {
     settings: {
         // Bible translations
         bibleTranslation: 'BSB',
-        referenceVersion: 'NASB1995',
+        referenceVersion: 'NASB',
         footnotes: {},
         
         // Audio settings
+        audioControlsVisible: true,
         audioNarrator: 'gilbert',
         
         // Manual navigation only
@@ -170,7 +171,7 @@ export const state = {
         notesView: 'text',
         
         // Panel states
-        referencePanelOpen: false,
+        referencePanelOpen: true,
         referenceSource: 'biblegateway',
         collapsedSections: {},
         collapsedPanels: {},
@@ -178,11 +179,24 @@ export const state = {
         // Panel dimensions
         panelWidths: {
             sidebar: 280,
-            referencePanel: 400,
+            referencePanel: 350,
             scriptureSection: null,
-            notesSection: 400
+            notesSection: 350
         }
     },
+
+    // Hotkey Configuration
+    hotkeys: {
+        prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false },
+        nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false },
+        prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true },
+        nextBook: { key: 'ArrowDown', altKey: true, shiftKey: true },
+        randomPassage: { key: 'r', altKey: true, shiftKey: false },
+        showHelp: { key: 'F1', altKey: false, shiftKey: false },
+        toggleAudio: { key: 'p', altKey: true, shiftKey: false }
+    },
+    
+    hotkeysEnabled: true,
 
     // Runtime state
     currentPassageReference: '',
@@ -276,7 +290,26 @@ export function loadFromStorage() {
     
     try {
         const parsed = JSON.parse(raw);
-        Object.assign(state, parsed);
+        
+        if (parsed.settings) {
+            state.settings = {
+                ...state.settings,
+                ...parsed.settings
+            };
+        }
+        
+        if (parsed.highlights) {
+            state.highlights = parsed.highlights;
+        }
+        
+        if (parsed.notes !== undefined) {
+            state.notes = parsed.notes;
+        }
+        
+        if (parsed.currentPassageReference !== undefined) {
+            state.currentPassageReference = parsed.currentPassageReference;
+        }
+        
         document.getElementById('notesInput').value = state.notes;
     } catch (e) {
         handleError(e, 'loadFromStorage');
@@ -343,22 +376,24 @@ export const bookNameMapping = {
 
 /* Bible Hub translation URL mappings */
 export const bibleHubUrlMap = {
+    'LSB':'lsb',
     'NASB1995': 'nasb',      // Bible Hub uses 'nasb' for NASB 1995
     'NASB': 'nasb_',         // Bible Hub uses 'nasb_' for NASB 2020
-    'ASV': 'asv',            // American Standard Version
-    'ESV': 'esv',            // English Standard Version
-    'KJV': 'kjv',            // King James Version
-    'NKJV': 'nkjv',          // New King James Version
-    'BSB': 'bsb',            // Berean Standard Bible
-    'CSB': 'csb',            // Christian Standard Bible
-    'NET': 'net',             // New English Translation
-    'NIV': 'niv',            // New International Version
-    'NLT': 'nlt'            // New Living Translation
-    // GNV not supported
+    'ASV': 'asv', 
+    'ESV': 'esv', 
+    'KJV': 'kjv', 
+    'GNV':'geneva',          // Geneva 1587
+    'NKJV': 'nkjv', 
+    'BSB': 'bsb', 
+    'CSB': 'csb', 
+    'NET': 'net', 
+    'NIV': 'niv', 
+    'NLT': 'nlt'
 };
 
 /* Bible.com (YouVersion) translation URL mappings */
 export const bibleComUrlMap = {
+    'LSB':'3345',
     'NASB1995': '100',
     'NASB': '2692',
     'ASV': '12',
@@ -386,6 +421,7 @@ export const ebibleOrgUrlMap = {
 
 /* STEP Bible translation URL mappings */
 export const stepBibleUrlMap = {
+    'LSB':'LSB',
     'NASB1995': 'NASB1995',
     'NASB': 'NASB2020',
     'ASV': 'ASV',
@@ -401,6 +437,7 @@ export const stepBibleUrlMap = {
 /* Version map for Bible Gateway search button */
 function getBibleGatewayVersionCode(appTranslation) {
     const versionMap = {
+        'LSB': 'LSB',
         'NASB1995': 'NASB1995',
         'NASB': 'NASB',
         'ASV': 'ASV',
@@ -408,7 +445,7 @@ function getBibleGatewayVersionCode(appTranslation) {
         'KJV': 'KJV',
         'GNV': 'GNV',
         'NKJV': 'NKJV',
-        'BSB': 'BSB',
+        'BSB': 'BSB',       // BSB is not supported but is handled by filterTranslationOptions() in ui.js
         'CSB': 'CSB',
         'NET': 'NET',
         'NIV': 'NIV',

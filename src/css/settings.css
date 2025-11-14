@@ -81,6 +81,17 @@
     padding-bottom: 15px;
 }
 
+.settings-group .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.settings-group button {
+    margin-top: 5px;
+}
+
 .pdf-download-options {
     margin-top: 15px;
     padding: 5px;

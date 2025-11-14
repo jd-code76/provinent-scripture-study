@@ -113,17 +113,18 @@
                 </div>
                 <div class="sidebar-section-content" id="content-bibles">
                     <ul class="sidebar-links">
-                        <li><a href="https://www.bible.com" target="_blank" rel="noopener noreferrer">Bible (YouVersion)</a></li>
-                        <li><a href="https://www.bibleref.com" target="_blank" rel="noopener noreferrer">BibleRef</a></li>
-                        <li><a href="https://www.biblegateway.com" target="_blank" rel="noopener noreferrer">Bible Gateway</a></li>
                         <li><a href="https://biblehub.com" target="_blank" rel="noopener noreferrer">Bible Hub (.com)</a></li>
+                        <li><a href="https://www.bible.com" target="_blank" rel="noopener noreferrer">Bible (YouVersion)</a></li>
+                        <li><a href="https://www.biblegateway.com" target="_blank" rel="noopener noreferrer">Bible Gateway</a></li>
                         <li><a href="https://biblewebapp.com" target="_blank" rel="noopener noreferrer">Bible Web App</a></li>
                         <li><a href="https://ebible.com" target="_blank" rel="noopener noreferrer">eBible (.com)</a></li>
                         <li><a href="https://ebible.org" target="_blank" rel="noopener noreferrer">eBible (.org)</a></li>
                         <li><a href="https://www.esv.org" target="_blank" rel="noopener noreferrer">ESV Bible</a></li>
+                        <li><a href="https://lsbible.org" target="_blank" rel="noopener noreferrer">The Legacy Standard Bible</a></li>
                         <li><a href="https://netbible.org" target="_blank" rel="noopener noreferrer">NET Bible</a></li>
                         <li><a href="https://relight.app" target="_blank" rel="noopener noreferrer">Relight App</a></li>
                         <li><a href="https://www.stepbible.org" target="_blank" rel="noopener noreferrer">STEP Bible</a></li>
+
                     </ul>
                 </div>
             </div>
@@ -256,6 +257,7 @@
                         <li><a href="https://dbs.org/en/bibles/audio/" target="_blank" rel="noopener noreferrer">Audio Bibles (DBS)</a></li>
                         <li><a href="https://berean.ai" target="_blank" rel="noopener noreferrer">Berean.ai</a></li>
                         <li><a href="https://biblehub.net" target="_blank" rel="noopener noreferrer">Bible Hub (.net)</a></li>
+                        <li><a href="https://www.bibleref.com" target="_blank" rel="noopener noreferrer">BibleRef</a></li>
                         <li><a href="https://www.bibletools.org" target="_blank" rel="noopener noreferrer">BibleTools</a></li>
                         <li><a href="https://dbs.org/en/bibles/" target="_blank" rel="noopener noreferrer">The Bible Cloud (DBS)</a></li>
                         <li><a href="https://www.blueletterbible.org/resources/prefaces.cfm" target="_blank" rel="noopener noreferrer">Bible Prefaces (BLB)</a></li>
@@ -297,9 +299,10 @@
 
                     <label for="referenceTranslation" class="sr-only">Reference Translation</label>
                     <select id="referenceTranslation">
-                        <option value="NASB1995">NASB 1995 (Strictly literal)</option>
-                        <option value="NASB">NASB 2020 (Updated literal)</option>
                         <option value="ASV">ASV (Rigorously literal)</option>
+                        <option value="NASB1995">NASB 1995 (Strictly literal)</option>
+                        <option value="LSB">LSB (Precision-focused literal)</option>
+                        <option value="NASB">NASB 2020 (Updated literal)</option>
                         <option value="ESV">ESV (Elegant literal)</option>
                         <option value="KJV">KJV (Classic literal)</option>
                         <option value="GNV">GNV (Scholarly literal; Old English)</option>
@@ -311,7 +314,7 @@
                         <option value="NLT">NLT (Thought‑for‑thought)</option>
                     </select>
 
-                    <button class="reference-panel-close" aria-label="Close reference panel">×</button>
+                    <button class="reference-panel-close" aria-label="Close reference panel"><i class="fas fa-xmark"></i></button>
                 </div>
             </div>
 
@@ -329,6 +332,33 @@
 
         <!-- MAIN CONTENT -->
         <main class="main-content">
+            <!-- Help Modal -->
+            <div class="popup-overlay" id="helpOverlay" aria-hidden="true"></div>
+            <div class="help-modal" id="helpModal" role="dialog" aria-labelledby="helpModalTitle" aria-modal="true">
+                <div class="popup-header">
+                    <h2 id="helpModalTitle">Keyboard Shortcuts</h2>
+                    <button class="popup-close" id="closeHelpBtn" aria-label="Close help"><i class="fas fa-xmark"></i></button>
+                </div>
+                
+                <div class="help-content">
+                    <div class="hotkey-settings-section">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="hotkeysEnabled" checked>
+                            <span class="toggle-slider"></span>
+                            Enable Keyboard Shortcuts
+                        </label>
+                    </div>
+                    
+                    <div class="hotkeys-list" id="hotkeysList">
+                        <!-- Hotkeys will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="help-actions">
+                        <button class="btn btn-secondary" id="resetHotkeysBtn">Reset to Defaults</button>
+                        <button class="btn" id="closeHelpModalBtn">Close</button>
+                    </div>
+                </div>
+            </div>
             <!-- Header bar (title + global actions) -->
             <header class="header">
                 <h1>Provinent Scripture Study</h1>
@@ -351,14 +381,14 @@
                     <i class="fas fa-arrow-right"></i>
                 </button>
 
-                <span class="toolbar-divider" aria-hidden="true"></span>
+                <span class="toolbar-divider" aria-hidden="true" id="chapter-tb-divider"></span>
 
                 <!-- Random passage -->
                 <button class="btn btn-secondary" id="randomPassageBtn" title="View a random passage of Scripture">
                     <i class="fas fa-shuffle"></i> Random
                 </button>
 
-                <span class="toolbar-divider" aria-hidden="true"></span>
+                <span class="toolbar-divider" aria-hidden="true" id="dropdown-tb-divider"></span>
 
                 <!-- Book selector (filled by script.js) -->
                 <label for="bookSelect" class="sr-only">Choose a book</label>
@@ -372,13 +402,17 @@
                     <!-- options will be injected by script.js -->
                 </select>
 
+                <span class="toolbar-divider" aria-hidden="true" id="highlights-tb-divider"></span>
+
                 <!-- Highlight button to show highlighted verses-->
                 <button class="btn btn-secondary" id="showHighlightsBtn" title="View highlighted verses">
                     <i class="fas fa-highlighter"></i> Highlights
                 </button>
 
+                <span class="toolbar-divider" aria-hidden="true" id="audio-tb-divider"></span>
+
                 <!-- Audio Controls -->
-                <div id="audioControls" style="display: none; margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">
+                <div id="audioControls" style="margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-weight: bold;">Audio</span>
                         <select class="narrator-select" style="padding: 5px; border-radius: 3px;">
@@ -485,7 +519,13 @@
     <div class="highlights-modal" id="highlightsModal" role="dialog" aria-labelledby="highlightsModalTitle" aria-modal="true">
         <div class="popup-header">
             <h2 id="highlightsModalTitle">Highlights</h2>
-            <button class="popup-close" id="closeHighlightsBtn" aria-label="Close highlights">×</button>
+            <button class="popup-close" id="closeHighlightsBtn" aria-label="Close highlights"><i class="fas fa-xmark"></i></button>
+            <div class="highlights-search">
+                <input type="text" id="highlightsSearch" placeholder="Search highlighted verses..." />
+                <button id="clearSearch" class="clear-search-btn">
+                    <i class="fas fa-delete-left"></i>
+                </button>
+            </div>
         </div>
         <div class="highlights-content" id="highlightsContent">
             <div class="highlights-filters">
@@ -508,7 +548,7 @@
     <div class="strongs-popup" id="strongsPopup" role="dialog" aria-labelledby="strongsPopupTitle" aria-modal="true">
         <div class="popup-header">
             <h2 id="strongsPopupTitle">Verse Analysis</h2>
-            <button class="popup-close" aria-label="Close popup">×</button>
+            <button class="popup-close" aria-label="Close popup"><i class="fas fa-xmark"></i></button>
         </div>
         <div class="strongs-content" id="strongsContent"></div>
     </div>
@@ -518,7 +558,7 @@
     <div class="settings-modal" id="settingsModal" role="dialog" aria-labelledby="settingsModalTitle" aria-modal="true">
         <div class="popup-header">
             <h2 id="settingsModalTitle">Settings</h2>
-            <button class="popup-close" id="closeSettingsBtn" aria-label="Close settings">×</button>
+            <button class="popup-close" id="closeSettingsBtn" aria-label="Close settings"><i class="fas fa-xmark"></i></button>
         </div>
 
         <div class="settings-group">
@@ -531,6 +571,24 @@
                 <option value="NET">New English Translation (NET)</option>
             </select>
             <small>Set the translation for the "Passage of the Day" area.</small>
+        </div>
+
+        <div class="settings-group">
+            <label for="audioControlsToggle">Audio Controls</label>
+            <label class="toggle-label">
+                <input type="checkbox" id="audioControlsToggle" checked>
+                <span class="toggle-slider"></span>
+                Show audio controls in toolbar
+            </label>
+            <small>Toggle visibility of audio playback controls.</small>
+        </div>
+
+        <div class="settings-group" id="keyboard-shortcuts">
+            <label>Keyboard Shortcuts</label>
+            <button class="btn btn-secondary" id="keyboardShortcutsBtn">
+                <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+            </button>
+            <small>View and customize keyboard shortcuts (you can also hit the 'F1' key to view these).</small>
         </div>
 
         <div class="settings-group">

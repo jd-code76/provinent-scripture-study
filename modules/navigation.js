@@ -7,6 +7,7 @@
     stopChapterAudio,
     updateAudioControls
 } from './api.js'
+import { setupKeyboardNavigation } from './hotkeys.js'
 import {
     clearError,
     handleError,
@@ -184,6 +185,7 @@ export async function loadSelectedChapter(book = null, chapter = null) {
 }
 export function initBookChapterControls() {
     populateBookDropdown();
+    setupKeyboardNavigation();
     document.getElementById('bookSelect').addEventListener('change', e => {
         if (typeof stopChapterAudio === 'function') {
             stopChapterAudio();
@@ -275,7 +277,7 @@ export function prevPassage() {
     }
     updateManualNavigation(nextBook, nextChapter);
 }
-function updateManualNavigation(book, chapter) {
+export function updateManualNavigation(book, chapter) {
     if (typeof stopChapterAudio === 'function') {
         stopChapterAudio();
     }
