@@ -1,196 +1,189 @@
-﻿import {
-    apiTranslationCode,
-    cleanupAudioPlayer,
-    fetchChapter,
-    getApiBookCode,
-    isKJV,
-    stopChapterAudio,
-    updateAudioControls
-} from './api.js'
-import { setupKeyboardNavigation } from './hotkeys.js'
-import {
-    clearError,
-    handleError,
-    showError,
-    showLoading
-} from '../main.js'
-import {
-    displayPassage,
-    extractVerseText,
-    updateDisplayRef
-} from './passage.js'
-import {
-    AVAILABLE_TRANSLATIONS,
-    BOOKS_ABBREVIATED,
-    BOOK_ORDER,
-    BOOK_NAME_TO_ABBREVIATION,
-    CHAPTER_COUNTS,
-    bookNameMapping,
-    parseURL,
-    saveToStorage,
-    state,
-    updateURL
-} from './state.js'
-import { updateReferencePanel } from './ui.js'
+﻿import { apiTranslationCode, cleanupAudioPlayer, fetchChapter, getApiBookCode, isKJV, stopChapterAudio, updateAudioControls } from './api.js';
+import { scrollToVerse } from './highlights.js';
+import { setupKeyboardNavigation } from './hotkeys.js';
+import { clearError, handleError, showError, showLoading, updateHeaderTitle } from '../main.js';
+import { displayPassage, extractVerseText, updateDisplayRef } from './passage.js';
+import { AVAILABLE_TRANSLATIONS, BOOKS_ABBREVIATED, BOOK_ORDER, BOOK_NAME_TO_ABBREVIATION, CHAPTER_COUNTS, bookNameMapping, parseURL, saveToStorage, state, updateURL } from './state.js';
+import { updateReferencePanel } from './ui.js';
+const SINGLE_CHAPTER_BOOKS = new Set([
+    'Obadiah', 'Philemon', '2 John', '3 John', 'Jude'
+]);
 export function populateBookDropdown() {
-    const bookSel = document.getElementById('bookSelect');
-    bookSel.innerHTML = '';
-    BOOK_ORDER.forEach(book => {
-        const opt = document.createElement('option');
-        opt.value = book;
-        opt.textContent = book;
-        bookSel.appendChild(opt);
-    });
+    try {
+        const bookSel = document.getElementById('bookSelect');
+        if (!bookSel) return;
+        bookSel.innerHTML = '';
+        BOOK_ORDER.forEach(book => {
+            const option = document.createElement('option');
+            option.value = book;
+            option.textContent = book;
+            bookSel.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error populating book dropdown:', error);
+    }
 }
 export function populateChapterDropdown(selectedBook) {
-    const chapSel = document.getElementById('chapterSelect');
-    chapSel.innerHTML = '';
-    const max = CHAPTER_COUNTS[selectedBook];
-    for (let i = 1; i <= max; i++) {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = i;
-        chapSel.appendChild(opt);
+    try {
+        const chapSel = document.getElementById('chapterSelect');
+        if (!chapSel) return;
+        chapSel.innerHTML = '';
+        const maxChapters = CHAPTER_COUNTS[selectedBook] || 1;
+        for (let i = 1; i <= maxChapters; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            chapSel.appendChild(option);
+        }
+        updateChapterDropdownVisibility(selectedBook);
+    } catch (error) {
+        console.error('Error populating chapter dropdown:', error);
     }
 }
 export function updateChapterDropdownVisibility(book) {
-    const singleChapterBooks = [
-        'Obadiah', 'Philemon', '2 John', '3 John', 'Jude'
-    ];
-    const chapterSelect = document.getElementById('chapterSelect');
-    const chapterLabel = document.querySelector('label[for="chapterSelect"]');
-    if (singleChapterBooks.includes(book)) {
-        chapterSelect.style.display = 'none';
-        if (chapterLabel) chapterLabel.style.display = 'none';
-    } else {
-        chapterSelect.style.display = 'block';
-        if (chapterLabel) chapterLabel.style.display = 'block';
+    try {
+        const chapterSelect = document.getElementById('chapterSelect');
+        const chapterLabel = document.querySelector('label[for="chapterSelect"]');
+        if (!chapterSelect) return;
+        const isSingleChapter = SINGLE_CHAPTER_BOOKS.has(book);
+        chapterSelect.style.display = isSingleChapter ? 'none' : 'block';
+        if (chapterLabel) {
+            chapterLabel.style.display = isSingleChapter ? 'none' : 'block';
+        }
+    } catch (error) {
+        console.error('Error updating chapter dropdown visibility:', error);
     }
 }
 export async function loadSelectedChapter(book = null, chapter = null) {
-    if (typeof cleanupAudioPlayer === 'function') {
-        cleanupAudioPlayer();
-    }
-    const selBook = book || document.getElementById('bookSelect').value;
-    const selChapter = chapter || document.getElementById('chapterSelect').value;
-    const apiBook = getApiBookCode(selBook);
-    updateChapterDropdownVisibility(selBook);
-    document.title = `${selBook} ${selChapter} - Provinent Scripture Study`;
-    updateDisplayRef(selBook, selChapter);
+    const selectedBook = book || getSelectedBook();
+    const selectedChapter = chapter || getSelectedChapter();
     try {
-        showLoading(true);
+        if (typeof cleanupAudioPlayer === 'function') {
+            cleanupAudioPlayer();
+        }
+        if (!selectedBook || !selectedChapter) {
+            throw new Error('Invalid book or chapter selection');
+        }
+        const apiBook = getApiBookCode(selectedBook);
+        updateChapterDropdownVisibility(selectedBook);
+        document.title = `${selectedBook} ${selectedChapter} - Provinent Scripture Study`;
+        updateDisplayRef(selectedBook, selectedChapter);
+        await loadChapterContent(selectedBook, selectedChapter, apiBook);
+    } catch (error) {
+        handleError(error, 'loadSelectedChapter');
+        showError(`Could not load ${selectedBook} ${selectedChapter}: ${error.message}`);
+    }
+}
+function getSelectedBook() {
+    const bookSelect = document.getElementById('bookSelect');
+    return bookSelect?.value || BOOK_ORDER[0];
+}
+function getSelectedChapter() {
+    const chapterSelect = document.getElementById('chapterSelect');
+    return parseInt(chapterSelect?.value || '1');
+}
+async function loadChapterContent(book, chapter, apiBook) {
+    showLoading(true);
+    try {
         const apiTranslation = apiTranslationCode(state.settings.bibleTranslation);
         if (isKJV(state.settings.bibleTranslation)) {
-            if (typeof updateAudioControls === 'function') {
-                updateAudioControls(null);
-            }
-            fetchChapter(apiTranslation, apiBook, selChapter)
-                .then(chapterData => {
-                    state.currentChapterData = chapterData;
-                    state.settings.manualBook = selBook;
-                    state.settings.manualChapter = Number(selChapter);
-                    const chapterFootnotes = chapterData.chapter.footnotes || [];
-                    const footnoteCounter = { value: 1 };
-                    const contentItems = chapterData.chapter.content
-                        .map(item => {
-                            if (item.type === 'verse') {
-                                return {
-                                    type: 'verse',
-                                    number: item.number,
-                                    text: extractVerseText(item.content, chapterFootnotes, footnoteCounter),
-                                    reference: `${selBook} ${selChapter}:${item.number}`,
-                                    rawContent: item.content
-                                };
-                            } else if (item.type === 'heading') {
-                                return {
-                                    type: 'heading',
-                                    content: item.content.join(' '),
-                                    reference: `${selBook} ${selChapter}`
-                                };
-                            } else if (item.type === 'line_break') {
-                                return {
-                                    type: 'line_break'
-                                };
-                            }
-                            return null;
-                        })
-                        .filter(item => item !== null);
-                    state.footnotes = {};
-                    displayPassage(contentItems);
-                    clearError();
-                    document.getElementById('scriptureSection').scrollTop = 0;
-                    if (state.settings.referencePanelOpen) {
-                        updateReferencePanel();
-                    }
-                    saveToStorage();
-                })
-                .catch(err => {
-                    handleError(err, 'loadSelectedChapter');
-                    showError(`Could not load ${selBook} ${selChapter}: ${err.message}`);
-                })
-                .finally(() => {
-                    showLoading(false);
-                });
+            await loadKJVChapter(book, chapter, apiTranslation, apiBook);
         } else {
-            const chapterData = await fetchChapter(apiTranslation, apiBook, selChapter);
-            const chapterFootnotes = chapterData.chapter.footnotes || [];
-            const footnoteCounter = { value: 1 };
-            const contentItems = chapterData.chapter.content
-                .map(item => {
-                    if (item.type === 'verse') {
-                        return {
-                            type: 'verse',
-                            number: item.number,
-                            text: extractVerseText(item.content, chapterFootnotes, footnoteCounter),
-                            reference: `${selBook} ${selChapter}:${item.number}`,
-                            rawContent: item.content
-                        };
-                    } else if (item.type === 'heading') {
-                        return {
-                            type: 'heading',
-                            content: item.content.join(' '),
-                            reference: `${selBook} ${selChapter}`
-                        };
-                    } else if (item.type === 'line_break') {
-                        return {
-                            type: 'line_break'
-                        };
-                    }
-                    return null;
-                })
-                .filter(item => item !== null);
-            state.footnotes = {};
-            displayPassage(contentItems);
-            clearError();
-            document.getElementById('scriptureSection').scrollTop = 0;
-            state.settings.manualBook = selBook;
-            state.settings.manualChapter = Number(selChapter);
-            state.currentChapterData = chapterData;
-            if (typeof updateAudioControls === 'function') {
-                updateAudioControls(chapterData.thisChapterAudioLinks);
-            }
-            if (state.settings.referencePanelOpen) {
-                updateReferencePanel();
-            }
-            saveToStorage();
+            await loadStandardChapter(book, chapter, apiTranslation, apiBook);
         }
-    } catch (err) {
-        handleError(err, 'loadSelectedChapter');
-        showError(`Could not load ${selBook} ${selChapter}: ${err.message}`);
     } finally {
         if (!isKJV(state.settings.bibleTranslation)) {
             showLoading(false);
         }
     }
 }
+async function loadKJVChapter(book, chapter, apiTranslation, apiBook) {
+    if (typeof updateAudioControls === 'function') {
+        updateAudioControls(null);
+    }
+    try {
+        const chapterData = await fetchChapter(apiTranslation, apiBook, chapter);
+        processChapterData(chapterData, book, chapter);
+        saveNavigationState(book, chapter, chapterData);
+        if (state.settings.referencePanelOpen) {
+            updateReferencePanel();
+        }
+    } finally {
+        showLoading(false);
+    }
+}
+async function loadStandardChapter(book, chapter, apiTranslation, apiBook) {
+    const chapterData = await fetchChapter(apiTranslation, apiBook, chapter);
+    processChapterData(chapterData, book, chapter);
+    saveNavigationState(book, chapter, chapterData);
+    if (typeof updateAudioControls === 'function') {
+        updateAudioControls(chapterData.thisChapterAudioLinks);
+    }
+    if (state.settings.referencePanelOpen) {
+        updateReferencePanel();
+    }
+}
+function processChapterData(chapterData, book, chapter) {
+    const chapterFootnotes = chapterData.chapter.footnotes || [];
+    const footnoteCounter = { value: 1 };
+    const contentItems = chapterData.chapter.content
+        .map(item => {
+            switch (item.type) {
+                case 'verse':
+                    return {
+                        type: 'verse',
+                        number: item.number,
+                        text: extractVerseText(item.content, chapterFootnotes, footnoteCounter),
+                        reference: `${book} ${chapter}:${item.number}`,
+                        rawContent: item.content
+                    };
+                case 'heading':
+                    return {
+                        type: 'heading',
+                        content: item.content.join(' '),
+                        reference: `${book} ${chapter}`
+                    };
+                case 'line_break':
+                    return { type: 'line_break' };
+                default:
+                    return null;
+            }
+        })
+        .filter(item => item !== null);
+    state.footnotes = {};
+    displayPassage(contentItems);
+    clearError();
+    const scriptureSection = document.getElementById('scriptureSection');
+    if (scriptureSection) scriptureSection.scrollTop = 0;
+}
+function saveNavigationState(book, chapter, chapterData) {
+    state.settings.manualBook = book;
+    state.settings.manualChapter = Number(chapter);
+    state.currentChapterData = chapterData;
+    saveToStorage();
+}
 export function initBookChapterControls() {
-    populateBookDropdown();
-    setupKeyboardNavigation();
-    document.getElementById('bookSelect').addEventListener('change', e => {
+    try {
+        populateBookDropdown();
+        setupKeyboardNavigation();
+        setupNavigationEventListeners();
+    } catch (error) {
+        console.error('Error initializing book chapter controls:', error);
+    }
+}
+function setupNavigationEventListeners() {
+    const bookSelect = document.getElementById('bookSelect');
+    const chapterSelect = document.getElementById('chapterSelect');
+    if (!bookSelect || !chapterSelect) return;
+    bookSelect.addEventListener('change', handleBookChange);
+    chapterSelect.addEventListener('change', handleChapterChange);
+}
+function handleBookChange(event) {
+    try {
         if (typeof stopChapterAudio === 'function') {
             stopChapterAudio();
         }
-        const book = e.target.value;
+        const book = event.target.value;
         populateChapterDropdown(book);
         state.settings.manualBook = book;
         state.settings.manualChapter = 1;
@@ -198,20 +191,25 @@ export function initBookChapterControls() {
         chapterSel.value = '1';
         updateChapterDropdownVisibility(book);
         loadSelectedChapter(book, 1);
-        saveToStorage(); 
-    });
-    document.getElementById('chapterSelect').addEventListener('change', () => {
+        saveToStorage();
+    } catch (error) {
+        console.error('Error handling book change:', error);
+    }
+}
+function handleChapterChange() {
+    try {
         if (typeof stopChapterAudio === 'function') {
             stopChapterAudio();
         }
         const book = document.getElementById('bookSelect').value;
-        const chap = Number(document.getElementById('chapterSelect').value);
+        const chapter = Number(document.getElementById('chapterSelect').value);
         state.settings.manualBook = book;
-        state.settings.manualChapter = chap;
-        loadSelectedChapter(book, chap);
-        saveToStorage();  
-    });
-    populateChapterDropdown(BOOK_ORDER[0]);
+        state.settings.manualChapter = chapter;
+        loadSelectedChapter(book, chapter);
+        saveToStorage();
+    } catch (error) {
+        console.error('Error handling chapter change:', error);
+    }
 }
 export async function randomPassage() {
     try {
@@ -219,110 +217,126 @@ export async function randomPassage() {
             stopChapterAudio();
         }
         const randomLoc = await getRandomBibleLocation();
+        const translation = getCurrentTranslation();
         state.settings.manualBook = randomLoc.book;
         state.settings.manualChapter = randomLoc.chapter;
-        const translation = getCurrentTranslation();
-        updateURL(translation, randomLoc.book, randomLoc.chapter);
+        updateURL(translation, randomLoc.book, randomLoc.chapter, 'push');
         saveToStorage();
-        const headerTitleEl = document.getElementById('passageHeaderTitle');
-        if (headerTitleEl) {
-            headerTitleEl.textContent = `Holy Bible: ${translation}`;
-        }
+        updateHeaderTitle();
         await loadSelectedChapter(randomLoc.book, randomLoc.chapter);
         updateDisplayRef(randomLoc.book, randomLoc.chapter);
         syncBookChapterSelectors();
         if (state.settings.referencePanelOpen) {
             updateReferencePanel();
         }
-    } catch (err) {
-        handleError(err, 'randomPassage');
-        showError('Could not load a random passage – see console for details.');
+    } catch (error) {
+        handleError(error, 'randomPassage');
+        showError('Could not load a random passage');
     }
 }
 export function nextPassage() {
-    if (typeof stopChapterAudio === 'function') {
-        stopChapterAudio();
+    try {
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
+        const { nextBook, nextChapter } = calculateNextPassage();
+        if (nextBook && nextChapter) {
+            updateManualNavigation(nextBook, nextChapter);
+        }
+    } catch (error) {
+        console.error('Error navigating to next passage:', error);
     }
-    let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
-    let chap = state.settings.manualChapter;
-    const maxCh = CHAPTER_COUNTS[state.settings.manualBook];
-    let nextBook = state.settings.manualBook;
-    let nextChapter = chap;
-    if (chap < maxCh) {
-        nextChapter = chap + 1;
-    } else if (bookIdx < BOOK_ORDER.length - 1) {
-        nextBook = BOOK_ORDER[bookIdx + 1];
-        nextChapter = 1;
-    } else {
-        return;
-    }
-    updateManualNavigation(nextBook, nextChapter);
 }
 export function prevPassage() {
-    if (typeof stopChapterAudio === 'function') {
-        stopChapterAudio();
+    try {
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
+        const { prevBook, prevChapter } = calculatePrevPassage();
+        if (prevBook && prevChapter) {
+            updateManualNavigation(prevBook, prevChapter);
+        }
+    } catch (error) {
+        console.error('Error navigating to previous passage:', error);
     }
-    let bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
-    let chap = state.settings.manualChapter;
-    let nextBook = state.settings.manualBook;
-    let nextChapter = chap;
-    if (chap > 1) {
-        nextChapter = chap - 1;
+}
+function calculateNextPassage() {
+    const bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
+    const currentChapter = state.settings.manualChapter;
+    const maxChapters = CHAPTER_COUNTS[state.settings.manualBook];
+    if (currentChapter < maxChapters) {
+        return {
+            nextBook: state.settings.manualBook,
+            nextChapter: currentChapter + 1
+        };
+    } else if (bookIdx < BOOK_ORDER.length - 1) {
+        return {
+            nextBook: BOOK_ORDER[bookIdx + 1],
+            nextChapter: 1
+        };
+    }
+    return { nextBook: null, nextChapter: null };
+}
+function calculatePrevPassage() {
+    const bookIdx = BOOK_ORDER.indexOf(state.settings.manualBook);
+    const currentChapter = state.settings.manualChapter;
+    if (currentChapter > 1) {
+        return {
+            prevBook: state.settings.manualBook,
+            prevChapter: currentChapter - 1
+        };
     } else if (bookIdx > 0) {
         const prevBook = BOOK_ORDER[bookIdx - 1];
-        nextBook = prevBook;
-        nextChapter = CHAPTER_COUNTS[prevBook];
-    } else {
-        return;
+        return {
+            prevBook: prevBook,
+            prevChapter: CHAPTER_COUNTS[prevBook]
+        };
     }
-    updateManualNavigation(nextBook, nextChapter);
+    return { prevBook: null, prevChapter: null };
 }
 export function updateManualNavigation(book, chapter) {
-    if (typeof stopChapterAudio === 'function') {
-        stopChapterAudio();
-    }
-    state.settings.manualBook = book;
-    state.settings.manualChapter = chapter;
-    const translation = getCurrentTranslation();
-    updateURL(translation, book, chapter);
-    const displayRef = `${book} ${chapter}`;
-    updateUIMode(translation, displayRef);
-    loadSelectedChapter(book, chapter);
-    syncBookChapterSelectors();
-    saveToStorage();
-    if (state.settings.referencePanelOpen) {
-        updateReferencePanel();
-    }
-}
-function updateUIMode(translation, displayRef) {
-    const headerTitleEl = document.getElementById('passageHeaderTitle');
-    const passageRefElement = document.getElementById('passageReference');
-    if (headerTitleEl) {
-        headerTitleEl.textContent = `Holy Bible: ${translation}`;
-    }
-    if (passageRefElement) {
-        passageRefElement.textContent = displayRef;
-        state.currentPassageReference = displayRef;
+    try {
+        if (typeof stopChapterAudio === 'function') {
+            stopChapterAudio();
+        }
+        state.settings.manualBook = book;
+        state.settings.manualChapter = chapter;
+        const translation = getCurrentTranslation();
+        updateURL(translation, book, chapter, 'push');
+        updateHeaderTitle();
+        loadSelectedChapter(book, chapter);
+        syncBookChapterSelectors();
+        saveToStorage();
+        if (state.settings.referencePanelOpen) {
+            updateReferencePanel();
+        }
+    } catch (error) {
+        console.error('Error updating manual navigation:', error);
     }
 }
 export function syncBookChapterSelectors() {
-    const bookSel = document.getElementById('bookSelect');
-    const chapterSel = document.getElementById('chapterSelect');
-    if (bookSel.value !== state.settings.manualBook) {
-        bookSel.value = state.settings.manualBook;
-        populateChapterDropdown(state.settings.manualBook);
+    try {
+        const bookSel = document.getElementById('bookSelect');
+        const chapterSel = document.getElementById('chapterSelect');
+        if (!bookSel || !chapterSel) return;
+        if (bookSel.value !== state.settings.manualBook) {
+            bookSel.value = state.settings.manualBook;
+            populateChapterDropdown(state.settings.manualBook);
+        }
+        const maxChapters = CHAPTER_COUNTS[state.settings.manualBook];
+        const currentChapter = state.settings.manualChapter;
+        const validChapter = Math.min(currentChapter, maxChapters);
+        chapterSel.value = validChapter;
+        updateChapterDropdownVisibility(state.settings.manualBook);
+    } catch (error) {
+        console.error('Error syncing book chapter selectors:', error);
     }
-    const curMax = CHAPTER_COUNTS[state.settings.manualBook];
-    const curChap = state.settings.manualChapter;
-    populateChapterDropdown(state.settings.manualBook);
-    chapterSel.value = (curChap <= curMax) ? curChap : curMax;
-    updateChapterDropdownVisibility(state.settings.manualBook);
 }
 async function getRandomBibleLocation() {
     try {
         const randomBook = BOOK_ORDER[Math.floor(Math.random() * BOOK_ORDER.length)];
-        const maxCh = CHAPTER_COUNTS[randomBook];
-        const randomChapter = Math.floor(Math.random() * maxCh) + 1;
+        const maxChapters = CHAPTER_COUNTS[randomBook];
+        const randomChapter = Math.floor(Math.random() * maxChapters) + 1;
         const apiMap = apiTranslationCode(state.settings.bibleTranslation);
         const apiBook = bookNameMapping[randomBook] || randomBook.replace(/\s+/g, '').toUpperCase();
         const chapterData = await fetchChapter(apiMap, apiBook, randomChapter);
@@ -335,60 +349,77 @@ async function getRandomBibleLocation() {
             endVerse: verseCount,
             displayRef: `${randomBook} ${randomChapter}`
         };
-    } catch (err) {
-        handleError(err, 'getRandomBibleLocation');
-    } 
+    } catch (error) {
+        handleError(error, 'getRandomBibleLocation');
+        throw error;
+    }
 }
 export function getCurrentTranslation() {
     return state.settings.bibleTranslation || 'BSB';
 }
 export function navigateFromURL() {
-    const urlParams = parseURL();
-    if (urlParams) {
-        const isValidTranslation = AVAILABLE_TRANSLATIONS.includes(urlParams.translation);
-        const bookAbbr = BOOK_NAME_TO_ABBREVIATION[urlParams.book];
-        const isValidBook = BOOKS_ABBREVIATED.includes(bookAbbr);
-        const isValidChapter = urlParams.chapter > 0 && urlParams.chapter < 151;
-        if (isValidTranslation && isValidBook && isValidChapter) {
-            state.settings.manualBook = urlParams.book;
-            state.settings.manualChapter = urlParams.chapter;
-            state.settings.bibleTranslation = urlParams.translation;
-            const bookSelect = document.getElementById('bookSelect');
-            const chapterSelect = document.getElementById('chapterSelect');
-            if (bookSelect) bookSelect.value = urlParams.book;
-            if (chapterSelect) {
-                populateChapterDropdown(urlParams.book);
-                chapterSelect.value = urlParams.chapter;
-            }
-            updateChapterDropdownVisibility(urlParams.book);
-            const translationSelect = document.getElementById('bibleTranslationSetting');
-            if (translationSelect) {
-                translationSelect.value = urlParams.translation;
-            }
-            const passageRefElement = document.getElementById('passageReference');
-            if (passageRefElement) {
-                passageRefElement.textContent = `${urlParams.book} ${urlParams.chapter}`;
-                state.currentPassageReference = `${urlParams.book} ${urlParams.chapter}`;
-            }
-            const headerTitleEl = document.getElementById('passageHeaderTitle');
-            if (headerTitleEl) {
-                headerTitleEl.textContent = `Holy Bible: ${urlParams.translation}`;
-            }
-            loadSelectedChapter(urlParams.book, urlParams.chapter);
-            window.history.replaceState(
-                { translation: urlParams.translation, book: urlParams.book, chapter: urlParams.chapter },
-                '',
-                window.location.search
-            );
+    try {
+        const urlParams = parseURL();
+        if (!urlParams) return false;
+        const { translation, book, chapter } = urlParams;
+        if (isValidNavigationParams(translation, book, chapter)) {
+            applyUrlNavigationParams(translation, book, chapter);
+            loadSelectedChapter(book, chapter);
+            updateBrowserHistory(translation, book, chapter);
             return true;
         }
+    } catch (error) {
+        console.error('Error navigating from URL:', error);
     }
     return false;
+}
+function isValidNavigationParams(translation, book, chapter) {
+    const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
+    return AVAILABLE_TRANSLATIONS.includes(translation) &&
+           BOOKS_ABBREVIATED.includes(bookAbbr) &&
+           chapter > 0 && chapter < 151;
+}
+function applyUrlNavigationParams(translation, book, chapter) {
+    state.settings.manualBook = book;
+    state.settings.manualChapter = chapter;
+    state.settings.bibleTranslation = translation;
+    updateSelectElements(book, chapter, translation);
+    updateUIElements(book, chapter, translation);
+}
+function updateSelectElements(book, chapter, translation) {
+    const bookSelect = document.getElementById('bookSelect');
+    const chapterSelect = document.getElementById('chapterSelect');
+    const translationSelect = document.getElementById('bibleTranslationSetting');
+    if (bookSelect) bookSelect.value = book;
+    if (chapterSelect) {
+        populateChapterDropdown(book);
+        chapterSelect.value = chapter;
+    }
+    if (translationSelect) translationSelect.value = translation;
+    updateChapterDropdownVisibility(book);
+}
+function updateUIElements(book, chapter, translation) {
+    const passageRefElement = document.getElementById('passageReference');
+    const headerTitleEl = document.getElementById('passageHeaderTitle');
+    if (passageRefElement) {
+        passageRefElement.textContent = `${book} ${chapter}`;
+        state.currentPassageReference = `${book} ${chapter}`;
+    }
+    if (headerTitleEl) {
+        headerTitleEl.textContent = `Holy Bible: ${translation}`;
+    }
+}
+function updateBrowserHistory(translation, book, chapter) {
+    window.history.replaceState(
+        { translation, book, chapter },
+        '',
+        window.location.search
+    );
 }
 export function setupPopStateListener() {
     window.addEventListener('popstate', (event) => {
         if (event.state) {
-            const { translation, book, chapter } = event.state;
+            const { translation, book, chapter, verse } = event.state;
             state.settings.manualBook = book;
             state.settings.manualChapter = chapter;
             state.settings.bibleTranslation = translation;
@@ -399,25 +430,46 @@ export function setupPopStateListener() {
                 populateChapterDropdown(book);
                 chapterSelect.value = chapter;
             }
+            updateURL(translation, book, chapter, 'replace');
             loadSelectedChapter(book, chapter);
+            if (verse) {
+                setTimeout(() => scrollToVerse(verse), 100);
+            }
         } else {
             navigateFromURL();
         }
     });
 }
+function applyPopStateNavigation(stateData) {
+    const { translation, book, chapter } = stateData;
+    state.settings.manualBook = book;
+    state.settings.manualChapter = chapter;
+    state.settings.bibleTranslation = translation;
+    const bookSelect = document.getElementById('bookSelect');
+    const chapterSelect = document.getElementById('chapterSelect');
+    if (bookSelect) bookSelect.value = book;
+    if (chapterSelect) {
+        populateChapterDropdown(book);
+        chapterSelect.value = chapter;
+    }
+    loadSelectedChapter(book, chapter);
+}
 export function setupNavigationWithURL() {
-    document.getElementById('bookSelect').addEventListener('change', (e) => {
+    const bookSelect = document.getElementById('bookSelect');
+    const chapterSelect = document.getElementById('chapterSelect');
+    if (!bookSelect || !chapterSelect) return;
+    bookSelect.addEventListener('change', (e) => {
         const book = e.target.value;
         const chapter = 1;
         const translation = getCurrentTranslation();
-        updateURL(translation, book, chapter);
+        updateURL(translation, book, chapter, 'push');
         loadSelectedChapter(book, chapter);
     });
-    document.getElementById('chapterSelect').addEventListener('change', (e) => {
+    chapterSelect.addEventListener('change', (e) => {
         const book = document.getElementById('bookSelect').value;
         const chapter = parseInt(e.target.value);
         const translation = getCurrentTranslation();
-        updateURL(translation, book, chapter);
+        updateURL(translation, book, chapter, 'push');
         loadSelectedChapter(book, chapter);
     });
 }

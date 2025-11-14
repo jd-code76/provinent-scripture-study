@@ -139,11 +139,26 @@
     
     .highlight-filter-btn {
         padding: 6px 12px;
-        font-size: 11px;
+        font-size: 14px;
     }
     
     .highlight-item {
         padding: 12px;
+    }
+
+    .highlights-search {
+        max-width: 250px;
+    }
+    
+    #highlightsSearch {
+        min-width: 100px;
+        padding: 6px 8px;
+        font-size: 14px;
+    }
+    
+    .clear-search-btn {
+        padding: 6px;
+        font-size: 14px;
     }
 
     /* Improve scrolling performance */
@@ -192,6 +207,37 @@
 
     div#keyboard-shortcuts {
         display: none;
+    }
+
+    .highlights-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-secondary);
+    }
+
+    #highlightsSearch {
+        max-width: 100px;
+    }
+
+        .highlights-search {
+        max-width: 200px;
+    }
+    
+    #highlightsSearch {
+        min-width: 80px;
+        padding: 4px 6px;
+        font-size: 14px;
+    }
+    
+    .clear-search-btn {
+        padding: 4px;
+        font-size: 14px;
+    }
+    
+    .highlight-filter-btn {
+        padding: 6px 12px;
+        font-size: 14px;
     }
 }
 

@@ -1,28 +1,64 @@
+# Access the site here: [https://provinent.org](https://provinent.org)
+
 # Provinent Scripture Study
 
 A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools. 
 The entirety of this project was written using AI tools like [Gab AI](https://gab.ai) and [Lumo](https://lumo.proton.me).
 The meaning of "Provinent" is a portmanteau of "providence" and "covenant", each referring to God's divine sovereignty.
 
-Access the site here: [https://provinent.org](https://provinent.org)
-
 ## Features
 
 ### Core Functionality
 - **Multi-Translation Support**: ASV, BSB, GNV, KJV, NET
-- **Study Notes**: Full Markdown support with live preview and export capabilities
+- **Study Notes**: Full Markdown support with preview, hotkeys, and export capabilities
 - **Verse Analysis**: Left-click any verse for analysis of a single verse with a side-by-side view of Strong's concordance (provided by [STEP Bible](https://www.stepbible.org)) and a Hebrew or Greek interlinear Bible (provided by [Bible Hub](https://biblehub.com/interlinear/))
-- **Verse Highlighting**: Right-click verses to highlight in one of six different colors for study emphasis
+- **Verse Highlighting**: Right-click to highlight in six colors for study emphasis
 - **Reference Bible**: Use the reference Bible to select from multiple translation options to compare with (ASV, BSB, CSB, ESV, GNV, KJV, LSB, NASB 1995, NASB 2020, NET, NIV, NKJV, NLT); this also sets the translation for Bible Gateway searches and the Verse Analysis popup
+- **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality to search for any word or passage
 
 ### Advanced Features
-- **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality
-- **Highlight Search**: Search through all highlighted verses by content
+- **Highlights Management**: Search and filter highlighted verses by color/content
 - **Keyboard Navigation**: Extensive keyboard shortcuts (F1 to toggle help)
-- **Data Management**: Import/export highlights, notes, and settings
+- **Data Portability**: Import/export highlights, notes, and settings
 - **Responsive Design**: Optimized for both desktop and mobile devices (desktop is preferred though)
-- **Dark/Light Mode**: Toggle between dark or light mode
-- **Color Themes**: Choose from one of six different color themes
+- **Theming**: Dark/light mode with six color themes
+
+## Markdown Keyboard Shortcuts
+### Basic Formatting (Ctrl/Cmd + Key)
+| Shortcut | Action | Result |
+|----------|--------|--------|
+| `Ctrl/Cmd + B` | Bold | `**bold text**` |
+| `Ctrl/Cmd + I` | Italic | `*italic text*` |
+| `Ctrl/Cmd + K` | Link | `[link text](url)` |
+| `Ctrl/Cmd + 1` | Heading 1 | `# Heading 1` |
+| `Ctrl/Cmd + 2` | Heading 2 | `## Heading 2` |
+| `Ctrl/Cmd + 3` | Heading 3 | `### Heading 3` |
+| `Ctrl/Cmd + \`` | Code | `` `code` `` |
+| `Ctrl/Cmd + Shift + U` | Unordered List | `- List item` |
+| `Ctrl/Cmd + Shift + O` | Ordered List | `1. List item` |
+| `Ctrl/Cmd + Shift + >` | Blockquote | `> Quote` |
+
+*Note: Works in both Windows (Ctrl) and Mac (Cmd) environments*
+
+## Navigation Keyboard Shortcuts
+### Chapter Navigation
+| Shortcut | Action |
+|----------|--------|
+| `Alt + ←` | Previous Chapter |
+| `Alt + →` | Next Chapter |
+### Book Navigation  
+| Shortcut | Action |
+|----------|--------|
+| `Alt + Shift + ↑` | Previous Book |
+| `Alt + Shift + ↓` | Next Book |
+### Other Functions
+| Shortcut | Action |
+|----------|--------|
+| `Alt + P` | Play/Pause Audio |
+| `Alt + R` | Random Passage |
+| `F1` | Show Help Modal |
+
+*Note: Hotkeys can be customized in the settings menu*
 
 ### Study Resources Integration
 The sidebar provides organized access to extensive theological resources (Reformed Theology/Calvinism focused) including:
@@ -51,9 +87,8 @@ The sidebar provides organized access to extensive theological resources (Reform
 ## Usage
 
 ### Basic Navigation
-- Use Prev/Next arrow buttons to navigate passages (hidden on mobile for cleaner UI)
-- Use "Random Passage" to study from any canon passage of Holy Scripture
-- Select specific books/chapters from dropdown menus
+- Navigate with arrow buttons or dropdown menus
+- Use “Random Passage” to study from any canon passage of Holy Scripture
 - Select a narrator and play audio for any chapter of the Bible in the BSB or KJV translations
 - Press F1 to view or change keyboard shortcuts
 
@@ -75,11 +110,17 @@ Highlights, notes, and settings are stored locally in your browser. Data transmi
 
 ## Attribution
 
-- Scripture text provided by [bible.helloao.org](https://bible.helloao.org) API
+- Scripture text provided by [AO Lab API](https://bible.helloao.org)
 - Berean Standard Bible translation by [Berean Bible](https://berean.bible)
 - Audio files hosted by [Open Bible](https://openbible.com/audio/)
 - Icons by [Font Awesome](https://fontawesome.com)
 - Markdown processing by [Marked.js](https://cdn.jsdelivr.net/npm/marked/)
+- **Reference Bible websites**
+  - [Bible Gateway](https://www.biblegateway.com)
+  - [Bible.com (YouVersion)](https://www.bible.com)
+  - [Bible Hub](https://biblehub.com)
+  - [STEP Bible](https://www.stepbible.org)
+  - [eBible.org](https://ebible.org)
 - All copyrights, trademarks, and attributions belong to their respective owners
 
 ## License
@@ -94,6 +135,9 @@ This project is licensed under the [GNU General Public License v3.0 (GPLv3)](htt
 ## Support
 
 For issues or suggestions, please check the browser console for error messages and ensure you're using a supported browser version.
+
+**Romans 11:36**
+> For from Him and through Him and to Him are all things. To Him be the glory forever. Amen.
 
 ---
 

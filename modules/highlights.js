@@ -1,189 +1,260 @@
-﻿import { loadSelectedChapter, syncBookChapterSelectors } from './navigation.js'
+﻿import { escapeHTML } from '../main.js';
+import { loadSelectedChapter, syncBookChapterSelectors } from './navigation.js';
 import { updateDisplayRef } from './passage.js';
-import {
-    BOOK_ORDER,
-    saveToStorage,
-    state
-} from './state.js'
+import { BOOK_ORDER, saveToStorage, state, updateURL } from './state.js';
+const HIGHLIGHT_COLORS = [
+    'yellow', 'green', 'blue', 'pink', 'orange', 'purple'
+];
 export function showColorPicker(ev, verseEl) {
-    const picker = document.getElementById('colorPicker');
-    state.currentVerse = verseEl;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const pickerWidth = 200;
-    const pickerHeight = 50;
-    const clientX = ev.clientX || (ev.touches && ev.touches[0].clientX) || 0;
-    const clientY = ev.clientY || (ev.touches && ev.touches[0].clientY) || 0;
-    let adjustedX = clientX;
-    let adjustedY = clientY;
-    if (clientX + pickerWidth > viewportWidth) {
-        adjustedX = viewportWidth - pickerWidth - 10;
+    try {
+        const picker = document.getElementById('colorPicker');
+        if (!picker) return;
+        state.currentVerse = verseEl;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const pickerWidth = 200;
+        const pickerHeight = 50;
+        const clientX = ev.clientX || (ev.touches?.[0]?.clientX) || 0;
+        const clientY = ev.clientY || (ev.touches?.[0]?.clientY) || 0;
+        let adjustedX = Math.max(10, clientX);
+        let adjustedY = Math.max(10, clientY);
+        if (clientX + pickerWidth > viewportWidth) {
+            adjustedX = viewportWidth - pickerWidth - 10;
+        }
+        if (clientY + pickerHeight > viewportHeight) {
+            adjustedY = viewportHeight - pickerHeight - 10;
+        }
+        picker.style.left = adjustedX + 'px';
+        picker.style.top = adjustedY + 'px';
+        picker.classList.add('active');
+        if (ev.preventDefault) ev.preventDefault();
+        if (ev.stopPropagation) ev.stopPropagation();
+    } catch (error) {
+        console.error('Error showing color picker:', error);
     }
-    if (clientY + pickerHeight > viewportHeight) {
-        adjustedY = viewportHeight - pickerHeight - 10;
-    }
-    adjustedX = Math.max(10, adjustedX);
-    adjustedY = Math.max(10, adjustedY);
-    picker.style.left = adjustedX + 'px';
-    picker.style.top = adjustedY + 'px';
-    picker.classList.add('active');
-    ev.preventDefault();
-    ev.stopPropagation();
 }
-export function applyHighlight(col) {
-    if (!state.currentVerse) return;
-    const verseRef = state.currentVerse.dataset.verse;
-    state.currentVerse.classList.remove(
-        'highlight-yellow', 'highlight-green', 'highlight-blue',
-        'highlight-pink', 'highlight-orange', 'highlight-purple'
-    );
-    if (col !== 'none') {
-        state.currentVerse.classList.add(`highlight-${col}`);
-        state.highlights[verseRef] = col;
-    } else {
-        delete state.highlights[verseRef];
+export function applyHighlight(color) {
+    try {
+        if (!state.currentVerse) return;
+        const verseRef = state.currentVerse.dataset.verse;
+        if (!verseRef) return;
+        state.currentVerse.classList.remove(...HIGHLIGHT_COLORS.map(col => `highlight-${col}`));
+        if (color !== 'none') {
+            state.currentVerse.classList.add(`highlight-${color}`);
+            state.highlights[verseRef] = color;
+        } else {
+            delete state.highlights[verseRef];
+        }
+        saveToStorage();
+        const picker = document.getElementById('colorPicker');
+        if (picker) picker.classList.remove('active');
+    } catch (error) {
+        console.error('Error applying highlight:', error);
     }
-    saveToStorage();
-    document.getElementById('colorPicker').classList.remove('active');
 }
 export function clearHighlights() {
-    if (!confirm('Delete ALL highlights?')) return;
-    state.highlights = {};
-    document.querySelectorAll('.verse')
-            .forEach(v => v.classList.remove(
-                'highlight-yellow', 'highlight-green', 'highlight-blue',
-                'highlight-pink', 'highlight-orange', 'highlight-purple'
-            ));
-    saveToStorage();
+    try {
+        if (!confirm('Are you sure you want to delete ALL highlights? This cannot be undone.')) {
+            return;
+        }
+        state.highlights = {};
+        document.querySelectorAll('.verse').forEach(verse => {
+            verse.classList.remove(...HIGHLIGHT_COLORS.map(col => `highlight-${col}`));
+        });
+        saveToStorage();
+        const modal = document.getElementById('highlightsModal');
+        if (modal?.classList.contains('active')) {
+            renderHighlights('all', '');
+        }
+    } catch (error) {
+        console.error('Error clearing highlights:', error);
+    }
 }
 export function showHighlightsModal() {
-    const overlay = document.getElementById('highlightsOverlay');
-    const modal = document.getElementById('highlightsModal');
-    overlay.classList.add('active');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    const searchInput = document.getElementById('highlightsSearch');
-    if (searchInput) {
-        searchInput.value = '';
-    }
-    const filterButtons = document.querySelectorAll('.highlight-filter-btn');
-    filterButtons.forEach(btn => btn.classList.remove('active'));
-    const allButton = document.querySelector('.highlight-filter-btn[data-color="all"]');
-    if (allButton) {
-        allButton.classList.add('active');
-    }
-    renderHighlights('all', '');
-    setupHighlightsSearch();
-}
-function setupHighlightsSearch() {
-    const searchInput = document.getElementById('highlightsSearch');
-    const clearSearchBtn = document.getElementById('clearSearch');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
-            const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
-            renderHighlights(activeFilter, searchTerm);
-        });
-    }
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', function() {
-            const searchInput = document.getElementById('highlightsSearch');
+    try {
+        const overlay = document.getElementById('highlightsOverlay');
+        const modal = document.getElementById('highlightsModal');
+        const searchInput = document.getElementById('highlightsSearch');
+        if (!overlay || !modal) return;
+        overlay.classList.add('active');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        if (searchInput) {
             searchInput.value = '';
-            const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
-            renderHighlights(activeFilter, '');
-        });
+        }
+        const filterButtons = document.querySelectorAll('.highlight-filter-btn');
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        const allButton = document.querySelector('.highlight-filter-btn[data-color="all"]');
+        if (allButton) {
+            allButton.classList.add('active');
+        }
+        renderHighlights('all', '');
+        setupHighlightsSearch();
+    } catch (error) {
+        console.error('Error opening highlights modal:', error);
     }
 }
 export function closeHighlightsModal() {
-    const overlay = document.getElementById('highlightsOverlay');
-    const modal = document.getElementById('highlightsModal');
-    overlay.classList.remove('active');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    try {
+        const overlay = document.getElementById('highlightsOverlay');
+        const modal = document.getElementById('highlightsModal');
+        if (!overlay || !modal) return;
+        overlay.classList.remove('active');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    } catch (error) {
+        console.error('Error closing highlights modal:', error);
+    }
+}
+function setupHighlightsSearch() {
+    try {
+        const searchInput = document.getElementById('highlightsSearch');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', handleSearchInput);
+        }
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', handleClearSearch);
+        }
+        document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const color = this.dataset.color;
+                const searchTerm = document.getElementById('highlightsSearch').value || '';
+                renderHighlights(color, searchTerm);
+                document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });        
+    } catch (error) {
+        console.error('Error setting up highlights search:', error);
+    }
+}
+function handleSearchInput() {
+    try {
+        const searchTerm = this.value.toLowerCase().trim();
+        const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
+        renderHighlights(activeFilter, searchTerm);
+    } catch (error) {
+        console.error('Error handling search input:', error);
+    }
+}
+function handleClearSearch() {
+    try {
+        const searchInput = document.getElementById('highlightsSearch');
+        if (!searchInput) return;
+        searchInput.value = '';
+        const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
+        renderHighlights(activeFilter, '');
+    } catch (error) {
+        console.error('Error clearing search:', error);
+    }
 }
 export function renderHighlights(filterColor = 'all', searchTerm = '') {
-    const highlightsList = document.getElementById('highlightsList');
-    const highlights = state.highlights || {};
-    if (Object.keys(highlights).length === 0) {
-        highlightsList.innerHTML = '<div class="no-highlights">No verses have been highlighted yet</div>';
-        return;
+    try {
+        const highlightsList = document.getElementById('highlightsList');
+        if (!highlightsList) return;
+        const highlights = state.highlights || {};
+        if (Object.keys(highlights).length === 0) {
+            highlightsList.innerHTML = '<div class="no-highlights">No verses have been highlighted yet</div>';
+            return;
+        }
+        const sortedReferences = sortHighlightReferences(highlights);
+        const filteredReferences = filterHighlightReferences(sortedReferences, filterColor, searchTerm);
+        let html = '';
+        if (filteredReferences.length === 0) {
+            const noResultsMsg = searchTerm 
+                ? `No highlights found matching "${searchTerm}"`
+                : 'No highlights match the selected filter';
+            html = `<div class="no-results">${noResultsMsg}</div>`;
+        } else {
+            html = generateHighlightItemsHTML(filteredReferences, searchTerm);
+        }
+        highlightsList.innerHTML = html;
+        setupHighlightItemClickHandlers();
+    } catch (error) {
+        console.error('Error rendering highlights:', error);
+        const highlightsList = document.getElementById('highlightsList');
+        if (highlightsList) {
+            highlightsList.innerHTML = '<div class="error">Error loading highlights</div>';
+        }
     }
-    let html = '';
-    let matchCount = 0;
-    const sortableReferences = Object.keys(highlights).map(reference => {
-        const match = reference.match(/^(\d*\s*\w+)\s+(\d+):(\d+)$/);
-        if (!match) return null;
-        let bookName = match[1].trim();
-        const chapter = parseInt(match[2]);
-        const verse = parseInt(match[3]);
-        const color = highlights[reference];
-        const bookParts = bookName.split(' ');
-        let baseBookName = bookName;
-        let bookNumber = '';
-        if (bookParts.length > 1 && /^\d+$/.test(bookParts[0])) {
-            bookNumber = bookParts[0];
-            baseBookName = bookParts.slice(1).join(' ');
-        }
-        const bookIndex = BOOK_ORDER.findIndex(book => {
-            const orderParts = book.split(' ');
-            let orderBaseName = book;
-            let orderNumber = '';
-            if (orderParts.length > 1 && /^\d+$/.test(orderParts[0])) {
-                orderNumber = orderParts[0];
-                orderBaseName = orderParts.slice(1).join(' ');
+}
+function sortHighlightReferences(highlights) {
+    return Object.keys(highlights)
+        .map(reference => {
+            const match = reference.match(/^(.+?)\s+(\d+):(\d+)$/);
+            if (!match) return null;
+            const [, bookName, chapter, verse] = match;
+            const color = highlights[reference];
+            const bookParts = bookName.split(' ');
+            let bookNumber = '';
+            let baseBookName = bookName;
+            if (bookParts.length > 1 && /^\d+$/.test(bookParts[0])) {
+                bookNumber = bookParts[0];
+                baseBookName = bookParts.slice(1).join(' ');
             }
-            return orderBaseName.toLowerCase() === baseBookName.toLowerCase() && 
-                   orderNumber === bookNumber;
+            const bookIndex = BOOK_ORDER.findIndex(book => {
+                const orderParts = book.split(' ');
+                let orderNumber = '';
+                let orderBaseName = book;
+                if (orderParts.length > 1 && /^\d+$/.test(orderParts[0])) {
+                    orderNumber = orderParts[0];
+                    orderBaseName = orderParts.slice(1).join(' ');
+                }
+                return orderBaseName.toLowerCase() === baseBookName.toLowerCase() && 
+                       orderNumber === bookNumber;
+            });
+            if (bookIndex === -1) return null;
+            return {
+                reference,
+                bookName,
+                bookIndex,
+                chapter: parseInt(chapter),
+                verse: parseInt(verse),
+                color
+            };
+        })
+        .filter(ref => ref !== null)
+        .sort((a, b) => {
+            if (a.bookIndex !== b.bookIndex) return a.bookIndex - b.bookIndex;
+            if (a.chapter !== b.chapter) return a.chapter - b.chapter;
+            return a.verse - b.verse;
         });
-        return {
-            reference,
-            bookName,
-            baseBookName,
-            bookNumber,
-            bookIndex,
-            chapter,
-            verse,
-            color
-        };
-    }).filter(ref => ref !== null && ref.bookIndex !== -1);
-    sortableReferences.sort((a, b) => {
-        if (a.bookIndex !== b.bookIndex) {
-            return a.bookIndex - b.bookIndex;
-        }
-        if (a.chapter !== b.chapter) {
-            return a.chapter - b.chapter;
-        }
-        return a.verse - b.verse;
-    });
-    sortableReferences.forEach(ref => {
+}
+function filterHighlightReferences(references, filterColor, searchTerm) {
+    return references.filter(ref => {
         if (filterColor !== 'all' && ref.color !== filterColor) {
-            return;
+            return false;
         }
+        if (searchTerm) {
+            const verseText = getVerseTextFromStorage(ref.reference) || '';
+            if (!verseText.toLowerCase().includes(searchTerm) && 
+                !ref.reference.toLowerCase().includes(searchTerm)) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
+function generateHighlightItemsHTML(references, searchTerm) {
+    return references.map(ref => {
         const verseText = getVerseTextFromStorage(ref.reference) || 'Text not available, click to refresh';
-        if (searchTerm && !verseText.toLowerCase().includes(searchTerm) && 
-            !ref.reference.toLowerCase().includes(searchTerm)) {
-            return;
-        }
-        matchCount++;
         let displayText = verseText;
         if (searchTerm) {
-            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
             displayText = verseText.replace(regex, '<mark>$1</mark>');
         }
-        html += `
-            <div class="highlight-item ${ref.color}" data-reference="${ref.reference}" data-color="${ref.color}">
-                <div class="highlight-ref">${ref.reference}</div>
+        return `
+            <div class="highlight-item ${ref.color}" 
+                 data-reference="${escapeHTML(ref.reference)}" 
+                 data-color="${escapeHTML(ref.color)}">
+                <div class="highlight-ref">${escapeHTML(ref.reference)}</div>
                 <div class="highlight-text">${displayText}</div>
             </div>
         `;
-    });
-    if (matchCount === 0) {
-        const noResultsMsg = searchTerm 
-            ? `No highlights found matching "${searchTerm}"`
-            : 'No highlights match the selected filter';
-        html = `<div class="no-results">${noResultsMsg}</div>`;
-    }
-    highlightsList.innerHTML = html;
+    }).join('');
+}
+function setupHighlightItemClickHandlers() {
     document.querySelectorAll('.highlight-item').forEach(item => {
         item.addEventListener('click', () => {
             const reference = item.dataset.reference;
@@ -192,32 +263,49 @@ export function renderHighlights(filterColor = 'all', searchTerm = '') {
         });
     });
 }
-function scrollToVerse(verseNumber) {
-    updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
-    syncBookChapterSelectors();
-    const verseElement = document.querySelector(`.verse[data-verse-number="${verseNumber}"]`);
-    if (verseElement) {
-        verseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        verseElement.style.backgroundColor = 'var(--verse-hover)';
-        setTimeout(() => {
-            verseElement.style.backgroundColor = '';
-        }, 1000);
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+export function scrollToVerse(verseNumber) {
+    try {
+        updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
+        syncBookChapterSelectors();
+        const verseElement = document.querySelector(`.verse[data-verse-number="${verseNumber}"]`);
+        if (verseElement) {
+            verseElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            verseElement.style.backgroundColor = 'var(--verse-hover)';
+            setTimeout(() => {
+                verseElement.style.backgroundColor = '';
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('Error scrolling to verse:', error);
     }
 }
 function getVerseTextFromStorage(reference) {
     try {
         const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
-        return cachedVerses[reference];
-    } catch (e) {
+        return cachedVerses[reference] || null;
+    } catch (error) {
+        console.error('Error retrieving verse text:', error);
         return null;
     }
 }
 function navigateToHighlightedVerse(reference) {
-    const match = reference.match(/^(.+?) (\d+):(\d+)$/);
-    if (!match) return;
-    const [, book, chapter, verse] = match;
-    state.settings.manualBook = book;
-    state.settings.manualChapter = parseInt(chapter);
-    loadSelectedChapter(book, chapter);
-    setTimeout(() => scrollToVerse(verse), 500);
+    try {
+        const match = reference.match(/^(.+?)\s+(\d+):(\d+)$/);
+        if (!match) return;
+        const [, book, chapter, verse] = match;
+        state.settings.manualBook = book;
+        state.settings.manualChapter = parseInt(chapter);
+        const translation = state.settings.bibleTranslation;
+        updateURL(translation, book, chapter, 'push');
+        loadSelectedChapter(book, chapter);
+        setTimeout(() => scrollToVerse(parseInt(verse)), 500);
+    } catch (error) {
+        console.error('Error navigating to highlighted verse:', error);
+    }
 }

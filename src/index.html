@@ -102,7 +102,7 @@
 
             <!-- Reference‑panel toggle button -->
             <button class="reference-panel-toggle" id="referencePanelToggle">
-                Open Reference Bible
+                <i class="fa-solid fa-book-bible"></i> Toggle Reference Bible
             </button>
 
             <!-- Collapsible sections (resources) -->
@@ -463,8 +463,7 @@
                     <div class= "notes-header">
                         <h3>Study Notes</h3>
                         <div class="notes-controls">
-                            <button class="btn btn-secondary" data-format="md" aria-label="Export as markdown" title="Export notes in Markdown format"><i class="fas fa-download" aria-hidden="true"></i> Export .md</button>
-                            <button class="btn btn-secondary" data-format="txt" aria-label="Export as text" title="Export notes in plaintext format"><i class="fas fa-download" aria-hidden="true"></i> Export .txt</button>
+                            <button class="btn btn-secondary" data-format="md" aria-label="Export as markdown" title="Export notes in Markdown format"><i class="fas fa-download" aria-hidden="true"></i> Export Notes</button>
                         </div>
                     </div>
 
@@ -478,14 +477,14 @@
                     <div class="markdown-toolbar" id="markdownToolbar">
                         <button class="markdown-btn" data-format="bold"   title="Bold (Ctrl+B)" aria-label="Bold"><strong>B</strong></button>
                         <button class="markdown-btn" data-format="italic" title="Italic (Ctrl+I)" aria-label="Italic"><em>I</em></button>
-                        <button class="markdown-btn" data-format="h1"    title="Heading 1" aria-label="Heading 1">H1</button>
-                        <button class="markdown-btn" data-format="h2"    title="Heading 2" aria-label="Heading 2">H2</button>
-                        <button class="markdown-btn" data-format="h3"    title="Heading 3" aria-label="Heading 3">H3</button>
-                        <button class="markdown-btn" data-format="ul"    title="Bullet List" aria-label="Bullet list">• List</button>
-                        <button class="markdown-btn" data-format="ol"    title="Numbered List" aria-label="Numbered list">1. List</button>
-                        <button class="markdown-btn" data-format="quote" title="Quote" aria-label="Quote">" Quote</button>
-                        <button class="markdown-btn" data-format="code"  title="Code" aria-label="Code">&lt;/&gt;</button>
-                        <button class="markdown-btn" data-format="link"  title="Link" aria-label="Insert link"><i class="fas fa-link"></i> Link</button>
+                        <button class="markdown-btn" data-format="h1"    title="Heading 1 (Ctrl+1)" aria-label="Heading 1">H1</button>
+                        <button class="markdown-btn" data-format="h2"    title="Heading 2 (Ctrl+2)" aria-label="Heading 2">H2</button>
+                        <button class="markdown-btn" data-format="h3"    title="Heading 3 (Ctrl+3)" aria-label="Heading 3">H3</button>
+                        <button class="markdown-btn" data-format="ul"    title="Bullet List (Ctrl+Shift+U)" aria-label="Bullet list">• List</button>
+                        <button class="markdown-btn" data-format="ol"    title="Numbered List (Ctrl+Shift+O)" aria-label="Numbered list">1. List</button>
+                        <button class="markdown-btn" data-format="quote" title="Quote (Ctrl+Shift+>)" aria-label="Quote">" Quote</button>
+                        <button class="markdown-btn" data-format="code"  title="Code (Ctrl+`)" aria-label="Code">&lt;/&gt;</button>
+                        <button class="markdown-btn" data-format="link"  title="Link (Ctrl+K)" aria-label="Insert link"><i class="fas fa-link"></i> Link</button>
                     </div>
 
                     <!-- Text area for raw notes (visible in Text mode) -->
@@ -521,7 +520,7 @@
             <h2 id="highlightsModalTitle">Highlights</h2>
             <button class="popup-close" id="closeHighlightsBtn" aria-label="Close highlights"><i class="fas fa-xmark"></i></button>
             <div class="highlights-search">
-                <input type="text" id="highlightsSearch" placeholder="Search highlighted verses..." />
+                <input type="text" id="highlightsSearch" placeholder="Search..." />
                 <button id="clearSearch" class="clear-search-btn">
                     <i class="fas fa-delete-left"></i>
                 </button>
@@ -529,7 +528,7 @@
         </div>
         <div class="highlights-content" id="highlightsContent">
             <div class="highlights-filters">
-                <button class="highlight-filter-btn active" data-color="all">All Colors</button>
+                <button class="highlight-filter-btn active" data-color="all">All</button>
                 <button class="highlight-filter-btn" data-color="yellow">Yellow</button>
                 <button class="highlight-filter-btn" data-color="green">Green</button>
                 <button class="highlight-filter-btn" data-color="blue">Blue</button>

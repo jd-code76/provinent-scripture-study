@@ -28,8 +28,8 @@
     }
     
     /* Border and UI elements */
-    --border-color: #bdc3c7;
-    --verse-hover: #f0f0f0;
+    --border-color: #d2d4d6;
+    --verse-hover: #cfcece;
     
     /* Shadows for depth */
     --shadow: rgba(0, 0, 0, 0.1);

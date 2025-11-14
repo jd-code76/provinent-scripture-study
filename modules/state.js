@@ -1,7 +1,8 @@
-﻿import { handleError } from '../main.js'
-export const APP_VERSION = '1.4.2025.11.13';
-let saveTimeout = null;
+﻿import { handleError } from '../main.js';
+export const APP_VERSION = '1.5.2025.11.14';
 const SAVE_DEBOUNCE_MS = 500;
+const COOKIE_LENGTH = 10;
+let saveTimeout = null;
 export const BOOK_ORDER = [
     'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy',
     'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings',
@@ -44,9 +45,7 @@ export const BOOKS_ABBREVIATED = [
     'EPH', 'PHI', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM', 'HEB', 'JAM', '1PE', 
     '2PE', '1JO', '2JO', '3JO', 'JUD', 'REV'
 ];
-export const AVAILABLE_TRANSLATIONS = [
-    'ASV', 'KJV', 'GNV', 'BSB', 'NET'
-];
+export const AVAILABLE_TRANSLATIONS = ['ASV', 'KJV', 'GNV', 'BSB', 'NET'];
 export const ABBREVIATION_TO_BOOK_NAME = {
     'GEN': 'Genesis', 'EXO': 'Exodus', 'LEV': 'Leviticus', 'NUM': 'Numbers', 'DEU': 'Deuteronomy',
     'JOS': 'Joshua', 'JDG': 'Judges', 'RUT': 'Ruth', '1SA': '1 Samuel', '2SA': '2 Samuel',
@@ -94,13 +93,13 @@ export const state = {
         }
     },
     hotkeys: {
-        prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false },
-        nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false },
-        prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true },
-        nextBook: { key: 'ArrowDown', altKey: true, shiftKey: true },
-        randomPassage: { key: 'r', altKey: true, shiftKey: false },
-        showHelp: { key: 'F1', altKey: false, shiftKey: false },
-        toggleAudio: { key: 'p', altKey: true, shiftKey: false }
+        prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false, ctrlKey: false },
+        nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false, ctrlKey: false },
+        prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true, ctrlKey: false },
+        nextBook: { key: 'ArrowDown', altKey: true, shiftKey: true, ctrlKey: false },
+        randomPassage: { key: 'r', altKey: true, shiftKey: false, ctrlKey: false },
+        showHelp: { key: 'F1', altKey: false, shiftKey: false, ctrlKey: false },
+        toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false }
     },
     hotkeysEnabled: true,
     currentPassageReference: '',
@@ -110,38 +109,36 @@ export const state = {
 export function formatBookNameForSource(bookName, source) {
     const book = bookName.toLowerCase();
     switch(source) {
-        case 'biblecom':
+        case 'biblecom': {
             const bibleComCodes = {
-                'genesis': 'GEN', 'exodus': 'EXO', 'leviticus': 'LEV', 'numbers': 'NUM',
-                'deuteronomy': 'DEU', 'joshua': 'JOS', 'judges': 'JDG', 'ruth': 'RUT',
+                genesis: 'GEN', exodus: 'EXO', leviticus: 'LEV', numbers: 'NUM',
+                deuteronomy: 'DEU', joshua: 'JOS', judges: 'JDG', ruth: 'RUT',
                 '1 samuel': '1SA', '2 samuel': '2SA', '1 kings': '1KI', '2 kings': '2KI',
-                '1 chronicles': '1CH', '2 chronicles': '2CH', 'ezra': 'EZR', 'nehemiah': 'NEH',
-                'esther': 'EST', 'job': 'JOB', 'psalms': 'PSA', 'proverbs': 'PRO',
-                'ecclesiastes': 'ECC', 'song of solomon': 'SNG', 'isaiah': 'ISA', 'jeremiah': 'JER',
-                'lamentations': 'LAM', 'ezekiel': 'EZK', 'daniel': 'DAN', 'hosea': 'HOS',
-                'joel': 'JOL', 'amos': 'AMO', 'obadiah': 'OBA', 'jonah': 'JON',
-                'micah': 'MIC', 'nahum': 'NAM', 'habakkuk': 'HAB', 'zephaniah': 'ZEP',
-                'haggai': 'HAG', 'zechariah': 'ZEC', 'malachi': 'MAL', 'matthew': 'MAT',
-                'mark': 'MRK', 'luke': 'LUK', 'john': 'JHN', 'acts': 'ACT',
-                'romans': 'ROM', '1 corinthians': '1CO', '2 corinthians': '2CO', 'galatians': 'GAL',
-                'ephesians': 'EPH', 'philippians': 'PHP', 'colossians': 'COL', '1 thessalonians': '1TH',
-                '2 thessalonians': '2TH', '1 timothy': '1TI', '2 timothy': '2TI', 'titus': 'TIT',
-                'philemon': 'PHM', 'hebrews': 'HEB', 'james': 'JAS', '1 peter': '1PE',
+                '1 chronicles': '1CH', '2 chronicles': '2CH', ezra: 'EZR', nehemiah: 'NEH',
+                esther: 'EST', job: 'JOB', psalms: 'PSA', proverbs: 'PRO',
+                ecclesiastes: 'ECC', 'song of solomon': 'SNG', isaiah: 'ISA', jeremiah: 'JER',
+                lamentations: 'LAM', ezekiel: 'EZK', daniel: 'DAN', hosea: 'HOS',
+                joel: 'JOL', amos: 'AMO', obadiah: 'OBA', jonah: 'JON',
+                micah: 'MIC', nahum: 'NAM', habakkuk: 'HAB', zephaniah: 'ZEP',
+                haggai: 'HAG', zechariah: 'ZEC', malachi: 'MAL', matthew: 'MAT',
+                mark: 'MRK', luke: 'LUK', john: 'JHN', acts: 'ACT',
+                romans: 'ROM', '1 corinthians': '1CO', '2 corinthians': '2CO', galatians: 'GAL',
+                ephesians: 'EPH', philippians: 'PHP', colossians: 'COL', '1 thessalonians': '1TH',
+                '2 thessalonians': '2TH', '1 timothy': '1TI', '2 timothy': '2TI', titus: 'TIT',
+                philemon: 'PHM', hebrews: 'HEB', james: 'JAS', '1 peter': '1PE',
                 '2 peter': '2PE', '1 john': '1JN', '2 john': '2JN', '3 john': '3JN',
-                'jude': 'JUD', 'revelation': 'REV'
+                jude: 'JUD', revelation: 'REV'
             };
             return bibleComCodes[book] || book.substring(0, 3).toUpperCase();
+        }
         case 'ebibleorg':
-            if (book === 'psalms') return 'PS1';
-            return book.substring(0, 3).toUpperCase() + '1';
+            return book === 'psalms' ? 'PS1' : book.substring(0, 3).toUpperCase() + '1';
         default:
             return book.replace(/\s+/g, '_');
     }
 }
 export function saveToStorage() {
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-    }
+    if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
         try {
             const cleanState = {
@@ -154,21 +151,19 @@ export function saveToStorage() {
             };
             localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
             saveToCookies();
-        } catch (e) {
-            console.error('Storage error:', e);
+        } catch (error) {
+            console.error('Storage save error:', error);
+            handleError(error, 'saveToStorage');
         }
     }, SAVE_DEBOUNCE_MS);
 }
 export function loadFromStorage() {
-    const raw = localStorage.getItem('bibleStudyState');
-    if (!raw) return;
     try {
+        const raw = localStorage.getItem('bibleStudyState');
+        if (!raw) return;
         const parsed = JSON.parse(raw);
         if (parsed.settings) {
-            state.settings = {
-                ...state.settings,
-                ...parsed.settings
-            };
+            state.settings = { ...state.settings, ...parsed.settings };
         }
         if (parsed.highlights) {
             state.highlights = parsed.highlights;
@@ -179,31 +174,40 @@ export function loadFromStorage() {
         if (parsed.currentPassageReference !== undefined) {
             state.currentPassageReference = parsed.currentPassageReference;
         }
-        document.getElementById('notesInput').value = state.notes;
-    } catch (e) {
-        handleError(e, 'loadFromStorage');
+        const notesInput = document.getElementById('notesInput');
+        if (notesInput) notesInput.value = state.notes;
+    } catch (error) {
+        console.error('Storage load error:', error);
+        handleError(error, 'loadFromStorage');
     }
 }
 export function saveToCookies() {
-    const exp = new Date();
-    exp.setFullYear(exp.getFullYear() + 10);
-    const cookieVal = encodeURIComponent(JSON.stringify({
-        ...state.settings
-    }));
-    document.cookie = `bibleStudySettings=${cookieVal}; expires=${exp.toUTCString()}; path=/; SameSite=Strict`;
+    try {
+        const expiry = new Date();
+        expiry.setFullYear(expiry.getFullYear() + COOKIE_LENGTH);
+        const cookieData = encodeURIComponent(JSON.stringify({
+            ...state.settings
+        }));
+        document.cookie = `bibleStudySettings=${cookieData}; expires=${expiry.toUTCString()}; path=/; SameSite=Strict`;
+    } catch (error) {
+        console.error('Cookie save error:', error);
+        handleError(error, 'saveToCookies');
+    }
 }
 export function loadFromCookies() {
-    const pairs = document.cookie.split(';');
-    for (let pair of pairs) {
-        const [k, v] = pair.trim().split('=');
-        if (k === 'bibleStudySettings') {
-            try {
-                const settings = JSON.parse(decodeURIComponent(v));
+    try {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === 'bibleStudySettings') {
+                const settings = JSON.parse(decodeURIComponent(value));
                 Object.assign(state.settings, settings);
-            } catch (e) {
-                console.error('Cookie parse error:', e);
+                break;
             }
         }
+    } catch (error) {
+        console.error('Cookie load error:', error);
+        handleError(error, 'loadFromCookies');
     }
 }
 export const bookNameMapping = {
@@ -223,120 +227,140 @@ export const bookNameMapping = {
     '1 John': '1JN', '2 John': '2JN', '3 John': '3JN', Jude: 'JUD', Revelation: 'REV'
 };
 export const bibleHubUrlMap = {
-    'LSB':'lsb',
-    'NASB1995': 'nasb',      // Bible Hub uses 'nasb' for NASB 1995
-    'NASB': 'nasb_',         // Bible Hub uses 'nasb_' for NASB 2020
-    'ASV': 'asv', 
-    'ESV': 'esv', 
-    'KJV': 'kjv', 
-    'GNV':'geneva',          
-    'NKJV': 'nkjv', 
-    'BSB': 'bsb', 
-    'CSB': 'csb', 
-    'NET': 'net', 
-    'NIV': 'niv', 
-    'NLT': 'nlt'
+    LSB: 'lsb',
+    NASB1995: 'nasb',
+    NASB: 'nasb_',
+    ASV: 'asv', 
+    ESV: 'esv', 
+    KJV: 'kjv', 
+    GNV: 'geneva',
+    NKJV: 'nkjv', 
+    BSB: 'bsb', 
+    CSB: 'csb', 
+    NET: 'net', 
+    NIV: 'niv', 
+    NLT: 'nlt'
 };
 export const bibleComUrlMap = {
-    'LSB':'3345',
-    'NASB1995': '100',
-    'NASB': '2692',
-    'ASV': '12',
-    'ESV': '59',
-    'KJV': '1',
-    'GNV': '2163',
-    'NKJV': '114',
-    'BSB': '3034',
-    'CSB': '1713',
-    'NET': '107',
-    'NIV': '111',
-    'NLT': '116'
+    LSB: '3345',
+    NASB1995: '100',
+    NASB: '2692',
+    ASV: '12',
+    ESV: '59',
+    KJV: '1',
+    GNV: '2163',
+    NKJV: '114',
+    BSB: '3034',
+    CSB: '1713',
+    NET: '107',
+    NIV: '111',
+    NLT: '116'
 };
 export const ebibleOrgUrlMap = {
-    'NASB1995': 'local:engnasb',
-    'ASV': 'local:eng-asv',
-    'KJV': 'local:eng-kjv2006',
-    'GNV': 'local:enggnv',
-    'BSB': 'local:engbsb',
-    'NET': 'local:engnet'
+    NASB1995: 'local:engnasb',
+    ASV: 'local:eng-asv',
+    KJV: 'local:eng-kjv2006',
+    GNV: 'local:enggnv',
+    BSB: 'local:engbsb',
+    NET: 'local:engnet'
 };
 export const stepBibleUrlMap = {
-    'LSB':'LSB',
-    'NASB1995': 'NASB1995',
-    'NASB': 'NASB2020',
-    'ASV': 'ASV',
-    'ESV': 'ESV',
-    'KJV': 'KJV',
-    'GNV': 'Gen',           
-    'BSB': 'BSB',
-    'NET': 'NET2full',      
-    'NIV': 'NIV'
+    LSB: 'LSB',
+    NASB1995: 'NASB1995',
+    NASB: 'NASB2020',
+    ASV: 'ASV',
+    ESV: 'ESV',
+    KJV: 'KJV',
+    GNV: 'Gen',
+    BSB: 'BSB',
+    NET: 'NET2full',
+    NIV: 'NIV'
 };
 function getBibleGatewayVersionCode(appTranslation) {
     const versionMap = {
-        'LSB': 'LSB',
-        'NASB1995': 'NASB1995',
-        'NASB': 'NASB',
-        'ASV': 'ASV',
-        'ESV': 'ESV', 
-        'KJV': 'KJV',
-        'GNV': 'GNV',
-        'NKJV': 'NKJV',
-        'BSB': 'BSB',       
-        'CSB': 'CSB',
-        'NET': 'NET',
-        'NIV': 'NIV',
-        'NLT': 'NLT'
+        LSB: 'LSB',
+        NASB1995: 'NASB1995',
+        NASB: 'NASB',
+        ASV: 'ASV',
+        ESV: 'ESV', 
+        KJV: 'KJV',
+        GNV: 'GNV',
+        NKJV: 'NKJV',
+        BSB: 'BSB',
+        CSB: 'CSB',
+        NET: 'NET',
+        NIV: 'NIV',
+        NLT: 'NLT'
     };
-    return versionMap[appTranslation] || 'NASB1995'; 
+    return versionMap[appTranslation] || 'NASB1995';
 }
 export function updateBibleGatewayVersion() {
-    const versionCode = getBibleGatewayVersionCode(state.settings.referenceVersion);
-    const versionInput = document.getElementById('bgVersion');
-    if (versionCode === 'BSB') {
-        versionInput.value = 'NASB1995';
-    } else {
-        versionInput.value = versionCode;
+    try {
+        const versionCode = getBibleGatewayVersionCode(state.settings.referenceVersion);
+        const versionInput = document.getElementById('bgVersion');
+        if (versionInput) {
+            versionInput.value = versionCode === 'BSB' ? 'NASB1995' : versionCode;
+        }
+    } catch (error) {
+        console.error('Bible Gateway version update error:', error);
+        handleError(error, 'updateBibleGatewayVersion');
     }
 }
-export function updateURL(translation, book, chapter) {
-    const cleanTranslation = translation.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
-    if (!bookAbbr) {
-        console.warn('No abbreviation found for book:', book);
-        return;
+export function updateURL(translation, book, chapter, action = 'push') {
+    try {
+        const cleanTranslation = translation.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        const bookAbbr = BOOK_NAME_TO_ABBREVIATION[book];
+        if (!bookAbbr) {
+            console.warn('Invalid book name:', book);
+            return;
+        }
+        const cleanBook = bookAbbr.toLowerCase();
+        const cleanChapter = Math.max(1, parseInt(chapter) || 1);
+        const newQuery = `?p=${cleanTranslation}/${cleanBook}/${cleanChapter}`;
+        const newState = { 
+            translation, 
+            book, 
+            chapter
+        };
+        if (action === 'replace') {
+            window.history.replaceState(newState, '', newQuery);
+        } else {
+            window.history.pushState(newState, '', newQuery);
+        }
+    } catch (error) {
+        console.error('URL update error:', error);
+        handleError(error, 'updateURL');
     }
-    const cleanBook = bookAbbr.toLowerCase();
-    const cleanChapter = Math.max(1, parseInt(chapter) || 1);
-    const newQuery = `?p=${cleanTranslation}/${cleanBook}/${cleanChapter}`;
-    const newState = { translation, book, chapter };
-    window.history.pushState(newState, '', newQuery);
 }
 export function parseURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const path = urlParams.get('p');
-    if (!path) {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const path = urlParams.get('p');
+        if (!path) return null;
+        const pathParts = path.split('/').filter(part => part !== '');
+        if (pathParts.length >= 3) {
+            const translation = pathParts[0].toUpperCase();
+            const bookAbbreviation = pathParts[1].toUpperCase();
+            const chapter = parseInt(pathParts[2], 10);
+            const book = ABBREVIATION_TO_BOOK_NAME[bookAbbreviation];
+            if (!book) {
+                console.warn('Invalid book abbreviation:', bookAbbreviation);
+                return null;
+            }
+            if (!AVAILABLE_TRANSLATIONS.includes(translation)) {
+                console.warn('Invalid translation:', translation);
+                return null;
+            }
+            if (isNaN(chapter) || chapter <= 0 || chapter > 150) {
+                console.warn('Invalid chapter:', chapter);
+                return null;
+            }
+            return { translation, book, chapter };
+        }
+        return null;
+    } catch (error) {
+        console.error('URL parse error:', error);
+        handleError(error, 'parseURL');
         return null;
     }
-    const pathParts = path.split('/').filter(part => part !== '');
-    if (pathParts.length >= 3) {
-        const translation = pathParts[0].toUpperCase();
-        let bookAbbreviation = pathParts[1].toUpperCase();
-        const chapter = parseInt(pathParts[2], 10);
-        const book = ABBREVIATION_TO_BOOK_NAME[bookAbbreviation];
-        if (!book) {
-            console.warn('Invalid book abbreviation in query:', bookAbbreviation);
-            return null;
-        }
-        if (!AVAILABLE_TRANSLATIONS.includes(translation)) {
-            console.warn('Invalid translation in query:', translation);
-            return null;
-        }
-        if (isNaN(chapter) || chapter <= 0 || chapter > 150) {
-            console.warn('Invalid chapter in query:', chapter);
-            return null;
-        }
-        return { translation, book, chapter };
-    }
-    return null;
 }
