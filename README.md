@@ -1,10 +1,11 @@
-# Access the site here: [https://provinent.org](https://provinent.org)
+# Access the app here: [https://provinent.org](https://provinent.org)
 
 # Provinent Scripture Study
 
-A comprehensive, feature-rich Bible study web application designed for serious scripture engagement with modern tools. 
-The entirety of this project was written using AI tools like [Gab AI](https://gab.ai) and [Lumo](https://lumo.proton.me).
-The meaning of "Provinent" is a portmanteau of "providence" and "covenant", each referring to God's divine sovereignty.
+A powerful, feature-rich web application for in-depth Bible study, designed to facilitate meaningful engagement with Scripture through modern digital tools.
+The name "Provinent" combines "providence" and "covenant", two profound theological concepts representing God's sovereign care and eternal promises.
+This project was developed with assistance from AI tools including [Gab AI](https://gab.ai) and [Lumo](https://lumo.proton.me).
+
 
 ## Features
 
@@ -12,7 +13,7 @@ The meaning of "Provinent" is a portmanteau of "providence" and "covenant", each
 - **Multi-Translation Support**: ASV, BSB, GNV, KJV, NET
 - **Study Notes**: Full Markdown support with preview, hotkeys, and export capabilities
 - **Verse Analysis**: Left-click any verse for analysis of a single verse with a side-by-side view of Strong's concordance (provided by [STEP Bible](https://www.stepbible.org)) and a Hebrew or Greek interlinear Bible (provided by [Bible Hub](https://biblehub.com/interlinear/))
-- **Verse Highlighting**: Right-click to highlight in six colors for study emphasis
+- **Verse Highlighting**: Right-click verses to highlight in one of six colors for study emphasis
 - **Reference Bible**: Use the reference Bible to select from multiple translation options to compare with (ASV, BSB, CSB, ESV, GNV, KJV, LSB, NASB 1995, NASB 2020, NET, NIV, NKJV, NLT); this also sets the translation for Bible Gateway searches and the Verse Analysis popup
 - **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality to search for any word or passage
 
@@ -20,7 +21,7 @@ The meaning of "Provinent" is a portmanteau of "providence" and "covenant", each
 - **Highlights Management**: Search and filter highlighted verses by color/content
 - **Keyboard Navigation**: Extensive keyboard shortcuts (F1 to toggle help)
 - **Data Portability**: Import/export highlights, notes, and settings
-- **Responsive Design**: Optimized for both desktop and mobile devices (desktop is preferred though)
+- **Responsive Design**: Optimized for both desktop and mobile devices (mobile has limited features)
 - **Theming**: Dark/light mode with six color themes
 
 ## Markdown Keyboard Shortcuts
@@ -38,7 +39,7 @@ The meaning of "Provinent" is a portmanteau of "providence" and "covenant", each
 | `Ctrl/Cmd + Shift + O` | Ordered List | `1. List item` |
 | `Ctrl/Cmd + Shift + >` | Blockquote | `> Quote` |
 
-*Note: Works in both Windows (Ctrl) and Mac (Cmd) environments*
+*Note: Tested only on Windows (Ctrl) but should also work on Mac (Cmd) environments*
 
 ## Navigation Keyboard Shortcuts
 ### Chapter Navigation
@@ -89,7 +90,7 @@ The sidebar provides organized access to extensive theological resources (Reform
 ### Basic Navigation
 - Navigate with arrow buttons or dropdown menus
 - Use “Random Passage” to study from any canon passage of Holy Scripture
-- Select a narrator and play audio for any chapter of the Bible in the BSB or KJV translations
+- Select a narrator and play audio for any chapter of the Bible in the BSB or KJV translations (KJV only supports one narrator)
 - Press F1 to view or change keyboard shortcuts
 
 ## Browser Support
@@ -105,6 +106,7 @@ Highlights, notes, and settings are stored locally in your browser. Data transmi
 - Bible passage requests are handled by bible.helloao.org
 - Bible Hub (interlinear) and STEP Bible (both when using Verse Analysis popup)
 - Bible Gateway searches
+- Reference Bible websites while the panel is opened
 - Resource links opened in external sites via the sidebar
 - Third-party library usage for Font Awesome and Marked.js
 
