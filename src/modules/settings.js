@@ -4,11 +4,12 @@
 =====================================================================*/
 
 import { stopChapterAudio } from './api.js';
+import { getVerseTextFromStorage } from './highlights.js';
 import { applyColorTheme, applyTheme, getFormattedDateForFilename, getFormattedDateForDisplay, handleError, showLoading } from '../main.js';
 import { populateChapterDropdown, updateChapterDropdownVisibility } from './navigation.js';
 import { loadPassage } from './passage.js';
 import { APP_VERSION, saveToCookies, saveToStorage, state, updateBibleGatewayVersion, updateURL } from './state.js';
-import { restorePanelStates, restoreSidebarState, switchNotesView, updateMarkdownPreview, updateReferencePanel } from './ui.js';
+import { restorePanelStates, restoreSidebarState, switchNotesView, updateMarkdownPreview, updateReferencePanel, updateScriptureFontSize } from './ui.js';
 
 /* ====================================================================
    DATA EXPORT/IMPORT
@@ -21,11 +22,20 @@ export function exportData() {
     try {
         const fileDate = getFormattedDateForFilename();
         const exportDate = getFormattedDateForDisplay();
+        const highlightsWithText = Object.entries(state.highlights).reduce(
+
+        (acc, [reference, color]) => {
+            const verseText = getVerseTextFromStorage(reference) || '';
+                acc[reference] = { color: color, text: verseText };
+                return acc;
+            },
+                {}
+        );
         
         const payload = {
             version: '2.0',
             exportDate: exportDate,
-            highlights: { ...state.highlights },
+            highlights: highlightsWithText,
             notes: state.notes,
             settings: { ...state.settings }
         };
@@ -37,7 +47,7 @@ export function exportData() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `provinent-bible-study-backup-${fileDate}.json`;
+        link.download = `provinent-scripture-study-backup-${fileDate}.json`;
         link.style.display = 'none';
         
         document.body.appendChild(link);
@@ -129,7 +139,30 @@ function confirmImport() {
  */
 function applyImportedData(incoming) {
     Object.assign(state.settings, incoming.settings);
-    state.highlights = incoming.highlights || {};
+    const incomingHighlights = incoming.highlights || {};
+    const colorMap = {};
+    const verseTextMap = {};          // will be merged into the cache
+
+    Object.entries(incomingHighlights).forEach(([reference, data]) => {
+        if (typeof data === 'string') {
+            colorMap[reference] = data;
+        } else if (data && typeof data === 'object') {
+            colorMap[reference] = data.color;
+        verseTextMap[reference] = data.text;
+        }
+    });
+
+    state.highlights = colorMap;
+
+    try {
+        const cachedRaw = localStorage.getItem('cachedVerses');
+        const cached = cachedRaw ? JSON.parse(cachedRaw) : {};
+        const merged = { ...cached, ...verseTextMap };
+        localStorage.setItem('cachedVerses', JSON.stringify(merged));
+    } catch (e) {
+        console.error('Failed to merge cached verses on import:', e);
+    }
+
     state.notes = incoming.notes || '';
 }
 
@@ -216,10 +249,24 @@ function populateSettingsForm() {
     const translationSelect = document.getElementById('bibleTranslationSetting');
     const audioToggle = document.getElementById('audioControlsToggle');
     const versionElement = document.getElementById('appVersion');
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    const fontSizeValue = document.getElementById('fontSizeValue');
     
     if (translationSelect) translationSelect.value = state.settings.bibleTranslation;
     if (audioToggle) audioToggle.checked = state.settings.audioControlsVisible;
     if (versionElement) versionElement.textContent = APP_VERSION;
+
+    if (fontSizeSlider) {
+        fontSizeSlider.value = state.settings.fontSize || 16;
+        fontSizeSlider.addEventListener('input', () => {
+        const val = fontSizeSlider.value;
+      if (fontSizeValue) fontSizeValue.textContent = `${val}px`;
+        });
+    }
+    
+    if (fontSizeValue) {
+        fontSizeValue.textContent = `${state.settings.fontSize || 16}px`;
+    }
     
     updateColorThemeSelection();
 }
@@ -289,11 +336,15 @@ function getSettingsFromForm() {
     const translationSelect = document.getElementById('bibleTranslationSetting');
     const audioToggle = document.getElementById('audioControlsToggle');
     const selectedTheme = document.querySelector('.color-theme-option.selected');
+    const narratorSelect = document.getElementById('narratorSelect');
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
     
     return {
         translation: translationSelect?.value || state.settings.bibleTranslation,
         audioControlsVisible: audioToggle?.checked ?? state.settings.audioControlsVisible,
-        colorTheme: selectedTheme?.dataset.theme || state.settings.colorTheme
+        colorTheme: selectedTheme?.dataset.theme || state.settings.colorTheme,
+        narrator: narratorSelect?.value || state.settings.audioNarrator,
+        fontSize: fontSizeSlider ? parseInt(fontSizeSlider.value, 10) : state.settings.fontSize
     };
 }
 
@@ -320,6 +371,8 @@ async function applyNewSettings(newSettings) {
     state.settings.bibleTranslation = newSettings.translation;
     state.settings.audioControlsVisible = newSettings.audioControlsVisible;
     state.settings.colorTheme = newSettings.colorTheme;
+    state.settings.audioNarrator = newSettings.narrator || state.settings.audioNarrator;
+    state.settings.fontSize = newSettings.fontSize ?? state.settings.fontSize;
     
     updateURL(newSettings.translation, state.settings.manualBook, state.settings.manualChapter, 'push');
     updateAudioControlsVisibility();
@@ -343,6 +396,10 @@ function updateUIAfterSettingsChange() {
     const referenceTranslationSelect = document.getElementById('referenceTranslation');
     if (referenceTranslationSelect) {
         referenceTranslationSelect.value = state.settings.referenceVersion;
+    }
+
+    if (typeof updateScriptureFontSize === 'function') {
+        updateScriptureFontSize(state.settings.fontSize);
     }
 }
 
@@ -496,4 +553,14 @@ export function initializeAudioControls() {
     }
     
     updateAudioControlsVisibility();
+}
+
+/**
+ * Initialize narrator select
+ */
+export function initialiseNarratorSelect() {
+    const sel = document.getElementById('narratorSelect');
+    if (sel) {
+        sel.value = state.settings.audioNarrator || 'gilbert';
+    }
 }

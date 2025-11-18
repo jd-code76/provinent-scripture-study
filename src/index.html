@@ -76,7 +76,7 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
-            <button class="collapse-toggle" title="Collapse Sidebar" aria-label="Collapse sidebar"></button>
+            <button class="collapse-toggle" title="Toggle sidebar" aria-label="Collapse sidebar"></button>
             <h2>Bible Study Resources</h2>
 
         <!-- Bible Gateway embedded search button -->
@@ -358,17 +358,17 @@
             <!-- Toolbar with navigation, selectors, etc. -->
             <div class="toolbar">
                 <div class="header-controls">
-                    <button class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle dark mode">
+                    <button class="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
                         <span id="themeIcon" aria-hidden="true"><i class="fas fa-moon"></i></span>
                     </button>
-                    <button class="btn" id="openSettingsBtn"><i class="fas fa-gear"></i></button>
+                    <button class="btn" id="openSettingsBtn" title="View and change settings"><i class="fas fa-gear"></i></button>
                     <input type="file" id="importFile" style="display: none;" accept=".json">
                 </div>
 
                 <span class="toolbar-divider" aria-hidden="true" id="settings-tb-divider"></span>
 
                 <!-- Reference‑panel/Bible toggle button -->
-                <button class="reference-panel-toggle" id="referencePanelToggle">
+                <button class="reference-panel-toggle" id="referencePanelToggle" title="Toggle reference Bible">
                     <i class="fa-solid fa-book-bible"></i>
                 </button>
 
@@ -416,18 +416,16 @@
                 <div id="audioControls" style="margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span><i class="fas fa-headphones"></i></span>
-                        <select class="narrator-select" style="padding: 5px; border-radius: 3px;">
-                            <option value="gilbert">Gilbert</option>
-                            <option value="hays">Hays</option>
-                            <option value="souer">Souer</option>
-                        </select>
-                        <button class="play-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer;">
+                        <button class="play-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer;"
+                        title="Play current chapter audio">
                             <i class="fas fa-play"></i>
                         </button>
-                        <button class="pause-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer; display: none;">
+                        <button class="pause-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer; display: none;"
+                        title="Pause current chapter audio">
                             <i class="fas fa-pause"></i>
                         </button>
-                        <button class="stop-audio-btn" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                        <button class="stop-audio-btn" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;"
+                        title="Stop current chapter audio">
                             <i class="fas fa-stop"></i>
                         </button>
                     </div>
@@ -460,7 +458,7 @@
 
                 <!-- NOTES SECTION -->
                 <section class="notes-section" id="notesSection">
-                    <button class="collapse-toggle" title="Collapse Notes" aria-label="Collapse notes"></button>
+                    <button class="collapse-toggle" title="Toggle notes" aria-label="Collapse notes"></button>
                     <div class= "notes-header">
                         <h3>Study Notes</h3>
                         <div class="notes-controls">
@@ -503,12 +501,12 @@
     <!-- COLOR PICKER (highlight menu) -->
     <div class="color-picker" id="colorPicker" role="menu" aria-label="Highlight color options">
         <div class="color-options">
-            <div class="color-option highlight-yellow" data-color="yellow" title="Yellow" role="menuitem" tabindex="0"></div>
-            <div class="color-option highlight-green"  data-color="green"  title="Green" role="menuitem" tabindex="0"></div>
-            <div class="color-option highlight-blue"   data-color="blue"   title="Blue" role="menuitem" tabindex="0"></div>
-            <div class="color-option highlight-pink"   data-color="pink"   title="Pink" role="menuitem" tabindex="0"></div>
-            <div class="color-option highlight-orange" data-color="orange" title="Orange" role="menuitem" tabindex="0"></div>
-            <div class="color-option highlight-purple" data-color="purple" title="Purple" role="menuitem" tabindex="0"></div>
+            <div class="color-option highlight-yellow" data-color="yellow" role="menuitem" tabindex="0"></div>
+            <div class="color-option highlight-green"  data-color="green" role="menuitem" tabindex="0"></div>
+            <div class="color-option highlight-blue"   data-color="blue" role="menuitem" tabindex="0"></div>
+            <div class="color-option highlight-pink"   data-color="pink" role="menuitem" tabindex="0"></div>
+            <div class="color-option highlight-orange" data-color="orange" role="menuitem" tabindex="0"></div>
+            <div class="color-option highlight-purple" data-color="purple" role="menuitem" tabindex="0"></div>
         </div>
         <button class="btn btn-secondary" id="removeHighlight"
                 style="width: 100%; margin-top: 10px;">Remove Highlight</button>
@@ -557,7 +555,7 @@
     <div class="popup-overlay" id="settingsOverlay" aria-hidden="true"></div>
     <div class="settings-modal" id="settingsModal" role="dialog" aria-labelledby="settingsModalTitle" aria-modal="true">
         <div class="popup-header">
-            <h2 id="settingsModalTitle"><i class="fas fa-gear"></i></h2>
+            <h2 id="settingsModalTitle">Settings</h2>
             <button class="popup-close" id="closeSettingsBtn" aria-label="Close settings"><i class="fas fa-xmark"></i></button>
         </div>
 
@@ -570,7 +568,25 @@
                 <option value="BSB">Berean Standard Bible (BSB)</option>
                 <option value="NET">New English Translation (NET)</option>
             </select>
-            <small>Set the translation for the "Passage of the Day" area.</small>
+            <small>Set the translation for Scripture area.</small>
+        </div>
+
+        <!-- =============== FONT SIZE SETTING ==================== -->
+        <div class="settings-group">
+            <label for="fontSizeSlider">Scripture Font Size</label>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                <!-- Slider (range 12 px … 24 px) -->
+                <input type="range"
+            id="fontSizeSlider"
+            min="12"
+                    max="24"
+                    step="1"
+                    value="16"
+                    style="flex:1;">
+                <!-- Live numeric preview -->
+                <output id="fontSizeValue" style="min-width:30px; text-align:center;">16 px</output>
+            </div>
+            <small>Adjust the size of all text in the Scripture area.</small>
         </div>
 
         <div class="settings-group">
@@ -579,6 +595,15 @@
                 <input type="checkbox" id="audioControlsToggle" checked>
                 <span class="toggle-slider"></span>
                 Show audio controls in toolbar
+            </label>
+
+            <label for="narratorSelect" style="margin-top:12px; display:block;">
+                <select class="narrator-select" style="padding: 5px; border-radius: 3px;" id="narratorSelect">
+                    <option value="gilbert">Gilbert</option>
+                    <option value="hays">Hays</option>
+                    <option value="souer">Souer</option>
+                </select>
+                <small style="font-weight:normal;">Set narrator for BSB audio.</small>
             </label>
         </div>
 
@@ -669,32 +694,26 @@
                 <div class="color-theme-option" data-theme="blue">
                     <div class="color-theme-preview"
                          style="background: linear-gradient(135deg, #2c3e50, #3498db);"></div>
-                    <div>Blue</div>
                 </div>
                 <div class="color-theme-option" data-theme="green">
                     <div class="color-theme-preview"
                          style="background: linear-gradient(135deg, #1b5e20, #4caf50);"></div>
-                    <div>Green</div>
                 </div>
                 <div class="color-theme-option" data-theme="purple">
                     <div class="color-theme-preview"
                          style="background: linear-gradient(135deg, #4a148c, #9c27b0);"></div>
-                    <div>Purple</div>
                 </div>
                 <div class="color-theme-option" data-theme="red">
                     <div class="color-theme-preview"
                          style="background: linear-gradient(135deg, #b71c1c, #f44336);"></div>
-                    <div>Red</div>
                 </div>
                 <div class="color-theme-option" data-theme="orange">
                     <div class="color-theme-preview"
                          style="background: linear-gradient(135deg, #e65100, #ff9800);"></div>
-                    <div>Orange</div>
                 </div>
                 <div class="color-theme-option" data-theme="teal">
                     <div class="color-theme-preview"
                          style="background: linear-gradient(135deg, #004d40, #009688);"></div>
-                    <div>Teal</div>
                 </div>
             </div>
         </div>

@@ -2,11 +2,11 @@
 import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights, showColorPicker, showHighlightsModal } from './modules/highlights.js';
 import { showHelpModal } from './modules/hotkeys.js';
 import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
-import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, openSettings, saveSettings } from './modules/settings.js'
-import { BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToCookies, saveToStorage, state } from './modules/state.js'
+import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings } from './modules/settings.js'
+import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToCookies, saveToStorage, state } from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
 import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
-    updateMarkdownPreview, updateReferencePanel } from './modules/ui.js'
+    updateMarkdownPreview, updateReferencePanel, updateScriptureFontSize } from './modules/ui.js'
 const OFFLINE_STYLES = `
 #offlineIndicator {
     position: fixed;
@@ -275,7 +275,11 @@ function setupAudioControls() {
         const playBtn = document.querySelector('.play-audio-btn');
         const pauseBtn = document.querySelector('.pause-audio-btn');
         const stopBtn = document.querySelector('.stop-audio-btn');
-        const narratorSelect = document.querySelector('.narrator-select');
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.matches('.narrator-select')) {
+                handleNarratorChange(e);
+            }
+        });
         if (playBtn) {
             playBtn.addEventListener('click', handleAudioPlayback);
         }
@@ -284,9 +288,6 @@ function setupAudioControls() {
         }
         if (stopBtn) {
             stopBtn.addEventListener('click', stopChapterAudio);
-        }
-        if (narratorSelect) {
-            narratorSelect.addEventListener('change', handleNarratorChange);
         }
     });
 }
@@ -483,6 +484,7 @@ async function init() {
         window.addEventListener('offline', () => updateOfflineStatus(true));
         initBookChapterControls();
         initializeAudioControls();
+        initialiseNarratorSelect();
         setupNavigationWithURL();
         setupPopStateListener();
         if (!navigateFromURL()) {
@@ -496,11 +498,25 @@ async function init() {
         applyColorTheme();
         restoreSidebarState();
         restorePanelStates();
+        if (typeof updateScriptureFontSize === 'function') {
+            updateScriptureFontSize(state.settings.fontSize);
+        }
         updateHeaderTitle();
         initResizeHandles();
         switchNotesView(state.settings.notesView || 'text');
         updateBibleGatewayVersion();
         setupEventListeners();
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => {
+                    return navigator.serviceWorker.ready;
+                })
+            .then(reg => {
+                    reg.active.postMessage({ type: 'VERSION', version: APP_VERSION });
+                    console.log('Sent version to SW:', APP_VERSION);
+                })
+                .catch(err => console.error('SW registration failed:', err));
+        }
         console.log('App initialized successfully');
     } catch (error) {
         handleError(error, 'app initialization');

@@ -285,7 +285,7 @@ export function scrollToVerse(verseNumber) {
         console.error('Error scrolling to verse:', error);
     }
 }
-function getVerseTextFromStorage(reference) {
+export function getVerseTextFromStorage(reference) {
     try {
         const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
         return cachedVerses[reference] || null;

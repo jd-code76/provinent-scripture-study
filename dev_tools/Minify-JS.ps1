@@ -11,7 +11,8 @@ $files = @(
     "../src/modules/settings.js",
     "../src/modules/state.js",
     "../src/modules/strongs.js",
-    "../src/modules/ui.js"
+    "../src/modules/ui.js",
+    "../src/sw.js"
 )
 
 Write-Host "Checking files..." -ForegroundColor Yellow

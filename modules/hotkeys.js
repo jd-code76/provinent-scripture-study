@@ -2,8 +2,11 @@
 import { escapeHTML } from '../main.js';
 import { nextPassage, prevPassage, randomPassage, updateManualNavigation } from './navigation.js';
 import { BOOK_ORDER, saveToStorage, state } from './state.js';
+import { togglePanelCollapse } from './ui.js';
 const DEFAULT_HOTKEYS = {
-    toggleReferencePanel: { key: 'b', altKey: false, shiftKey: false, ctrlKey: true },
+    toggleReferencePanel: { key: 'b', altKey: true, shiftKey: false, ctrlKey: false },
+    toggleNotes: { key: 'n', altKey: true, shiftKey: false, ctrlKey: false },
+    toggleSidebar: { key: 's', altKey: true, shiftKey: false, ctrlKey: false },
     prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false, ctrlKey: false },
     nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false, ctrlKey: false },
     prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true, ctrlKey: false },
@@ -88,6 +91,8 @@ function getHotkeyAction(event) {
 function executeHotkeyAction(action) {
     const actions = {
         toggleReferencePanel: toggleReferencePanel,
+        toggleNotes: () => togglePanelCollapse('notesSection'),
+        toggleSidebar: () => togglePanelCollapse('sidebar'),
         prevChapter: prevPassage,
         nextChapter: nextPassage,
         prevBook: () => navigateToAdjacentBook(-1),
@@ -245,7 +250,9 @@ function populateHotkeysList() {
         if (!hotkeysList || !enabledCheckbox) return;
         enabledCheckbox.checked = state.settings.hotkeysEnabled;
         const hotkeyDefinitions = [
-            { action: 'toggleReferencePanel', label: 'Toggle Reference Panel' },
+            { action: 'toggleReferencePanel', label: 'Toggle Reference Bible' },
+            { action: 'toggleNotes',          label: 'Toggle Notes' },
+            { action: 'toggleSidebar',     label: 'Toggle Sidebar' },
             { action: 'prevChapter', label: 'Previous Chapter' },
             { action: 'nextChapter', label: 'Next Chapter' },
             { action: 'prevBook', label: 'Previous Book' },

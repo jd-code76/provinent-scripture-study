@@ -40,6 +40,7 @@
 .passage-header h2 {
     font-size: 1.5em;
     margin-bottom: 5px;
+    margin-left: 10px;
     color: white;
     border: none;
 }
@@ -47,6 +48,7 @@
 .passage-reference {
     font-weight: bold;
     font-size: 1.2em;
+    margin-left: 10px;
 }
 
 /* Verse Display & Styling */

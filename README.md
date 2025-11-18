@@ -56,6 +56,8 @@ This project was developed with assistance from AI tools including [Gab AI](http
 | Shortcut | Action |
 |----------|--------|
 | `Alt + B` | Toggle Reference Bible |
+| `Alt + N` | Toggle Notes |
+| `Alt + S` | Toggle Sidebar |
 | `Alt + P` | Play/Pause Audio |
 | `Alt + R` | Random Passage |
 | `F1` | Show Help Modal |

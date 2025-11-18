@@ -32,6 +32,44 @@ const PANEL_LIMITS = {
 };
 
 /* ====================================================================
+   FONT‑SIZE HANDLING
+   ==================================================================== */
+/**
+ * Apply a font‑size (in px) to the entire Scripture view.
+ * This includes the chapter header (`#passageHeaderTitle`,
+ * `#passageReference`) and the verse text (`.verse` elements).
+ *
+ * The function is called:
+ *   - on app start (after UI restoration)
+ *   - after the user saves a new font‑size in Settings
+ * @param {number} sizePx - Desired font size in pixels.
+ */
+export function updateScriptureFontSize(sizePx) {
+    try {
+        const size = Number(sizePx);
+        if (Number.isNaN(size) || size < 10 || size > 36) return;
+
+        // The outer container that holds the whole passage
+        const scriptureSection = document.getElementById('scriptureSection');
+        if (scriptureSection) {
+            scriptureSection.style.fontSize = `${size}px`;
+        }
+
+        // Header titles sometimes have their own explicit size – reset to inherit
+        const headerTitle = document.getElementById('passageHeaderTitle');
+        const headerRef   = document.getElementById('passageReference');
+        if (headerTitle) headerTitle.style.fontSize = '';
+        if (headerRef)   headerRef.style.fontSize   = '';
+        
+        // Save the new size for persistence
+        state.settings.fontSize = size;
+        saveToStorage();
+    } catch (err) {
+        console.error('Failed to update scripture font size:', err);
+    }
+}
+
+/* ====================================================================
    NOTES SECTION
 ==================================================================== */
 
@@ -163,7 +201,7 @@ export function exportNotes() {
         const link = document.createElement('a');
         
         link.href = url;
-        link.download = `provinent-bible-study-notes-${fileDate}.md`;
+        link.download = `provinent-scripture-study-notes-${fileDate}.md`;
         link.style.display = 'none';
         
         document.body.appendChild(link);
@@ -591,21 +629,21 @@ export function restorePanelStates() {
         });
         
         // Restore reference panel
+        const sourceSelect = document.getElementById('referenceSource');
+        const translationSelect = document.getElementById('referenceTranslation');
+
+        if (sourceSelect) {
+            sourceSelect.value = state.settings.referenceSource || 'biblegateway';
+        }
+
+        if (translationSelect) {
+            translationSelect.value = state.settings.referenceVersion || 'NASB1995';
+        }
+
         if (state.settings.referencePanelOpen) {
             const referencePanel = document.getElementById('referencePanel');
             if (referencePanel) {
                 referencePanel.classList.add('active');
-            }
-            
-            const sourceSelect = document.getElementById('referenceSource');
-            const translationSelect = document.getElementById('referenceTranslation');
-            
-            if (sourceSelect) {
-                sourceSelect.value = state.settings.referenceSource || 'biblegateway';
-            }
-            
-            if (translationSelect) {
-                translationSelect.value = state.settings.referenceVersion || 'NASB1995';
             }
             
             updateReferencePanel();

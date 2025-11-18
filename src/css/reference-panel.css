@@ -94,65 +94,27 @@
     border: none;
 }
 
-/* Bible Gateway Search Form Styles */
-.bible-gateway-container {
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    background-color: var(--card-background);
-}
+/* Reference Panel Toggle Button */
 
-.bible-gateway-header {
-    background-color: var(--primary-color);
-    color: var(--sidebar-text);
-    text-align: center;
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-weight: bold;
-}
-
-.bible-gateway-content {
-    background-color: var(--card-background);
-    text-align: center;
-    padding: 4px;
-}
-
-.bible-gateway-inputs input[type="text"] {
-    margin: var(--spacing-xs);
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-secondary);
-    color: var(--text-color);
-}
-
-.bible-gateway-inputs input[type="submit"] {
-    margin: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background-color: var(--primary-color);
-    color: var(--sidebar-text);
+.reference-panel-toggle {
+    padding: 12px;
+    background: var(--accent-color);
+    color: white;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color var(--transition-fast);
-    width: 180px;
+    width: 100%;
+    font-size: 14px;
+    font-weight: bold;
+    transition: opacity 0.3s;
 }
 
-.bible-gateway-inputs input[type="submit"]:hover {
-    background-color: var(--secondary-color);
-}
-
-.bible-gateway-content small {
-    color: var(--text-color);
+.reference-panel-toggle:hover {
     opacity: 0.8;
-    display: block;
-    margin-top: 4px;
+    transform: translateY(-1px);
 }
 
-.bible-gateway-content small a {
-    color: var(--accent-color);
-    text-decoration: none;
-}
-
-.bible-gateway-content small a:hover {
-    text-decoration: underline;
+.reference-panel-toggle:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }

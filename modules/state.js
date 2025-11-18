@@ -1,5 +1,5 @@
 ﻿import { handleError } from '../main.js';
-export const APP_VERSION = '1.7.2025.11.17';
+export const APP_VERSION = '1.8.2025.11.18';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -90,10 +90,13 @@ export const state = {
             referencePanel: 350,
             scriptureSection: null,
             notesSection: 350
-        }
+        },
+        fontSize: 16
     },
     hotkeys: {
-        toggleReferencePanel: { key: 'b', altKey: false, shiftKey: false, ctrlKey: true },
+        toggleReferencePanel: { key: 'b', altKey: true, shiftKey: false, ctrlKey: false },
+        toggleNotes: { key: 'n', altKey: true, shiftKey: false, ctrlKey: false },
+        toggleSidebar: { key: 's', altKey: true, shiftKey: false, ctrlKey: false },
         prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false, ctrlKey: false },
         nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false, ctrlKey: false },
         prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true, ctrlKey: false },

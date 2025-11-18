@@ -18,6 +18,24 @@ const PANEL_LIMITS = {
     scriptureSection: { min: 300, max: 1200 },
     notesSection: { min: 250, max: 800 }
 };
+export function updateScriptureFontSize(sizePx) {
+    try {
+        const size = Number(sizePx);
+        if (Number.isNaN(size) || size < 10 || size > 36) return;
+        const scriptureSection = document.getElementById('scriptureSection');
+        if (scriptureSection) {
+            scriptureSection.style.fontSize = `${size}px`;
+        }
+        const headerTitle = document.getElementById('passageHeaderTitle');
+        const headerRef   = document.getElementById('passageReference');
+        if (headerTitle) headerTitle.style.fontSize = '';
+        if (headerRef)   headerRef.style.fontSize   = '';
+        state.settings.fontSize = size;
+        saveToStorage();
+    } catch (err) {
+        console.error('Failed to update scripture font size:', err);
+    }
+}
 export function switchNotesView(view) {
     try {
         state.settings.notesView = view;
@@ -104,7 +122,7 @@ export function exportNotes() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `provinent-bible-study-notes-${fileDate}.md`;
+        link.download = `provinent-scripture-study-notes-${fileDate}.md`;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
@@ -375,18 +393,18 @@ export function restorePanelStates() {
                 panel.classList.add('panel-collapsed');
             }
         });
+        const sourceSelect = document.getElementById('referenceSource');
+        const translationSelect = document.getElementById('referenceTranslation');
+        if (sourceSelect) {
+            sourceSelect.value = state.settings.referenceSource || 'biblegateway';
+        }
+        if (translationSelect) {
+            translationSelect.value = state.settings.referenceVersion || 'NASB1995';
+        }
         if (state.settings.referencePanelOpen) {
             const referencePanel = document.getElementById('referencePanel');
             if (referencePanel) {
                 referencePanel.classList.add('active');
-            }
-            const sourceSelect = document.getElementById('referenceSource');
-            const translationSelect = document.getElementById('referenceTranslation');
-            if (sourceSelect) {
-                sourceSelect.value = state.settings.referenceSource || 'biblegateway';
-            }
-            if (translationSelect) {
-                translationSelect.value = state.settings.referenceVersion || 'NASB1995';
             }
             updateReferencePanel();
         }

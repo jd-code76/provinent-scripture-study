@@ -462,7 +462,7 @@ export function scrollToVerse(verseNumber) {
  * @param {string} reference - Verse reference
  * @returns {string|null} - Verse text or null
  */
-function getVerseTextFromStorage(reference) {
+export function getVerseTextFromStorage(reference) {
     try {
         const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
         return cachedVerses[reference] || null;
