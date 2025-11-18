@@ -55,6 +55,7 @@ This project was developed with assistance from AI tools including [Gab AI](http
 ### Other Functions
 | Shortcut | Action |
 |----------|--------|
+| `Alt + B` | Toggle Reference Bible |
 | `Alt + P` | Play/Pause Audio |
 | `Alt + R` | Random Passage |
 | `F1` | Show Help Modal |
