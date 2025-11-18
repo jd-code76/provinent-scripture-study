@@ -3,21 +3,6 @@
    Top bar with app title and control buttons
 ==================================================================== */
 
-.header {
-    background-color: var(--header-background);
-    padding: 20px 30px;
-    box-shadow: 0 2px 5px var(--shadow);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.header h1 {
-    color: var(--text-color);
-    font-size: 1.8em;
-}
-
 .header-controls {
     display: flex;
     gap: 10px;
@@ -137,7 +122,7 @@
 
 .toolbar {
     background-color: var(--toolbar-background);
-    padding: 15px 30px;
+    padding: 10px 20px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     gap: 10px;
@@ -180,7 +165,6 @@
 
 .toolbar button,
 .toolbar select.btn {
-    height: 40px;
     min-height: 40px;
     min-width: fit-content;
     box-sizing: border-box;

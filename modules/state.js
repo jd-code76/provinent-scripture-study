@@ -1,5 +1,5 @@
 ﻿import { handleError } from '../main.js';
-export const APP_VERSION = '1.5.2025.11.14';
+export const APP_VERSION = '1.7.2025.11.17';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -93,6 +93,7 @@ export const state = {
         }
     },
     hotkeys: {
+        toggleReferencePanel: { key: 'b', altKey: false, shiftKey: false, ctrlKey: true },
         prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false, ctrlKey: false },
         nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false, ctrlKey: false },
         prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true, ctrlKey: false },

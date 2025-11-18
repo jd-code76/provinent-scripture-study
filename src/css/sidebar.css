@@ -121,7 +121,6 @@
 /* Reference Panel Toggle Button */
 
 .reference-panel-toggle {
-    margin-top: 20px;
     padding: 12px;
     background: var(--accent-color);
     color: white;

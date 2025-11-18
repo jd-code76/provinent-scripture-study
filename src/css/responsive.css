@@ -126,6 +126,10 @@
         display: none;
     }
 
+    span#bible-tb-divider {
+        display: none;
+    }
+
     .highlights-modal {
         width: 90%;
         max-width: none;
@@ -195,14 +199,6 @@
 @media (max-width: 420px) {
     button.stop-audio-btn {
         display: none !important;
-    }
-
-    span#highlights-tb-divider {
-        display: none;
-    }
-
-    span#audio-tb-divider {
-        display: flex;
     }
 
     div#keyboard-shortcuts {

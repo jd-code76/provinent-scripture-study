@@ -53,7 +53,7 @@
     color: var(--text-color);
 }
 
-.popup-close {
+.strongs-popup .popup-close {
     cursor: pointer;
     font-size: 24px;
     color: var(--text-color);
@@ -68,11 +68,11 @@
     transition: background-color 0.2s;
 }
 
-.popup-close:hover {
+.strongs-popup .popup-close:hover {
     background-color: var(--verse-hover);
 }
 
-.popup-close:focus {
+.strongs-popup .popup-close:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
 }
@@ -290,8 +290,7 @@
 .strongs-popup .footnote:hover,
 .strongs-popup .footnote-ref:hover,
 .strongs-popup sup.footnote-ref:hover,
-.strongs-popup .footnote-content:hover,
-.strongs-popup .popup-close:hover {
+.strongs-popup .footnote-content:hover {
     background-color: transparent;
     transform: none;
     opacity: 1;

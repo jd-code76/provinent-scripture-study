@@ -239,3 +239,30 @@
     border-radius: 6px;
     display: inline-block;
 }
+
+.settings-modal .popup-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--text-color);
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.settings-modal .popup-close:hover {
+    background-color: var(--verse-hover);
+}
+
+.settings-modal .popup-close:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}

@@ -100,11 +100,6 @@
             </div>
         </form>
 
-            <!-- Reference‑panel toggle button -->
-            <button class="reference-panel-toggle" id="referencePanelToggle">
-                <i class="fa-solid fa-book-bible"></i> Toggle Reference Bible
-            </button>
-
             <!-- Collapsible sections (resources) -->
             <div class="sidebar-section">
                 <div class="sidebar-section-header" data-section="bibles">
@@ -202,8 +197,9 @@
                         <li><a href="https://carm.org" target="_blank" rel="noopener noreferrer">CARM</a></li>
                         <li><a href="https://www.equip.org" target="_blank" rel="noopener noreferrer">Christian Research Institute</a></li>
                         <li><a href="https://www.desiringgod.org" target="_blank" rel="noopener noreferrer">Desiring God</a></li>
-                        <li><a href="https://www.gotquestions.org" target="_blank" rel="noopener noreferrer">Got Questions</a></li>
+                        <li><a href="https://fortisinstitute.org" target="_blank" rel="noopener noreferrer">Fortis Institute</a></li>
                         <li><a href="https://www.thegospelcoalition.org" target="_blank" rel="noopener noreferrer">The Gospel Coalition</a></li>
+                        <li><a href="https://www.gotquestions.org" target="_blank" rel="noopener noreferrer">Got Questions</a></li>
                         <li><a href="https://www.ligonier.org" target="_blank" rel="noopener noreferrer">Ligonier Ministries</a></li>
                         <li><a href="https://www.monergism.com" target="_blank" rel="noopener noreferrer">Monergism</a></li>
                         <li><a href="https://reasonabletheology.org" target="_blank" rel="noopener noreferrer">Reasonable Theology</a></li>
@@ -284,7 +280,6 @@
 
         <!-- REFERENCE PANEL -->
         <div class="reference-panel" id="referencePanel">
-            <button class="collapse-toggle" title="Collapse Reference Panel" aria-label="Collapse reference panel"></button>
             <div class="reference-panel-header">
                 <h3>Reference Bible</h3>
                 <div class="reference-panel-controls">
@@ -359,20 +354,26 @@
                     </div>
                 </div>
             </div>
-            <!-- Header bar (title + global actions) -->
-            <header class="header">
-                <h1>Provinent Scripture Study</h1>
+
+            <!-- Toolbar with navigation, selectors, etc. -->
+            <div class="toolbar">
                 <div class="header-controls">
                     <button class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle dark mode">
                         <span id="themeIcon" aria-hidden="true"><i class="fas fa-moon"></i></span>
                     </button>
-                    <button class="btn" id="openSettingsBtn">Settings</button>
+                    <button class="btn" id="openSettingsBtn"><i class="fas fa-gear"></i></button>
                     <input type="file" id="importFile" style="display: none;" accept=".json">
                 </div>
-            </header>
 
-            <!-- Toolbar with navigation, selectors, etc. -->
-            <div class="toolbar">
+                <span class="toolbar-divider" aria-hidden="true" id="settings-tb-divider"></span>
+
+                <!-- Reference‑panel/Bible toggle button -->
+                <button class="reference-panel-toggle" id="referencePanelToggle">
+                    <i class="fa-solid fa-book-bible"></i>
+                </button>
+
+                <span class="toolbar-divider" aria-hidden="true" id="bible-tb-divider"></span>
+
                 <!-- Prev / Next / Resume -->
                 <button class="btn btn-secondary" id="prevPassageBtn" title="Previous passage">
                     <i class="fas fa-arrow-left"></i>
@@ -385,7 +386,7 @@
 
                 <!-- Random passage -->
                 <button class="btn btn-secondary" id="randomPassageBtn" title="View a random passage of Scripture">
-                    <i class="fas fa-shuffle"></i> Random
+                    <i class="fas fa-shuffle"></i>
                 </button>
 
                 <span class="toolbar-divider" aria-hidden="true" id="dropdown-tb-divider"></span>
@@ -406,7 +407,7 @@
 
                 <!-- Highlight button to show highlighted verses-->
                 <button class="btn btn-secondary" id="showHighlightsBtn" title="View highlighted verses">
-                    <i class="fas fa-highlighter"></i> Highlights
+                    <i class="fas fa-highlighter"></i>
                 </button>
 
                 <span class="toolbar-divider" aria-hidden="true" id="audio-tb-divider"></span>
@@ -414,20 +415,20 @@
                 <!-- Audio Controls -->
                 <div id="audioControls" style="margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-weight: bold;">Audio</span>
+                        <span><i class="fas fa-headphones"></i></span>
                         <select class="narrator-select" style="padding: 5px; border-radius: 3px;">
                             <option value="gilbert">Gilbert</option>
                             <option value="hays">Hays</option>
                             <option value="souer">Souer</option>
                         </select>
                         <button class="play-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer;">
-                            <i class="fas fa-play"></i> Play
+                            <i class="fas fa-play"></i>
                         </button>
                         <button class="pause-audio-btn" style="padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 3px; cursor: pointer; display: none;">
-                            <i class="fas fa-pause"></i> Pause
+                            <i class="fas fa-pause"></i>
                         </button>
                         <button class="stop-audio-btn" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
-                            <i class="fas fa-stop"></i> Stop
+                            <i class="fas fa-stop"></i>
                         </button>
                     </div>
                 </div>
@@ -556,7 +557,7 @@
     <div class="popup-overlay" id="settingsOverlay" aria-hidden="true"></div>
     <div class="settings-modal" id="settingsModal" role="dialog" aria-labelledby="settingsModalTitle" aria-modal="true">
         <div class="popup-header">
-            <h2 id="settingsModalTitle">Settings</h2>
+            <h2 id="settingsModalTitle"><i class="fas fa-gear"></i></h2>
             <button class="popup-close" id="closeSettingsBtn" aria-label="Close settings"><i class="fas fa-xmark"></i></button>
         </div>
 
@@ -573,13 +574,12 @@
         </div>
 
         <div class="settings-group">
-            <label for="audioControlsToggle">Audio Controls</label>
+            <label for="audioControlsToggle">Audio Preferences</label>
             <label class="toggle-label">
                 <input type="checkbox" id="audioControlsToggle" checked>
                 <span class="toggle-slider"></span>
                 Show audio controls in toolbar
             </label>
-            <small>Toggle visibility of audio playback controls.</small>
         </div>
 
         <div class="settings-group" id="keyboard-shortcuts">

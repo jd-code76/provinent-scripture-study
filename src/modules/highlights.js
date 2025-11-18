@@ -384,7 +384,7 @@ function filterHighlightReferences(references, filterColor, searchTerm) {
  */
 function generateHighlightItemsHTML(references, searchTerm) {
     return references.map(ref => {
-        const verseText = getVerseTextFromStorage(ref.reference) || 'Text not available, click to refresh';
+        const verseText = getVerseTextFromStorage(ref.reference) || 'Text not cached, visit to refresh';
         let displayText = verseText;
         
         // Highlight search terms

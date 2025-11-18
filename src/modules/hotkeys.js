@@ -13,6 +13,7 @@ import { BOOK_ORDER, saveToStorage, state } from './state.js';
 ==================================================================== */
 
 const DEFAULT_HOTKEYS = {
+    toggleReferencePanel: { key: 'b', altKey: false, shiftKey: false, ctrlKey: true },
     prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false, ctrlKey: false },
     nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false, ctrlKey: false },
     prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true, ctrlKey: false },
@@ -152,6 +153,7 @@ function getHotkeyAction(event) {
  */
 function executeHotkeyAction(action) {
     const actions = {
+        toggleReferencePanel: toggleReferencePanel,
         prevChapter: prevPassage,
         nextChapter: nextPassage,
         prevBook: () => navigateToAdjacentBook(-1),
@@ -322,6 +324,17 @@ export function toggleHotkeysEnabled() {
     }
 }
 
+function toggleReferencePanel() {
+    try {
+        const panelToggle = document.getElementById('referencePanelToggle');
+        if (panelToggle) {
+            panelToggle.click();
+        }
+    } catch (error) {
+        console.error('Error toggling reference panel:', error);
+    }
+}
+
 /* ====================================================================
    HELP MODAL FUNCTIONS
 ==================================================================== */
@@ -379,6 +392,7 @@ function populateHotkeysList() {
         enabledCheckbox.checked = state.settings.hotkeysEnabled;
         
         const hotkeyDefinitions = [
+            { action: 'toggleReferencePanel', label: 'Toggle Reference Panel' },
             { action: 'prevChapter', label: 'Previous Chapter' },
             { action: 'nextChapter', label: 'Next Chapter' },
             { action: 'prevBook', label: 'Previous Book' },

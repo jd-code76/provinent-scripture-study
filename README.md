@@ -34,7 +34,7 @@ This project was developed with assistance from AI tools including [Gab AI](http
 | `Ctrl/Cmd + 1` | Heading 1 | `# Heading 1` |
 | `Ctrl/Cmd + 2` | Heading 2 | `## Heading 2` |
 | `Ctrl/Cmd + 3` | Heading 3 | `### Heading 3` |
-| `Ctrl/Cmd + \`` | Code | `` `code` `` |
+| `Ctrl/Cmd + `\` | Code | `` `code` `` |
 | `Ctrl/Cmd + Shift + U` | Unordered List | `- List item` |
 | `Ctrl/Cmd + Shift + O` | Ordered List | `1. List item` |
 | `Ctrl/Cmd + Shift + >` | Blockquote | `> Quote` |

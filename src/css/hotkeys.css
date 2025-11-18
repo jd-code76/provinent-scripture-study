@@ -25,6 +25,33 @@
     display: block;
 }
 
+.help-modal .popup-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--text-color);
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.help-modal .popup-close:hover {
+    background-color: var(--verse-hover);
+}
+
+.help-modal .popup-close:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
 .hotkey-settings-section {
     margin-bottom: 20px;
     padding-bottom: 15px;
