@@ -249,23 +249,45 @@ function populateSettingsForm() {
     const translationSelect = document.getElementById('bibleTranslationSetting');
     const audioToggle = document.getElementById('audioControlsToggle');
     const versionElement = document.getElementById('appVersion');
-    const fontSizeSlider = document.getElementById('fontSizeSlider');
-    const fontSizeValue = document.getElementById('fontSizeValue');
+    const scriptureFontSizeSlider = document.getElementById('scriptureFontSizeSlider');
+    const scriptureFontSizeValue = document.getElementById('scriptureFontSizeValue');
+    const notesFontSizeSlider = document.getElementById('notesFontSizeSlider');
+    const notesFontSizeValue = document.getElementById('notesFontSizeValue');
+    const themeToggle = document.getElementById('themeToggleSetting');
     
     if (translationSelect) translationSelect.value = state.settings.bibleTranslation;
     if (audioToggle) audioToggle.checked = state.settings.audioControlsVisible;
     if (versionElement) versionElement.textContent = APP_VERSION;
 
-    if (fontSizeSlider) {
-        fontSizeSlider.value = state.settings.fontSize || 16;
-        fontSizeSlider.addEventListener('input', () => {
-        const val = fontSizeSlider.value;
-      if (fontSizeValue) fontSizeValue.textContent = `${val}px`;
+    if (themeToggle) {
+        themeToggle.checked = state.settings.theme === 'dark';
+        themeToggle.addEventListener('change', () => {
+            document.documentElement.setAttribute('data-theme', themeToggle.checked ? 'dark' : 'light');
+        });
+    }
+
+    if (scriptureFontSizeSlider) {
+        scriptureFontSizeSlider.value = state.settings.scriptureFontSize || 16;
+        scriptureFontSizeSlider.addEventListener('input', () => {
+            const val = scriptureFontSizeSlider.value;
+            if (scriptureFontSizeValue) scriptureFontSizeValue.textContent = `${val}px`;
         });
     }
     
-    if (fontSizeValue) {
-        fontSizeValue.textContent = `${state.settings.fontSize || 16}px`;
+    if (scriptureFontSizeValue) {
+        scriptureFontSizeValue.textContent = `${state.settings.scriptureFontSize || 16}px`;
+    }
+    
+    if (notesFontSizeSlider) {
+        notesFontSizeSlider.value = state.settings.notesFontSize || 16;
+        notesFontSizeSlider.addEventListener('input', () => {
+            const val = notesFontSizeSlider.value;
+            if (notesFontSizeValue) notesFontSizeValue.textContent = `${val}px`;
+        });
+    }
+    
+    if (notesFontSizeValue) {
+        notesFontSizeValue.textContent = `${state.settings.notesFontSize || 16}px`;
     }
     
     updateColorThemeSelection();
@@ -311,14 +333,20 @@ export async function saveSettings() {
         showLoading(true);
         
         const newSettings = getSettingsFromForm();
+        const oldNotesFontSize = state.settings.notesFontSize;
         validateSettings(newSettings);
         
         await applyNewSettings(newSettings);
         saveSettingsToStorage();
         updateUIAfterSettingsChange();
-        
         closeSettings();
-        await reloadPassageWithNewSettings();
+        
+        if (newSettings.notesFontSize !== oldNotesFontSize) {
+            alert('Notes font size changed. Page will refresh to apply changes.');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            await reloadPassageWithNewSettings();
+        }
         
     } catch (error) {
         handleError(error, 'saveSettings');
@@ -337,14 +365,18 @@ function getSettingsFromForm() {
     const audioToggle = document.getElementById('audioControlsToggle');
     const selectedTheme = document.querySelector('.color-theme-option.selected');
     const narratorSelect = document.getElementById('narratorSelect');
-    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    const scriptureFontSizeSlider = document.getElementById('scriptureFontSizeSlider');
+    const notesFontSizeSlider = document.getElementById('notesFontSizeSlider');
+    const themeToggle = document.getElementById('themeToggleSetting');
     
     return {
         translation: translationSelect?.value || state.settings.bibleTranslation,
         audioControlsVisible: audioToggle?.checked ?? state.settings.audioControlsVisible,
         colorTheme: selectedTheme?.dataset.theme || state.settings.colorTheme,
         narrator: narratorSelect?.value || state.settings.audioNarrator,
-        fontSize: fontSizeSlider ? parseInt(fontSizeSlider.value, 10) : state.settings.fontSize
+        scriptureFontSize: scriptureFontSizeSlider ? parseInt(scriptureFontSizeSlider.value, 10) : state.settings.scriptureFontSize,
+        notesFontSize: notesFontSizeSlider ? parseInt(notesFontSizeSlider.value, 10) : state.settings.notesFontSize,
+        theme: themeToggle?.checked ? 'dark' : 'light'
     };
 }
 
@@ -372,11 +404,14 @@ async function applyNewSettings(newSettings) {
     state.settings.audioControlsVisible = newSettings.audioControlsVisible;
     state.settings.colorTheme = newSettings.colorTheme;
     state.settings.audioNarrator = newSettings.narrator || state.settings.audioNarrator;
-    state.settings.fontSize = newSettings.fontSize ?? state.settings.fontSize;
+    state.settings.scriptureFontSize = newSettings.scriptureFontSize ?? state.settings.scriptureFontSize;
+    state.settings.notesFontSize = newSettings.notesFontSize ?? state.settings.notesFontSize;
+    state.settings.theme = newSettings.theme;
     
     updateURL(newSettings.translation, state.settings.manualBook, state.settings.manualChapter, 'push');
     updateAudioControlsVisibility();
     updateBibleGatewayVersion();
+    applyTheme();
 }
 
 /**
@@ -399,7 +434,11 @@ function updateUIAfterSettingsChange() {
     }
 
     if (typeof updateScriptureFontSize === 'function') {
-        updateScriptureFontSize(state.settings.fontSize);
+        updateScriptureFontSize(state.settings.scriptureFontSize);
+    }
+    
+    if (typeof updateNotesFontSize === 'function') {
+        updateNotesFontSize(state.settings.notesFontSize);
     }
 }
 

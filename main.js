@@ -6,7 +6,7 @@ import { clearCache, closeSettings, deleteAllData, exportData, importData, initi
 import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToCookies, saveToStorage, state } from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
 import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
-    updateMarkdownPreview, updateReferencePanel, updateScriptureFontSize } from './modules/ui.js'
+    updateMarkdownPreview, updateReferencePanel, updateNotesFontSize, updateScriptureFontSize } from './modules/ui.js'
 const OFFLINE_STYLES = `
 #offlineIndicator {
     position: fixed;
@@ -230,7 +230,6 @@ function refreshHighlightsModalTheme() {
     }
 }
 function setupEventListeners() {
-    setupThemeToggle();
     setupHeaderButtons();
     setupToolbarNavigation();
     setupAudioControls();
@@ -241,10 +240,6 @@ function setupEventListeners() {
     setupModalControls();
     setupMarkdownShortcuts();
     setupTouchEvents();
-}
-function setupThemeToggle() {
-    const toggle = document.querySelector('.theme-toggle');
-    if (toggle) toggle.addEventListener('click', toggleTheme);
 }
 function setupHeaderButtons() {
     const buttons = {
@@ -499,7 +494,10 @@ async function init() {
         restoreSidebarState();
         restorePanelStates();
         if (typeof updateScriptureFontSize === 'function') {
-            updateScriptureFontSize(state.settings.fontSize);
+            updateScriptureFontSize(state.settings.scriptureFontSize);
+        }
+        if (typeof updateNotesFontSize === 'function') {
+            updateNotesFontSize(state.settings.notesFontSize);
         }
         updateHeaderTitle();
         initResizeHandles();

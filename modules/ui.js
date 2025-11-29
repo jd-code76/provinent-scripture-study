@@ -8,10 +8,6 @@ const UNSUPPORTED_TRANSLATIONS = {
     stepbible: ['NKJV', 'CSB', 'NLT'],
     ebibleorg: ['LSB', 'NASB', 'ASV', 'ESV', 'NKJV', 'CSB', 'NIV', 'NLT']
 };
-const CONTENT_TYPES = {
-    text: { btnClass: 'text', display: 'block', inputDisplay: 'block' },
-    markdown: { btnClass: 'markdown', display: 'block', inputDisplay: 'none' }
-};
 const PANEL_LIMITS = {
     sidebar: { min: 150, max: 600 },
     referencePanel: { min: 250, max: 800 },
@@ -21,7 +17,7 @@ const PANEL_LIMITS = {
 export function updateScriptureFontSize(sizePx) {
     try {
         const size = Number(sizePx);
-        if (Number.isNaN(size) || size < 10 || size > 36) return;
+        if (Number.isNaN(size) || size < 10 || size > 24) return;
         const scriptureSection = document.getElementById('scriptureSection');
         if (scriptureSection) {
             scriptureSection.style.fontSize = `${size}px`;
@@ -30,10 +26,24 @@ export function updateScriptureFontSize(sizePx) {
         const headerRef   = document.getElementById('passageReference');
         if (headerTitle) headerTitle.style.fontSize = '';
         if (headerRef)   headerRef.style.fontSize   = '';
-        state.settings.fontSize = size;
+        state.settings.scriptureFontSize = size;
         saveToStorage();
     } catch (err) {
         console.error('Failed to update scripture font size:', err);
+    }
+}
+export function updateNotesFontSize(sizePx) {
+    try {
+        const size = Number(sizePx);
+        if (Number.isNaN(size) || size < 10 || size > 24) return;
+        const notesSection = document.getElementById('notesSection');
+        if (notesSection) {
+            notesSection.style.fontSize = `${size}px`;
+        }
+        state.settings.notesFontSize = size;
+        saveToStorage();
+    } catch (err) {
+        console.error('Failed to update notes font size:', err);
     }
 }
 export function switchNotesView(view) {
@@ -271,6 +281,9 @@ function generateBibleGatewayUrl(translation, passage) {
     return `https://www.biblegateway.com/passage/?search=${query}&version=${version}&interface=print`;
 }
 function filterTranslationOptions(source, selectElement) {
+    if (!selectElement.id.includes('Translation') && !selectElement.id.includes('reference')) {
+        return; 
+    }
     const currentValue = selectElement.value;
     const unsupported = UNSUPPORTED_TRANSLATIONS[source] || [];
     let needsUpdate = false;

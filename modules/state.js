@@ -1,5 +1,5 @@
 ﻿import { handleError } from '../main.js';
-export const APP_VERSION = '1.8.2025.11.18';
+export const APP_VERSION = '1.9.2025.11.28';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -91,7 +91,8 @@ export const state = {
             scriptureSection: null,
             notesSection: 350
         },
-        fontSize: 16
+        scriptureFontSize: 16,
+        notesFontSize: 16
     },
     hotkeys: {
         toggleReferencePanel: { key: 'b', altKey: true, shiftKey: false, ctrlKey: false },

@@ -27,6 +27,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    font-size: inherit;
 }
 
 .notes-header h3 {
@@ -133,12 +134,11 @@
     margin-bottom: 10px;
     background-color: var(--card-background);
     color: var(--text-color);
+    font-size: inherit;
 }
 
 #notesInput {
     font-family: 'Courier New', monospace;
-    font-size: 14px;
-    resize: none;
 }
 
 #notesInput:focus {
@@ -149,7 +149,6 @@
 #notesDisplay {
     overflow-y: auto;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 14px;
 }
 
 /* Markdown Rendering Styles */

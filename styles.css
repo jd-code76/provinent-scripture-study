@@ -51,7 +51,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:va
 .sidebar-section-header h3{margin:0;font-size:1.1em;color:var(--accent-color)}
 .section-toggle{font-size:0.9em;transition:transform 0.3s}
 .section-toggle.collapsed{transform:rotate(-90deg)}
-.sidebar-section-content{max-height:1000px;overflow:hidden;transition:max-height 0.3s ease-out,opacity 0.3s ease-out;opacity:1}
+.sidebar-section-content{max-height:none;overflow:auto;transition:max-height 0.3s ease-out,opacity 0.3s ease-out;opacity:1}
 .sidebar-section-content.collapsed{max-height:0;opacity:0}
 .sidebar-links{list-style:none;margin-top:10px}
 .sidebar-links li{margin-bottom:8px}
@@ -131,7 +131,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:va
 .verse{margin-bottom:8px;padding:var(--spacing-sm);border-radius:var(--radius-sm);cursor:pointer;transition:background-color var(--transition-fast);position:relative;contain:content}
 .verse:hover,.verse:active{background-color:var(--verse-hover);will-change:background-color}
 .verse:focus{outline:2px solid var(--accent-color);outline-offset:2px}
-.verse-number{font-weight:bold;color:var(--accent-color);margin-right:8px;font-size:0.85em;vertical-align:super}
+.verse-number{font-weight:bold;margin-right:8px;font-size:0.85em;vertical-align:super}
 .verse-text{display:inline}
 .highlight-yellow{background-color:var(--highlight-yellow);color:#000}
 .highlight-green{background-color:var(--highlight-green);color:#000}
@@ -141,7 +141,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:va
 .highlight-purple{background-color:var(--highlight-purple);color:#000}
 .chapter-heading{margin:20px 0 10px 0;padding:10px;background:var(--bg-secondary);border-left:4px solid var(--accent-color);border-radius:4px}
 .chapter-heading h3{margin:0;font-size:1.2em;color:var(--text-primary);font-weight:600}
-.footnote-ref{position:relative;color:var(--accent-color);font-size:0.7em;vertical-align:super;cursor:pointer;margin:0 1px;text-decoration:none;font-weight:bold;background-color:rgba(0,0,0,0.08);padding:1px 4px;border-radius:3px;line-height:1;transition:all 0.2s ease}
+.footnote-ref{position:relative;font-size:0.7em;vertical-align:super;cursor:pointer;margin:0 1px;text-decoration:none;font-weight:bold;padding:1px 4px;border-radius:3px;line-height:1;transition:all 0.2s ease;white-space:nowrap;display:inline-block}
 .footnote-ref:hover{background-color:var(--accent-color);color:white;transform:scale(1.1)}
 .footnote-ref::before{content:'['}
 .footnote-ref::after{content:']'}
@@ -289,7 +289,7 @@ mark{background-color:rgb(26,255,0);color:black;padding:1px 2px;border-radius:2p
 
 .notes-section{width:400px;padding:20px;background-color:var(--notes-background);border-left:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;position:relative;min-width:50px;transition:all 0.3s ease}
 .notes-section.hidden{display:none}
-.notes-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.notes-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;font-size:inherit}
 .notes-header h3{color:var(--text-color)}
 .notes-controls{display:flex;gap:5px}
 .notes-controls button{padding:5px 10px;font-size:12px}
@@ -303,10 +303,10 @@ mark{background-color:rgb(26,255,0);color:black;padding:1px 2px;border-radius:2p
 .markdown-btn:hover{background-color:var(--accent-color);color:white;border-color:var(--accent-color)}
 .markdown-btn:focus{outline:2px solid var(--accent-color);outline-offset:2px}
 .markdown-btn:active{transform:scale(0.95)}
-#notesInput,#notesDisplay{flex:1;width:100%;border:1px solid var(--border-color);border-radius:0 0 5px 5px;padding:15px;margin-bottom:10px;background-color:var(--card-background);color:var(--text-color)}
-#notesInput{font-family:'Courier New',monospace;font-size:14px;resize:none}
+#notesInput,#notesDisplay{flex:1;width:100%;border:1px solid var(--border-color);border-radius:0 0 5px 5px;padding:15px;margin-bottom:10px;background-color:var(--card-background);color:var(--text-color);font-size:inherit}
+#notesInput{font-family:'Courier New',monospace}
 #notesInput:focus{outline:2px solid var(--accent-color);outline-offset:2px}
-#notesDisplay{overflow-y:auto;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;font-size:14px}
+#notesDisplay{overflow-y:auto;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
 #notesDisplay h1,#notesDisplay h2,#notesDisplay h3{margin-top:20px;margin-bottom:10px;color:var(--text-color)}
 #notesDisplay h1{font-size:2em;border-bottom:2px solid var(--border-color);padding-bottom:10px}
 #notesDisplay h2{font-size:1.5em}
@@ -365,7 +365,7 @@ mark{background-color:rgb(26,255,0);color:black;padding:1px 2px;border-radius:2p
 .settings-modal .popup-close{position:absolute;top:24px;right:24px;cursor:pointer;font-size:24px;color:var(--text-color);background:none;border:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:background-color 0.2s}
 .settings-modal .popup-close:hover{background-color:var(--verse-hover)}
 .settings-modal .popup-close:focus{outline:2px solid var(--accent-color);outline-offset:2px}
-#fontSizeSlider{accent-color:var(--accent-color)}
+#scriptureFontSizeSlider,#notesFontSizeSlider{accent-color:var(--accent-color)}
 
 .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;justify-content:center;align-items:center;z-index:3000}
 .loading-overlay.active{display:flex}

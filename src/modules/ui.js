@@ -19,11 +19,6 @@ const UNSUPPORTED_TRANSLATIONS = {
     ebibleorg: ['LSB', 'NASB', 'ASV', 'ESV', 'NKJV', 'CSB', 'NIV', 'NLT']
 };
 
-const CONTENT_TYPES = {
-    text: { btnClass: 'text', display: 'block', inputDisplay: 'block' },
-    markdown: { btnClass: 'markdown', display: 'block', inputDisplay: 'none' }
-};
-
 const PANEL_LIMITS = {
     sidebar: { min: 150, max: 600 },
     referencePanel: { min: 250, max: 800 },
@@ -47,7 +42,7 @@ const PANEL_LIMITS = {
 export function updateScriptureFontSize(sizePx) {
     try {
         const size = Number(sizePx);
-        if (Number.isNaN(size) || size < 10 || size > 36) return;
+        if (Number.isNaN(size) || size < 10 || size > 24) return;
 
         // The outer container that holds the whole passage
         const scriptureSection = document.getElementById('scriptureSection');
@@ -61,11 +56,34 @@ export function updateScriptureFontSize(sizePx) {
         if (headerTitle) headerTitle.style.fontSize = '';
         if (headerRef)   headerRef.style.fontSize   = '';
         
-        // Save the new size for persistence
-        state.settings.fontSize = size;
+        state.settings.scriptureFontSize = size;
         saveToStorage();
     } catch (err) {
         console.error('Failed to update scripture font size:', err);
+    }
+}
+
+/**
+ * Apply a font-size (in px) to the notes section.
+ * This includes both the textarea input and markdown preview.
+ * @param {number} sizePx - Desired font size in pixels.
+ */
+export function updateNotesFontSize(sizePx) {
+    try {
+        const size = Number(sizePx);
+        if (Number.isNaN(size) || size < 10 || size > 24) return;
+
+        // Apply to the entire notes section container - child elements will inherit
+        const notesSection = document.getElementById('notesSection');
+        if (notesSection) {
+            notesSection.style.fontSize = `${size}px`;
+        }
+        
+        // Save the new size for persistence
+        state.settings.notesFontSize = size;
+        saveToStorage();
+    } catch (err) {
+        console.error('Failed to update notes font size:', err);
     }
 }
 
@@ -443,6 +461,10 @@ function generateBibleGatewayUrl(translation, passage) {
  * @param {HTMLSelectElement} selectElement - Select element
  */
 function filterTranslationOptions(source, selectElement) {
+    if (!selectElement.id.includes('Translation') && !selectElement.id.includes('reference')) {
+        return; // Skip non-translation selects
+    }
+    
     const currentValue = selectElement.value;
     const unsupported = UNSUPPORTED_TRANSLATIONS[source] || [];
     let needsUpdate = false;

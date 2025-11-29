@@ -163,6 +163,7 @@
                         <li><a href="https://www.gty.org/articles/A331/What-Is-the-Doctrine-of-Election" target="_blank" rel="noopener noreferrer">What is the Doctrine of Election?</a></li>
                         <li><a href="https://www.desiringgod.org/articles/a-beginners-guide-to-free-will" target="_blank" rel="noopener noreferrer">A Beginner's Guide to 'Free Will'</a></li>
                         <li><a href="https://www.gotquestions.org/predestination-vs-free-will.html" target="_blank" rel="noopener noreferrer">What does the Bible say about predestination vs. free will?</a></li>
+                        <li><a href="https://tabletalkmagazine.com/posts/people-reject-jesus/" target="_blank" rel="noopener noreferrer">Why do some people reject Jesus?</a></li>
                         <li><a href="https://www.monergism.com/reformation-theology/blog/what-about-john-316" target="_blank" rel="noopener noreferrer">What about John 3:16?</a></li>
                         <li><a href="https://www.gotquestions.org/arminianism.html" target="_blank" rel="noopener noreferrer">What is Arminianism, and is it biblical?</a></li>
                         <li><a href="https://www.gotquestions.org/calvinism.html" target="_blank" rel="noopener noreferrer">What is Calvinism and is it biblical?</a></li>
@@ -178,6 +179,7 @@
                         <li><a href="https://www.gotquestions.org/exegesis-eisegesis.html" target="_blank" rel="noopener noreferrer">What is the difference between exegesis and eisegesis?</a></li>
                         <li><a href="https://www.blueletterbible.org/Comm/stewart_don/faq/bible-translations/question6-what-is-an-interlinear-bible.cfm" target="_blank" rel="noopener noreferrer">What is an interlinear Bible?</a></li>
                         <li><a href="https://www.desiringgod.org/articles/what-is-the-apocrypha" target="_blank" rel="noopener noreferrer">What is the Apocrypha?</a></li>
+                        <li><a href="https://christiannationalist.com" target="_blank" rel="noopener noreferrer">What is Christian Nationalism?</a></li>
                     </ul>
                 </div>
             </div>
@@ -358,9 +360,6 @@
             <!-- Toolbar with navigation, selectors, etc. -->
             <div class="toolbar">
                 <div class="header-controls">
-                    <button class="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-                        <span id="themeIcon" aria-hidden="true"><i class="fas fa-moon"></i></span>
-                    </button>
                     <button class="btn" id="openSettingsBtn" title="View and change settings"><i class="fas fa-gear"></i></button>
                     <input type="file" id="importFile" style="display: none;" accept=".json">
                 </div>
@@ -559,6 +558,7 @@
             <button class="popup-close" id="closeSettingsBtn" aria-label="Close settings"><i class="fas fa-xmark"></i></button>
         </div>
 
+        <!-- SCRIPTURE TRANSLATION -->
         <div class="settings-group">
             <label for="bibleTranslationSetting">Bible Translation</label>
             <select id="bibleTranslationSetting">
@@ -568,27 +568,53 @@
                 <option value="BSB">Berean Standard Bible (BSB)</option>
                 <option value="NET">New English Translation (NET)</option>
             </select>
-            <small>Set the translation for Scripture area.</small>
+            <small>Set the translation for Scripture section.</small>
         </div>
 
-        <!-- =============== FONT SIZE SETTING ==================== -->
+        <!-- DARK MODE TOGGLE -->
         <div class="settings-group">
-            <label for="fontSizeSlider">Scripture Font Size</label>
+            <label>Dark Mode Toggle</label>
+            <label class="toggle-label">
+                <input type="checkbox" id="themeToggleSetting">
+                <span class="toggle-slider"></span>
+                Dark mode
+            </label>
+            <small>Toggle between light and dark mode.</small>
+        </div>
+
+        <!-- SCRIPTURE FONT SIZE SETTING -->
+        <div class="settings-group">
+            <label for="scriptureFontSizeSlider">Scripture Font Size</label>
             <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                <!-- Slider (range 12 px … 24 px) -->
                 <input type="range"
-            id="fontSizeSlider"
-            min="12"
+                    id="scriptureFontSizeSlider"
+                    min="12"
                     max="24"
                     step="1"
                     value="16"
                     style="flex:1;">
-                <!-- Live numeric preview -->
-                <output id="fontSizeValue" style="min-width:30px; text-align:center;">16 px</output>
+                <output id="scriptureFontSizeValue" style="min-width:30px; text-align:center;">16 px</output>
             </div>
-            <small>Adjust the size of all text in the Scripture area.</small>
+            <small>Adjust the size of all text in the Scripture section.</small>
         </div>
 
+        <!-- NOTES FONT SIZE SETTING -->
+        <div class="settings-group">
+            <label for="notesFontSizeSlider">Notes Font Size</label>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                <input type="range"
+                    id="notesFontSizeSlider"
+                    min="12"
+                    max="24"
+                    step="1"
+                    value="16"
+                    style="flex:1;">
+                <output id="notesFontSizeValue" style="min-width:30px; text-align:center;">16 px</output>
+            </div>
+            <small>Adjust the size of all text in the Study Notes section.</small>
+        </div>
+
+        <!-- AUDIO SETTINGS -->
         <div class="settings-group">
             <label for="audioControlsToggle">Audio Preferences</label>
             <label class="toggle-label">
@@ -607,6 +633,7 @@
             </label>
         </div>
 
+        <!-- KEYBOARD SETTINGS -->
         <div class="settings-group" id="keyboard-shortcuts">
             <label>Keyboard Shortcuts</label>
             <button class="btn btn-secondary" id="keyboardShortcutsBtn">
@@ -615,6 +642,7 @@
             <small>View and customize keyboard shortcuts (you can also hit the 'F1' key to view these).</small>
         </div>
 
+        <!-- DATA MANAGEMENT -->
         <div class="settings-group">
             <label>Data Management</label>
                 <div class="settings-group">
@@ -662,6 +690,7 @@
                 </div>
         </div>
 
+        <!-- PDF DOWNLOADS -->
         <div class="settings-group">
             <label>Bible PDF Downloads</label>
             <small style="margin-bottom: 10px;">
@@ -688,6 +717,7 @@
             </div>
         </div>
 
+        <!-- THEME SETTINGS -->
         <div class="settings-group">
             <label>Color Theme</label>
             <div class="color-theme-options">
@@ -718,6 +748,7 @@
             </div>
         </div>
 
+        <!-- ABOUT -->
         <div class="settings-section">
             <h3>About Provinent Scripture Study</h3>
             <div class="about-content">
