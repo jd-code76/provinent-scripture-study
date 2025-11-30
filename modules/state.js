@@ -1,5 +1,5 @@
 ﻿import { handleError } from '../main.js';
-export const APP_VERSION = '1.9.2025.11.28';
+export const APP_VERSION = '1.9.01.2025.11.29';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
