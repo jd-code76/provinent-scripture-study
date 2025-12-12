@@ -1,4 +1,5 @@
-﻿import { clearError, handleError, showError, showLoading } from '../main.js';
+import { clearError, handleError, showError, showLoading } from '../main.js';
+import { nextPassage } from './navigation.js';
 import { afterContentLoad, displayPassage, extractVerseText } from './passage.js';
 import { bookNameMapping, state, saveToStorage } from './state.js';
 const API_BASE_URL = 'https://bible.helloao.org/api';
@@ -126,7 +127,10 @@ export async function playChapterAudio(narrator = null) {
     } catch (error) {
         console.error('Audio playback error:', error);
         showError(`Could not play audio: ${error.message}`);
-        handleError(error, 'playChapterAudio');
+        const hint =
+            'Unable to start audio playback. Please ensure your device’s sound is on, ' +
+            'the browser is allowed to play media, and that you have granted any required permissions.';
+        handleError(error, 'playChapterAudio', `${hint}`);
     }
 }
 async function playKJVAudio(book, chapter) {
@@ -144,11 +148,17 @@ async function playKJVAudio(book, chapter) {
     };
     setupAudioEventHandlers(audio, 'default');
     try {
-        await audio.play();
+        await audio.play(); 
         state.audioPlayer.isPlaying = true;
         updateAudioPlayerUI(true);
     } catch (error) {
-        throw new Error(`Audio playback failed: ${error.message}`);
+        if (error.name === 'AbortError') {
+            state.audioPlayer.isPlaying = true;
+            updateAudioPlayerUI(true);
+        } else {
+            console.error('Audio playback failed (KJV):', error);
+            showError(`Could not play audio: ${error.message}`);
+        }
     }
 }
 async function playBSBAudio(narrator) {
@@ -172,19 +182,41 @@ async function playBSBAudio(narrator) {
     };
     setupAudioEventHandlers(audio, selectedNarrator);
     try {
-        await audio.play();
+        await audio.play(); 
         state.audioPlayer.isPlaying = true;
         updateAudioPlayerUI(true, selectedNarrator);
     } catch (error) {
-        throw new Error(`Audio playback failed: ${error.message}`);
+        if (error.name === 'AbortError') {
+            state.audioPlayer.isPlaying = true;
+            updateAudioPlayerUI(true, selectedNarrator);
+        } else {
+            console.error('Audio playback failed (BSB):', error);
+            showError(`Could not play audio: ${error.message}`);
+        }
     }
 }
 function setupAudioEventHandlers(audio, narrator) {
-    audio.addEventListener('ended', () => {
-        if (state.audioPlayer) {
-            state.audioPlayer.isPlaying = false;
-            state.audioPlayer.isPaused = false;
-            updateAudioPlayerUI(false, narrator);
+    audio.addEventListener('ended', async () => {
+        if (!state.audioPlayer) return;
+        state.audioPlayer.isPlaying = false;
+        state.audioPlayer.isPaused = false;
+        updateAudioPlayerUI(false, narrator);
+        const isLastChapter = state.settings.manualBook === 'Revelation' && Number(state.settings.manualChapter) === 22;
+        if (state.settings.autoplayAudio && !state.audioPlayer.isPaused && !isLastChapter) {
+            try {
+                nextPassage();
+                setTimeout(() => {
+                    const translation = state.settings.bibleTranslation;
+                    if (isKJV(translation)) {
+                        playChapterAudio();
+                    } else {
+                        const narr = state.settings.audioNarrator || 'gilbert';
+                        playChapterAudio(narr);
+                    }
+                }, 300);
+            } catch (e) {
+                console.error('Autoplay after audio end failed:', e);
+            }
         }
     });
     audio.addEventListener('error', (error) => {
@@ -227,15 +259,14 @@ export function resumeChapterAudio() {
 function updateAudioPlayerUI(isPlaying, narrator = null) {
     const audioControls = document.getElementById('audioControls');
     if (!audioControls) return;
-    const playBtn = audioControls.querySelector('.play-audio-btn');
+    const playBtn  = audioControls.querySelector('.play-audio-btn');
     const pauseBtn = audioControls.querySelector('.pause-audio-btn');
-    const stopBtn = audioControls.querySelector('.stop-audio-btn');
-    if (playBtn) playBtn.style.display = isPlaying ? 'none' : 'inline-block';
+    const stopBtn  = audioControls.querySelector('.stop-audio-btn');
+    if (playBtn)  playBtn.style.display  = isPlaying ? 'none' : 'inline-block';
     if (pauseBtn) pauseBtn.style.display = isPlaying ? 'inline-block' : 'none';
+    const showStop = isPlaying || (state.audioPlayer && state.audioPlayer.isPaused);
     if (stopBtn) {
-        const hasAudioStarted = state.audioPlayer && 
-                              (state.audioPlayer.isPlaying || state.audioPlayer.isPaused);
-        stopBtn.style.display = hasAudioStarted ? 'inline-block' : 'none';
+        stopBtn.style.display = showStop ? 'inline-block' : 'none';
     }
     if (narrator && !isKJV(state.settings.bibleTranslation)) {
         const narratorSelect = audioControls.querySelector('.narrator-select');

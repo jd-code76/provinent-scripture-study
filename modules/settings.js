@@ -1,6 +1,6 @@
-﻿import { stopChapterAudio } from './api.js';
+import { stopChapterAudio } from './api.js';
 import { getVerseTextFromStorage } from './highlights.js';
-import { applyColorTheme, applyTheme, getFormattedDateForFilename, getFormattedDateForDisplay, handleError, showLoading } from '../main.js';
+import { applyColorTheme, applyTheme, getFormattedDateForFilename, getFormattedDateForDisplay, handleError, handleNarratorChange, showLoading } from '../main.js';
 import { populateChapterDropdown, updateChapterDropdownVisibility } from './navigation.js';
 import { loadPassage } from './passage.js';
 import { APP_VERSION, saveToCookies, saveToStorage, state, updateBibleGatewayVersion, updateURL } from './state.js';
@@ -151,6 +151,7 @@ export function openSettings() {
 function populateSettingsForm() {
     const translationSelect = document.getElementById('bibleTranslationSetting');
     const audioToggle = document.getElementById('audioControlsToggle');
+    const autoplayToggle = document.getElementById('autoplayAudioToggle');
     const versionElement = document.getElementById('appVersion');
     const scriptureFontSizeSlider = document.getElementById('scriptureFontSizeSlider');
     const scriptureFontSizeValue = document.getElementById('scriptureFontSizeValue');
@@ -162,9 +163,6 @@ function populateSettingsForm() {
     if (versionElement) versionElement.textContent = APP_VERSION;
     if (themeToggle) {
         themeToggle.checked = state.settings.theme === 'dark';
-        themeToggle.addEventListener('change', () => {
-            document.documentElement.setAttribute('data-theme', themeToggle.checked ? 'dark' : 'light');
-        });
     }
     if (scriptureFontSizeSlider) {
         scriptureFontSizeSlider.value = state.settings.scriptureFontSize || 16;
@@ -185,6 +183,9 @@ function populateSettingsForm() {
     }
     if (notesFontSizeValue) {
         notesFontSizeValue.textContent = `${state.settings.notesFontSize || 16}px`;
+    }
+    if (autoplayToggle) {
+        autoplayToggle.checked = !!state.settings.autoplayAudio;
     }
     updateColorThemeSelection();
 }
@@ -210,18 +211,13 @@ export async function saveSettings() {
     try {
         showLoading(true);
         const newSettings = getSettingsFromForm();
-        const oldNotesFontSize = state.settings.notesFontSize;
         validateSettings(newSettings);
         await applyNewSettings(newSettings);
         saveSettingsToStorage();
         updateUIAfterSettingsChange();
         closeSettings();
-        if (newSettings.notesFontSize !== oldNotesFontSize) {
-            alert('Notes font size changed. Page will refresh to apply changes.');
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            await reloadPassageWithNewSettings();
-        }
+        alert('Settings saved. The page will now refresh to apply changes.');
+        setTimeout(() => window.location.reload(), 500);
     } catch (error) {
         handleError(error, 'saveSettings');
         alert('Error saving settings: ' + error.message);
@@ -232,6 +228,7 @@ export async function saveSettings() {
 function getSettingsFromForm() {
     const translationSelect = document.getElementById('bibleTranslationSetting');
     const audioToggle = document.getElementById('audioControlsToggle');
+    const autoplayToggle = document.getElementById('autoplayAudioToggle');
     const selectedTheme = document.querySelector('.color-theme-option.selected');
     const narratorSelect = document.getElementById('narratorSelect');
     const scriptureFontSizeSlider = document.getElementById('scriptureFontSizeSlider');
@@ -244,7 +241,8 @@ function getSettingsFromForm() {
         narrator: narratorSelect?.value || state.settings.audioNarrator,
         scriptureFontSize: scriptureFontSizeSlider ? parseInt(scriptureFontSizeSlider.value, 10) : state.settings.scriptureFontSize,
         notesFontSize: notesFontSizeSlider ? parseInt(notesFontSizeSlider.value, 10) : state.settings.notesFontSize,
-        theme: themeToggle?.checked ? 'dark' : 'light'
+        theme: themeToggle?.checked ? 'dark' : 'light',
+        autoplayAudio: autoplayToggle?.checked ?? state.settings.autoplayAudio
     };
 }
 function validateSettings(settings) {
@@ -257,16 +255,18 @@ async function applyNewSettings(newSettings) {
         stopChapterAudio();
     }
     state.settings.bibleTranslation = newSettings.translation;
-    state.settings.audioControlsVisible = newSettings.audioControlsVisible;
-    state.settings.colorTheme = newSettings.colorTheme;
-    state.settings.audioNarrator = newSettings.narrator || state.settings.audioNarrator;
+    state.settings.theme = newSettings.theme;
     state.settings.scriptureFontSize = newSettings.scriptureFontSize ?? state.settings.scriptureFontSize;
     state.settings.notesFontSize = newSettings.notesFontSize ?? state.settings.notesFontSize;
-    state.settings.theme = newSettings.theme;
+    state.settings.audioControlsVisible = newSettings.audioControlsVisible;
+    state.settings.autoplayAudio = newSettings.autoplayAudio;
+    state.settings.audioNarrator = newSettings.narrator || state.settings.audioNarrator;
+    state.settings.colorTheme = newSettings.colorTheme;
     updateURL(newSettings.translation, state.settings.manualBook, state.settings.manualChapter, 'push');
     updateAudioControlsVisibility();
     updateBibleGatewayVersion();
     applyTheme();
+    handleNarratorChange(state.settings.audioNarrator);
 }
 function saveSettingsToStorage() {
     saveToStorage();

@@ -158,6 +158,7 @@
                 </div>
                 <div class="sidebar-section-content" id="content-importantWorks">
                     <ul class="sidebar-links">
+                        <li><a href="https://thewestminsterstandard.org/the-westminster-confession/" target="_blank" rel="noopener noreferrer">The Westminster Confession of Faith</a></li>
                         <li><a href="https://www.monergism.com/thethreshold/sdg/calvin/Institutes%20-%20John%20Calvin.pdf" target="_blank" rel="noopener noreferrer">Institutes of the Christian Religion by John Calvin</a></li>
                         <li><a href="https://www.monergism.com/thethreshold/sdg/luther/Bondage%20of%20the%20Will%20-%20Martin%20Luther.pdf" target="_blank" rel="noopener noreferrer">Bondage of the Will by Martin Luther</a></li>
                         <li><a href="https://www.monergism.com/thethreshold/sdg/augustine/Confessions%20-%20Augustine.pdf" target="_blank" rel="noopener noreferrer">Confessions by St. Augustine</a></li>
@@ -299,7 +300,7 @@
                 <h3>Reference Bible</h3>
                 <div class="reference-panel-controls">
                     <label for="referenceSource" class="sr-only">Reference Source</label>
-                    <select id="referenceSource">
+                    <select id="referenceSource" title="Choose a reference Bible source">
                         <option value="biblegateway">Bible Gateway</option>
                         <option value="biblecom">Bible.com (YouVersion)</option>
                         <option value="biblehub">Bible Hub</option>
@@ -308,7 +309,7 @@
                     </select>
 
                     <label for="referenceTranslation" class="sr-only">Reference Translation</label>
-                    <select id="referenceTranslation">
+                    <select id="referenceTranslation" title="Choose a reference Bible translation">
                         <option value="ASV">ASV (Rigorously literal)</option>
                         <option value="NASB1995">NASB 1995 (Strictly literal)</option>
                         <option value="LSB">LSB (Precision-focused literal)</option>
@@ -636,13 +637,23 @@
                 Show audio controls in toolbar
             </label>
 
+            <label class="toggle-label" style="margin-top:12px;">
+                <input type="checkbox" id="autoplayAudioToggle" checked>
+                <span class="toggle-slider"></span>
+                Play next chapter audio automatically
+            </label>
+
             <label for="narratorSelect" style="margin-top:12px; display:block;">
-                <select class="narrator-select" style="padding: 5px; border-radius: 3px;" id="narratorSelect">
+                <select class="narrator-select"
+                        id="narratorSelect"
+                        style="padding:5px; border-radius:3px;">
                     <option value="gilbert">Gilbert</option>
                     <option value="hays">Hays</option>
                     <option value="souer">Souer</option>
                 </select>
-                <small style="font-weight:normal;">Set narrator for BSB audio.</small>
+                <small style="font-weight:normal;">
+                    Set narrator for BSB audio.
+                </small>
             </label>
         </div>
 

@@ -1,8 +1,9 @@
-﻿import { playChapterAudio, pauseChapterAudio, stopChapterAudio, isKJV } from './api.js';
+import { playChapterAudio, pauseChapterAudio, stopChapterAudio, isKJV } from './api.js';
 import { escapeHTML } from '../main.js';
 import { nextPassage, prevPassage, randomPassage, updateManualNavigation } from './navigation.js';
+import { exportData } from './settings.js';
 import { BOOK_ORDER, saveToStorage, state } from './state.js';
-import { togglePanelCollapse } from './ui.js';
+import { exportNotes, togglePanelCollapse } from './ui.js';
 const DEFAULT_HOTKEYS = {
     toggleReferencePanel: { key: 'b', altKey: true, shiftKey: false, ctrlKey: false },
     toggleNotes: { key: 'n', altKey: true, shiftKey: false, ctrlKey: false },
@@ -13,7 +14,10 @@ const DEFAULT_HOTKEYS = {
     nextBook: { key: 'ArrowDown', altKey: true, shiftKey: true, ctrlKey: false },
     randomPassage: { key: 'r', altKey: true, shiftKey: false, ctrlKey: false },
     showHelp: { key: 'F1', altKey: false, shiftKey: false, ctrlKey: false },
-    toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false }
+    toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false },
+    exportData: { key: 'e', altKey: true, shiftKey: false, ctrlKey: false },
+    importData: { key: 'i', altKey: true, shiftKey: false, ctrlKey: false },
+    exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false }
 };
 const IGNORED_KEYS = new Set([
     'Control', 'Shift', 'Alt', 'Meta', 'CapsLock', 'Escape', 'Tab'
@@ -99,7 +103,10 @@ function executeHotkeyAction(action) {
         nextBook: () => navigateToAdjacentBook(1),
         randomPassage: randomPassage,
         toggleAudio: toggleAudioPlayback,
-        showHelp: showHelpModal
+        showHelp: showHelpModal,
+        exportData: exportData,
+        importData: () => document.getElementById('importFile').click(),
+        exportNotes: () => exportNotes()
     };
     if (actions[action]) {
         actions[action]();
@@ -259,6 +266,9 @@ function populateHotkeysList() {
             { action: 'nextBook', label: 'Next Book' },
             { action: 'randomPassage', label: 'Random Passage' },
             { action: 'toggleAudio', label: 'Play/Pause Audio' },
+            { action: 'exportData', label: 'Export Data' },
+            { action: 'importData', label: 'Import Data' },
+            { action: 'exportNotes', label: 'Export Notes' },
             { action: 'showHelp', label: 'Show This Help' }
         ];
         hotkeysList.innerHTML = hotkeyDefinitions.map(hotkey => {

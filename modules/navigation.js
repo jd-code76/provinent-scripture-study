@@ -1,4 +1,4 @@
-﻿import { apiTranslationCode, cleanupAudioPlayer, fetchChapter, getApiBookCode, isKJV, stopChapterAudio, updateAudioControls } from './api.js';
+import { apiTranslationCode, cleanupAudioPlayer, fetchChapter, getApiBookCode, isKJV, stopChapterAudio, updateAudioControls } from './api.js';
 import { scrollToVerse } from './highlights.js';
 import { setupKeyboardNavigation } from './hotkeys.js';
 import { clearError, handleError, showError, showLoading, updateHeaderTitle } from '../main.js';

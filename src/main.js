@@ -76,15 +76,15 @@ class AppError extends Error {
  * @param {Error} error - The error object
  * @param {string} context - Where the error occurred
  */
-export function handleError(error, context) {
+export function handleError(error, context, userFriendlyMessage) {
     console.error(`Error in ${context}:`, error);
-    
-    const userMessage = error instanceof AppError 
-        ? error.message 
-        : 'An unexpected error occurred';
-    
-    showError(userMessage);
-    
+
+    // If the caller supplied a friendly string, use it
+    const messageToShow = userFriendlyMessage ??
+        (error instanceof AppError ? error.message : 'An unexpected error occurred');
+
+    showError(messageToShow);
+
     if (window.errorTracker) {
         window.errorTracker.log(error, context);
     }
@@ -428,12 +428,6 @@ function setupAudioControls() {
         const playBtn = document.querySelector('.play-audio-btn');
         const pauseBtn = document.querySelector('.pause-audio-btn');
         const stopBtn = document.querySelector('.stop-audio-btn');
-
-        document.addEventListener('change', (e) => {
-            if (e.target && e.target.matches('.narrator-select')) {
-                handleNarratorChange(e);
-            }
-        });
         
         if (playBtn) {
             playBtn.addEventListener('click', handleAudioPlayback);
@@ -473,11 +467,9 @@ function handleAudioPlayback() {
     }
 }
 
-function handleNarratorChange(e) {
-    const newNarrator = e.target.value;
+export function handleNarratorChange(newNarrator) {
     state.settings.audioNarrator = newNarrator;
     saveToStorage();
-    
     if (state.audioPlayer && !isKJV(state.settings.bibleTranslation)) {
         stopChapterAudio();
         setTimeout(() => playChapterAudio(newNarrator), 100);

@@ -60,6 +60,9 @@ This project was developed with assistance from AI tools including [Gab AI](http
 | `Alt + S` | Toggle Sidebar |
 | `Alt + P` | Play/Pause Audio |
 | `Alt + R` | Random Passage |
+| `Alt + E` | Export Data |
+| `Alt + I` | Import Data |
+| `Alt + M` | Export Notes |
 | `F1` | Show Help Modal |
 
 *Note: Hotkeys can be customized in the settings menu*
@@ -71,6 +74,7 @@ The sidebar provides organized access to extensive theological resources (Reform
 - Theological resources
 - Podcasts and devotionals
 - Study tools and commentaries
+- Important literary works
 
 ## Technical Stack
 
@@ -105,7 +109,9 @@ The sidebar provides organized access to extensive theological resources (Reform
 
 ## Privacy & Data
 
-Highlights, notes, and settings are stored locally in your browser. Data transmitted to external servers:
+Highlights, notes, and settings are stored locally in your browser. 
+
+Data that is transmitted to external servers:
 - Bible passage requests are handled by bible.helloao.org
 - Bible Hub (interlinear) and STEP Bible (both when using Verse Analysis popup)
 - Bible Gateway searches

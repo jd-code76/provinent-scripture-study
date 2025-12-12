@@ -1,5 +1,5 @@
-﻿import { escapeHTML } from '../main.js';
-import { state } from './state.js';
+import { escapeHTML } from '../main.js';
+import { saveToStorage, state } from './state.js';
 import { getStepBibleUrl } from './ui.js';
 const IFRAME_STYLES = `
     width: 100%;
@@ -20,11 +20,43 @@ export function showStrongsReference(verseEl) {
         const stepUrl = generateStepBibleUrl(verseData.reference);
         content.innerHTML = buildPopupContent(verseData, greekUrl, stepUrl);
         populateStrongsFootnotes(verseData.reference);
+        setupFootnotesToggle();
         showPopup();
         setupPopupEventHandlers();
+        const iframes = content.querySelectorAll('iframe');
+        iframes.forEach(frame => {
+            frame.addEventListener('load', resetPopupScrollPosition);
+            if (frame.complete) resetPopupScrollPosition();
+        });
+        resetPopupScrollPosition();
     } catch (error) {
         console.error('Error showing Strong\'s reference:', error);
     }
+}
+function setupFootnotesToggle() {
+    const label = document.getElementById('footnotesToggleLabel');
+    const container = document.getElementById('strongsFootnotesContainer');
+    const icon = label.querySelector('i');
+    if (!label || !container || !icon) return;
+    const collapsed = !!state.settings.footnotesCollapsed;
+    container.style.display = collapsed ? 'none' : 'block';
+    icon.className = `fas ${collapsed ? 'fa-chevron-down' : 'fa-chevron-up'}`;
+    label.addEventListener('click', () => {
+        const nowCollapsed = container.style.display === 'none';
+        if (nowCollapsed) {
+            container.style.display = 'block';
+            icon.className = 'fas fa-chevron-up';
+        } else {
+            container.style.display = 'none';
+            icon.className = 'fas fa-chevron-down';
+        }
+        const newCollapsed = !nowCollapsed;
+        const tip = newCollapsed ? 'Show footnotes' : 'Hide footnotes';
+        label.setAttribute('title', tip);
+        label.setAttribute('aria-label', tip);
+        state.settings.footnotesCollapsed = newCollapsed;
+        saveToStorage();
+    });
 }
 function extractVerseData(verseEl) {
     const ref = verseEl.dataset.verse;
@@ -73,15 +105,34 @@ function buildPopupContent(verseData, greekUrl, stepUrl) {
         <div class="verse-text-display">
             ${sanitizeVerseText(verseData.text)}
         </div>
-        <div class="strongs-footnotes-container" id="strongsFootnotesContainer" style="display: none;"></div>
+        <h4 id="footnotesToggleLabel"
+            style="
+                cursor: pointer;
+                color: var(--accent-color);
+                user-select: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                title="${state.settings.footnotesCollapsed ? 'Expand footnotes' : 'Collapse footnotes'}"
+                aria-label="${state.settings.footnotesCollapsed ? 'Expand footnotes' : 'Collapse footnotes'}
+            ">
+            <span>Footnotes</span>
+            <i class="fas ${state.settings.footnotesCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"
+               aria-hidden="true"></i>
+        </h4>
+        <div class="strongs-footnotes-container"
+             id="strongsFootnotesContainer"
+             style="display: none;">
+        </div>
         <div class="embedded-resources">
-            ${buildResourceFrame('Bible Hub Interlinear', greekUrl, 'Interlinear (Hebrew is read right-to-left, Greek left-to-right)')}
+            ${buildResourceFrame('Bible Hub Interlinear', greekUrl, 'Bible Hub')}
             ${buildResourceFrame('STEP Bible Analysis', stepUrl, 'STEP Bible')}
         </div>
         <p style="margin-bottom:15px;opacity:0.8;font-size:0.9em;">
             <em>These resources provide detailed word-by-word analysis.
-            Use the "Pop Out" button to open them in a new tab.
-            Please support them as they are great resources!</em>
+            Note that Hebrew/OT is read right-to-left, while Greek/NT is read left-to-right.
+            Use the "Pop Out" button to open either resource in a new tab.
+            Please support these websites as they are great resources!</em>
         </p>
     `;
 }
@@ -91,14 +142,19 @@ function buildResourceFrame(title, url, tooltip) {
             <div class="resource-frame-header">
                 <h4>${escapeHTML(title)}</h4>
                 <div class="resource-frame-actions">
-                    <button class="resource-frame-btn" data-url="${escapeHTML(url)}" data-title="${escapeHTML(tooltip)}">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Pop Out
-                    </button>
+                    <a class="resource-frame-btn"
+                       href="${escapeHTML(url)}"
+                       target="_blank"
+                       rel="noopener"
+                       title="${escapeHTML(tooltip)}">
+                        <i class="fas fa-arrow-up-right-from-square"></i> Pop Out
+                    </a>
                 </div>
             </div>
-            <iframe src="${escapeHTML(url)}" 
-                loading="lazy" 
+            <iframe src="${escapeHTML(url)}"
+                loading="lazy"
                 referrerpolicy="no-referrer"
+                tabindex="-1"
                 style="${IFRAME_STYLES}">
             </iframe>
         </div>
@@ -119,12 +175,32 @@ function showPopup() {
     const overlay = document.getElementById('popupOverlay');
     if (popup) popup.classList.add('active');
     if (overlay) overlay.classList.add('active');
+    if (popup) {
+        popup.setAttribute('tabindex', '-1');
+        popup.focus({ preventScroll: true });
+    }
+}
+export function closeStrongsPopup() {
+    const popup = document.getElementById('strongsPopup');
+    const overlay = document.getElementById('popupOverlay');
+    if (popup) popup.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    if (popup) popup.removeAttribute('tabindex');
+    document.body.classList.remove('modal-open');
+    state.currentVerseData = null;
+}
+function resetPopupScrollPosition() {
+    const popup = document.getElementById('strongsPopup');
+    if (!popup) return;
+    popup.scrollTop = 0;
+    requestAnimationFrame(() => {
+        popup.scrollTop = 0;
+    });
 }
 function setupPopupEventHandlers() {
     setTimeout(() => {
         setupCopyButton();
         setupNavigationButtons();
-        setupResourceButtons();
         setupStrongsFootnoteHandlers();
     }, 0);
 }
@@ -235,8 +311,8 @@ function populateStrongsFootnotes(verseRef) {
         container.style.display = 'none';
         return;
     }
-    container.style.display = 'block';
-    container.innerHTML = '<h4 class="footnotes-heading">Footnotes</h4>';
+    container.style.display = state.settings.footnotesCollapsed ? 'none' : 'block';
+    container.innerHTML = '<h4 class="footnotes-heading"></h4>';
     verseFootnotes.forEach(fn => {
         const footnoteDiv = document.createElement('div');
         footnoteDiv.className = 'footnote';
@@ -261,33 +337,9 @@ function setupStrongsFootnoteHandlers() {
         });
     });
 }
-function setupResourceButtons() {
-    document.querySelectorAll('.resource-frame-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const url = this.dataset.url;
-            const title = this.dataset.title;
-            popOutResource(url, title);
-        });
-    });
-}
-function popOutResource(url, title) {
-    try {
-        window.open(url, title, 'width=800,height=600,menubar=no,toolbar=no,location=no');
-    } catch (error) {
-        console.error('Error opening resource:', error);
-        alert('Could not open resource. Pop-ups may be blocked.');
-    }
-}
 function setupNavigationButtons() {
     const prevBtn = document.getElementById('prevVerseBtn');
     const nextBtn = document.getElementById('nextVerseBtn');
     if (prevBtn) prevBtn.addEventListener('click', navigateToPreviousVerse);
     if (nextBtn) nextBtn.addEventListener('click', navigateToNextVerse);
-}
-export function closeStrongsPopup() {
-    const popup = document.getElementById('strongsPopup');
-    const overlay = document.getElementById('popupOverlay');
-    if (popup) popup.classList.remove('active');
-    if (overlay) overlay.classList.remove('active');
-    state.currentVerseData = null;
 }

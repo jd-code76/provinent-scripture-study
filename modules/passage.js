@@ -1,4 +1,4 @@
-﻿import { loadPassageFromAPI } from './api.js';
+import { loadPassageFromAPI } from './api.js';
 import { escapeHTML, handleError, updateHeaderTitle } from '../main.js';
 import { getCurrentTranslation } from './navigation.js';
 import { saveToStorage, state } from './state.js';

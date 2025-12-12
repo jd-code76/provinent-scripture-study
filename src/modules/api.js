@@ -4,6 +4,7 @@
 =====================================================================*/
 
 import { clearError, handleError, showError, showLoading } from '../main.js';
+import { nextPassage } from './navigation.js';
 import { afterContentLoad, displayPassage, extractVerseText } from './passage.js';
 import { bookNameMapping, state, saveToStorage } from './state.js';
 
@@ -233,7 +234,10 @@ export async function playChapterAudio(narrator = null) {
     } catch (error) {
         console.error('Audio playback error:', error);
         showError(`Could not play audio: ${error.message}`);
-        handleError(error, 'playChapterAudio');
+        const hint =
+            'Unable to start audio playback. Please ensure your device’s sound is on, ' +
+            'the browser is allowed to play media, and that you have granted any required permissions.';
+        handleError(error, 'playChapterAudio', `${hint}`);
     }
 }
 
@@ -244,29 +248,33 @@ export async function playChapterAudio(narrator = null) {
  */
 async function playKJVAudio(book, chapter) {
     cleanupAudioPlayer();
-    
     const audioUrl = getKJVAudioLink(book, chapter);
     if (!audioUrl) {
         throw new Error('KJV audio not available for this book');
     }
-
     const audio = createAudioElement(audioUrl);
-    
     state.audioPlayer = {
         audio,
         currentNarrator: 'default',
         isPlaying: false,
         isPaused: false
     };
-
     setupAudioEventHandlers(audio, 'default');
-    
+
     try {
-        await audio.play();
+        await audio.play(); // Normal success path
         state.audioPlayer.isPlaying = true;
         updateAudioPlayerUI(true);
     } catch (error) {
-        throw new Error(`Audio playback failed: ${error.message}`);
+        // Firefox may reject with AbortError even though playback started.
+        if (error.name === 'AbortError') {
+            // Treat it as a successful start.
+            state.audioPlayer.isPlaying = true;
+            updateAudioPlayerUI(true);
+        } else {
+            console.error('Audio playback failed (KJV):', error);
+            showError(`Could not play audio: ${error.message}`);
+        }
     }
 }
 
@@ -276,52 +284,80 @@ async function playKJVAudio(book, chapter) {
  */
 async function playBSBAudio(narrator) {
     const selectedNarrator = narrator || state.settings.audioNarrator || 'gilbert';
-    
-    // Update settings if narrator changed
     if (narrator && narrator !== state.settings.audioNarrator) {
         state.settings.audioNarrator = selectedNarrator;
         saveToStorage();
     }
-    
     cleanupAudioPlayer();
-    
     const audioLinks = getCurrentChapterAudioLinks();
     if (!audioLinks || !audioLinks[selectedNarrator]) {
         throw new Error(`Audio not available for current chapter from ${selectedNarrator}`);
     }
-    
     const audioUrl = audioLinks[selectedNarrator];
     const audio = createAudioElement(audioUrl);
-    
     state.audioPlayer = {
         audio,
         currentNarrator: selectedNarrator,
         isPlaying: false,
         isPaused: false
     };
-
     setupAudioEventHandlers(audio, selectedNarrator);
-    
+
     try {
-        await audio.play();
+        await audio.play(); // Normal success path
         state.audioPlayer.isPlaying = true;
         updateAudioPlayerUI(true, selectedNarrator);
     } catch (error) {
-        throw new Error(`Audio playback failed: ${error.message}`);
+        // Firefox may reject with AbortError even though playback started.
+        if (error.name === 'AbortError') {
+            // Treat it as a successful start.
+            state.audioPlayer.isPlaying = true;
+            updateAudioPlayerUI(true, selectedNarrator);
+        } else {
+            console.error('Audio playback failed (BSB):', error);
+            showError(`Could not play audio: ${error.message}`);
+        }
     }
 }
 
 /**
- * Set up audio event handlers
+ * Setup audio event handlers.
+ * 
+ * When the audio ends **naturally** (i.e. not because the user hit Pause/Stop),
+ * we want to advance to the next chapter and start playback automatically.
+ *
+ * The UI button will already have switched back to the “play” icon because
+ * `isPlaying` is set to false.  We therefore check that the player is **not**
+ * in a paused state before triggering the auto‑advance.
  * @param {HTMLAudioElement} audio - Audio element
  * @param {string} narrator - Narrator identifier
  */
 function setupAudioEventHandlers(audio, narrator) {
-    audio.addEventListener('ended', () => {
-        if (state.audioPlayer) {
-            state.audioPlayer.isPlaying = false;
-            state.audioPlayer.isPaused = false;
-            updateAudioPlayerUI(false, narrator);
+    audio.addEventListener('ended', async () => {
+        if (!state.audioPlayer) return;
+
+        // Reset UI state first (play button becomes visible again)
+        state.audioPlayer.isPlaying = false;
+        state.audioPlayer.isPaused = false;
+        updateAudioPlayerUI(false, narrator);
+        
+        const isLastChapter = state.settings.manualBook === 'Revelation' && Number(state.settings.manualChapter) === 22;
+
+        if (state.settings.autoplayAudio && !state.audioPlayer.isPaused && !isLastChapter) {
+            try {
+                nextPassage();
+                setTimeout(() => {
+                    const translation = state.settings.bibleTranslation;
+                    if (isKJV(translation)) {
+                        playChapterAudio();
+                    } else {
+                        const narr = state.settings.audioNarrator || 'gilbert';
+                        playChapterAudio(narr);
+                    }
+                }, 300);
+            } catch (e) {
+                console.error('Autoplay after audio end failed:', e);
+            }
         }
     });
     
@@ -334,6 +370,7 @@ function setupAudioEventHandlers(audio, narrator) {
         }
     });
 }
+
 
 /**
  * Pause currently playing audio
@@ -383,23 +420,19 @@ export function resumeChapterAudio() {
 function updateAudioPlayerUI(isPlaying, narrator = null) {
     const audioControls = document.getElementById('audioControls');
     if (!audioControls) return;
-    
-    const playBtn = audioControls.querySelector('.play-audio-btn');
+
+    const playBtn  = audioControls.querySelector('.play-audio-btn');
     const pauseBtn = audioControls.querySelector('.pause-audio-btn');
-    const stopBtn = audioControls.querySelector('.stop-audio-btn');
-    
-    // Toggle play/pause buttons
-    if (playBtn) playBtn.style.display = isPlaying ? 'none' : 'inline-block';
+    const stopBtn  = audioControls.querySelector('.stop-audio-btn');
+
+    if (playBtn)  playBtn.style.display  = isPlaying ? 'none' : 'inline-block';
     if (pauseBtn) pauseBtn.style.display = isPlaying ? 'inline-block' : 'none';
-    
-    // Show stop button only if audio has been started
+
+    const showStop = isPlaying || (state.audioPlayer && state.audioPlayer.isPaused);
     if (stopBtn) {
-        const hasAudioStarted = state.audioPlayer && 
-                              (state.audioPlayer.isPlaying || state.audioPlayer.isPaused);
-        stopBtn.style.display = hasAudioStarted ? 'inline-block' : 'none';
+        stopBtn.style.display = showStop ? 'inline-block' : 'none';
     }
-    
-    // Update narrator selection for non-KJV translations
+
     if (narrator && !isKJV(state.settings.bibleTranslation)) {
         const narratorSelect = audioControls.querySelector('.narrator-select');
         if (narratorSelect) {

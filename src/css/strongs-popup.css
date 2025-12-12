@@ -19,6 +19,8 @@
     max-height: 90vh;
     overflow-y: auto;
     border: 1px solid var(--border-color);
+    overscroll-behavior: contain;
+    outline: none;
 }
 
 .strongs-popup.active {
@@ -88,7 +90,6 @@
     display: block;
     background-color: var(--toolbar-background);
     border-radius: 6px;
-    margin-top: 5px;
 }
 
 .strongs-footnotes-container .footnotes-heading {
@@ -161,6 +162,10 @@
 #strongsPopup .footnote {
     cursor: pointer;
     transition: all 0.2s ease;
+}
+
+#footnotesToggleLabel:hover i {
+    opacity: 0.8;
 }
 
 .verse-reference-display {
@@ -242,6 +247,7 @@
 }
 
 .resource-frame-btn {
+    text-decoration: none; 
     padding: 4px 8px;
     font-size: 11px;
     background: var(--accent-color);
@@ -308,4 +314,43 @@
 
 .embedded-resources {
     overflow-anchor: none;
+}
+
+/* ==============================================================
+   Strong’s (Verse‑Analysis) popup – desktop‑size enhancements
+   ============================================================== */
+@media (min-width: 1024px) {
+    .strongs-popup {
+        max-height: 95vh;
+        min-height: 650px;
+        height: auto;
+        width: 80%;
+    }
+
+    .strongs-popup .resource-frame iframe {
+        height: 420px !important;
+    }
+
+    .strongs-popup .resource-frame {
+        margin-bottom: 1.5rem;
+    }
+
+    .strongs-popup .strongs-footnotes-container {
+        max-height: 260px;
+        overflow-y: auto;
+    }
+}
+
+/* --------------------------------------------------------------
+   Mobile fallback – keep the original compact sizing
+   -------------------------------------------------------------- */
+@media (max-width: 1023px) {
+    .strongs-popup {
+        max-height: 90vh;
+        width: 95%;
+    }
+
+    .strongs-popup .resource-frame iframe {
+        height: 300px !important;
+    }
 }

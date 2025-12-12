@@ -1,4 +1,4 @@
-﻿import { handleError, getSimpleDate } from '../main.js';
+import { handleError, getSimpleDate } from '../main.js';
 import { loadSelectedChapter, populateBookDropdown, populateChapterDropdown } from './navigation.js';
 import { BOOK_ORDER, CHAPTER_COUNTS, bibleComUrlMap, bibleHubUrlMap, ebibleOrgUrlMap, formatBookNameForSource, saveToStorage, state, stepBibleUrlMap } from './state.js';
 const UNSUPPORTED_TRANSLATIONS = {

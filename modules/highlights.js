@@ -1,4 +1,4 @@
-﻿import { escapeHTML } from '../main.js';
+import { escapeHTML } from '../main.js';
 import { loadSelectedChapter, syncBookChapterSelectors } from './navigation.js';
 import { updateDisplayRef } from './passage.js';
 import { BOOK_ORDER, saveToStorage, state, updateURL } from './state.js';

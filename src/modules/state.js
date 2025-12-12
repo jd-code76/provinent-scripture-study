@@ -9,7 +9,7 @@ import { handleError } from '../main.js';
    CONSTANTS
 ==================================================================== */
 
-export const APP_VERSION = '1.9.01.2025.11.29';
+export const APP_VERSION = '2.0.2025.12.12';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -151,7 +151,9 @@ export const state = {
             notesSection: 350
         },
         scriptureFontSize: 16,
-        notesFontSize: 16
+        notesFontSize: 16,
+        autoplayAudio: true,
+        footnotesCollapsed: false
     },
 
     hotkeys: {
@@ -164,7 +166,10 @@ export const state = {
         nextBook: { key: 'ArrowDown', altKey: true, shiftKey: true, ctrlKey: false },
         randomPassage: { key: 'r', altKey: true, shiftKey: false, ctrlKey: false },
         showHelp: { key: 'F1', altKey: false, shiftKey: false, ctrlKey: false },
-        toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false }
+        toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false },
+        exportData: { key: 'e', altKey: true, shiftKey: false, ctrlKey: false },
+        importData: { key: 'i', altKey: true, shiftKey: false, ctrlKey: false },
+        exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false }
     },
     
     hotkeysEnabled: true,
@@ -286,18 +291,29 @@ export function loadFromStorage() {
 }
 
 /**
- * Save critical settings to cookies
+ * Firefox (and newer Chrome/Edge) reject cookies with SameSite=Lax/Strict
+ * when they are set from a cross‑site context (e.g. OneTrust scripts).
+ * Setting SameSite=None; Secure tells the browser the cookie is
+ * intentionally allowed to be sent cross‑origin.
+ * NOTE: Secure requires HTTPS. Our app is always served over HTTPS
+ * (GitHub Pages, Netlify, etc.), so this is safe.
  */
 export function saveToCookies() {
     try {
         const expiry = new Date();
         expiry.setFullYear(expiry.getFullYear() + COOKIE_LENGTH);
-        
-        const cookieData = encodeURIComponent(JSON.stringify({
-            ...state.settings
-        }));
-        
-        document.cookie = `bibleStudySettings=${cookieData}; expires=${expiry.toUTCString()}; path=/; SameSite=Strict`;
+
+        const cookieData = encodeURIComponent(JSON.stringify(state.settings));
+
+        const cookieParts = [
+            `bibleStudySettings=${cookieData}`,
+            `expires=${expiry.toUTCString()}`,
+            'path=/',
+            'SameSite=None',
+            'Secure'
+        ];
+
+        document.cookie = cookieParts.join('; ');
     } catch (error) {
         console.error('Cookie save error:', error);
         handleError(error, 'saveToCookies');

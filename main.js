@@ -1,4 +1,4 @@
-﻿import { isKJV, playChapterAudio, pauseChapterAudio, resumeChapterAudio, stopChapterAudio } from './modules/api.js';
+import { isKJV, playChapterAudio, pauseChapterAudio, resumeChapterAudio, stopChapterAudio } from './modules/api.js';
 import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights, showColorPicker, showHighlightsModal } from './modules/highlights.js';
 import { showHelpModal } from './modules/hotkeys.js';
 import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
@@ -44,12 +44,11 @@ class AppError extends Error {
         this.originalError = originalError;
     }
 }
-export function handleError(error, context) {
+export function handleError(error, context, userFriendlyMessage) {
     console.error(`Error in ${context}:`, error);
-    const userMessage = error instanceof AppError 
-        ? error.message 
-        : 'An unexpected error occurred';
-    showError(userMessage);
+    const messageToShow = userFriendlyMessage ??
+        (error instanceof AppError ? error.message : 'An unexpected error occurred');
+    showError(messageToShow);
     if (window.errorTracker) {
         window.errorTracker.log(error, context);
     }
@@ -270,11 +269,6 @@ function setupAudioControls() {
         const playBtn = document.querySelector('.play-audio-btn');
         const pauseBtn = document.querySelector('.pause-audio-btn');
         const stopBtn = document.querySelector('.stop-audio-btn');
-        document.addEventListener('change', (e) => {
-            if (e.target && e.target.matches('.narrator-select')) {
-                handleNarratorChange(e);
-            }
-        });
         if (playBtn) {
             playBtn.addEventListener('click', handleAudioPlayback);
         }
@@ -308,8 +302,7 @@ function handleAudioPlayback() {
         }
     }
 }
-function handleNarratorChange(e) {
-    const newNarrator = e.target.value;
+export function handleNarratorChange(newNarrator) {
     state.settings.audioNarrator = newNarrator;
     saveToStorage();
     if (state.audioPlayer && !isKJV(state.settings.bibleTranslation)) {
