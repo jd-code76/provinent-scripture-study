@@ -7,7 +7,7 @@ import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights
 import { showHelpModal } from './modules/hotkeys.js';
 import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
 import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings } from './modules/settings.js'
-import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToCookies, saveToStorage, state } from './modules/state.js'
+import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToStorage, state } from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
 import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
     updateMarkdownPreview, updateReferencePanel, updateNotesFontSize, updateScriptureFontSize } from './modules/ui.js'
@@ -75,15 +75,16 @@ class AppError extends Error {
  * Handle application errors with context awareness
  * @param {Error} error - The error object
  * @param {string} context - Where the error occurred
+ * @param {string} userFriendlyMessage - Optional user-facing message
  */
 export function handleError(error, context, userFriendlyMessage) {
     console.error(`Error in ${context}:`, error);
 
-    // If the caller supplied a friendly string, use it
-    const messageToShow = userFriendlyMessage ??
+    const rawMsg = userFriendlyMessage ?? 
         (error instanceof AppError ? error.message : 'An unexpected error occurred');
+    const escapedMsg = escapeHTML(rawMsg);
 
-    showError(messageToShow);
+    showError(escapedMsg);
 
     if (window.errorTracker) {
         window.errorTracker.log(error, context);
@@ -91,13 +92,13 @@ export function handleError(error, context, userFriendlyMessage) {
 }
 
 /**
- * Display error message to user
- * @param {string} msg - Error message to display
+ * Display error message to user (HTML-escaped)
+ * @param {string} escapedMsg - Pre-escaped message to display
  */
-export function showError(msg) {
+export function showError(escapedMsg) {
     const errorContainer = document.getElementById('errorContainer');
     if (errorContainer) {
-        errorContainer.innerHTML = `<div class="error-message">${msg}</div>`;
+        errorContainer.innerHTML = `<div class="error-message">${escapedMsg}</div>`;
     }
 }
 
@@ -310,16 +311,6 @@ export function escapeHTML(string) {
    THEMING
    Theme management functions
 ==================================================================== */
-
-/**
- * Toggle between light and dark themes
- */
-function toggleTheme() {
-    state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light';
-    applyTheme();
-    saveToStorage();
-    saveToCookies();
-}
 
 /**
  * Apply current theme to document

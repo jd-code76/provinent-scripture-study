@@ -149,6 +149,51 @@ function handleClearSearch() {
         console.error('Error clearing search:', error);
     }
 }
+function getValidatedCache(forceClearOnInvalid = false) {
+    try {
+        const rawData = localStorage.getItem('cachedVerses');
+        if (!rawData) {
+            return {};
+        }
+        let cachedVerses;
+        try {
+            cachedVerses = JSON.parse(rawData);
+        } catch (parseError) {
+            console.error('Invalid JSON in cachedVerses:', parseError);
+            if (forceClearOnInvalid) {
+                localStorage.removeItem('cachedVerses');
+            }
+            return null;
+        }
+        if (cachedVerses === null || typeof cachedVerses !== 'object' || Array.isArray(cachedVerses)) {
+            console.error('cachedVerses is not a valid object');
+            if (forceClearOnInvalid) {
+                localStorage.removeItem('cachedVerses');
+            }
+            return null;
+        }
+        for (const [key, value] of Object.entries(cachedVerses)) {
+            if (typeof key !== 'string' || typeof value !== 'string') {
+                console.error('Invalid entry in cachedVerses at key:', key);
+                if (forceClearOnInvalid) {
+                    localStorage.removeItem('cachedVerses');
+                }
+                return null;
+            }
+            const sanitized = value.trim().replace(/[\x00-\x1F\x7F]/g, '');
+            if (sanitized.length === 0 || sanitized.length > 10000) {
+                console.warn('Invalid verse length at', key, '; skipping');
+                delete cachedVerses[key];
+            } else {
+                cachedVerses[key] = sanitized;
+            }
+        }
+        return cachedVerses;
+    } catch (error) {
+        console.error('Error validating cache:', error);
+        return null;
+    }
+}
 export function renderHighlights(filterColor = 'all', searchTerm = '') {
     try {
         const highlightsList = document.getElementById('highlightsList');
@@ -158,8 +203,13 @@ export function renderHighlights(filterColor = 'all', searchTerm = '') {
             highlightsList.innerHTML = '<div class="no-highlights">No verses have been highlighted yet</div>';
             return;
         }
+        const validatedCache = getValidatedCache(false);
+        if (validatedCache === null) {
+            highlightsList.innerHTML = '<div class="warning">Cached verse data is invalid. Visit verses to refresh highlights display.</div>';
+            return;
+        }
         const sortedReferences = sortHighlightReferences(highlights);
-        const filteredReferences = filterHighlightReferences(sortedReferences, filterColor, searchTerm);
+        const filteredReferences = filterHighlightReferences(sortedReferences, filterColor, searchTerm, validatedCache);
         let html = '';
         if (filteredReferences.length === 0) {
             const noResultsMsg = searchTerm 
@@ -167,7 +217,7 @@ export function renderHighlights(filterColor = 'all', searchTerm = '') {
                 : 'No highlights match the selected filter';
             html = `<div class="no-results">${noResultsMsg}</div>`;
         } else {
-            html = generateHighlightItemsHTML(filteredReferences, searchTerm);
+            html = generateHighlightItemsHTML(filteredReferences, searchTerm, validatedCache);
         }
         highlightsList.innerHTML = html;
         setupHighlightItemClickHandlers();
@@ -221,13 +271,13 @@ function sortHighlightReferences(highlights) {
             return a.verse - b.verse;
         });
 }
-function filterHighlightReferences(references, filterColor, searchTerm) {
+function filterHighlightReferences(references, filterColor, searchTerm, validatedCache) {
     return references.filter(ref => {
         if (filterColor !== 'all' && ref.color !== filterColor) {
             return false;
         }
         if (searchTerm) {
-            const verseText = getVerseTextFromStorage(ref.reference) || '';
+            const verseText = validatedCache[ref.reference] || '';
             if (!verseText.toLowerCase().includes(searchTerm) && 
                 !ref.reference.toLowerCase().includes(searchTerm)) {
                 return false;
@@ -236,9 +286,9 @@ function filterHighlightReferences(references, filterColor, searchTerm) {
         return true;
     });
 }
-function generateHighlightItemsHTML(references, searchTerm) {
+function generateHighlightItemsHTML(references, searchTerm, validatedCache) {
     return references.map(ref => {
-        const verseText = getVerseTextFromStorage(ref.reference) || 'Text not cached, visit to refresh';
+        const verseText = validatedCache[ref.reference] || 'Text not cached, visit to refresh';
         let displayText = verseText;
         if (searchTerm) {
             const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
@@ -285,14 +335,12 @@ export function scrollToVerse(verseNumber) {
         console.error('Error scrolling to verse:', error);
     }
 }
-export function getVerseTextFromStorage(reference) {
-    try {
-        const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
-        return cachedVerses[reference] || null;
-    } catch (error) {
-        console.error('Error retrieving verse text:', error);
+export function getVerseTextFromStorage(reference, forceClearOnInvalid = false) {
+    const cachedVerses = getValidatedCache(forceClearOnInvalid);
+    if (!cachedVerses || !(reference in cachedVerses)) {
         return null;
     }
+    return cachedVerses[reference];
 }
 function navigateToHighlightedVerse(reference) {
     try {

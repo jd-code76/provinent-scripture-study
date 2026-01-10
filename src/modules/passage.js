@@ -121,15 +121,59 @@ function getPlainVerseText(htmlText) {
 }
 
 /**
- * Cache verse text in localStorage
+ * Cache verse text in localStorage with validation
+ * @param {Object} verse - Verse object with reference and text
  */
 function cacheVerseText(verse) {
     try {
-        const cachedVerses = JSON.parse(localStorage.getItem('cachedVerses') || '{}');
-        cachedVerses[verse.reference] = getPlainVerseText(verse.text.text);
+        // Sanitize incoming verse text first (plain, safe string)
+        const plainText = getPlainVerseText(verse.text.text || '').trim();
+        if (plainText.length === 0 || plainText.length > 10000) {
+            console.warn('Invalid verse text length for', verse.reference, '; skipping cache');
+            return;
+        }
+        const sanitizedText = plainText.replace(/[\x00-\x1F\x7F]/g, '');
+
+        // Get raw data
+        const rawData = localStorage.getItem('cachedVerses');
+        let cachedVerses = {};
+
+        if (rawData) {
+            try {
+                cachedVerses = JSON.parse(rawData);
+            } catch (parseError) {
+                console.error('Invalid JSON in cachedVerses during cache; starting fresh:', parseError);
+                cachedVerses = {};
+            }
+
+            // Validate structure: plain object
+            if (cachedVerses === null || typeof cachedVerses !== 'object' || Array.isArray(cachedVerses)) {
+                console.error('cachedVerses invalid structure; starting fresh');
+                cachedVerses = {};
+            } else {
+                // Clean existing entries (sanitize keys/values)
+                const cleanEntries = {};
+                for (const [key, value] of Object.entries(cachedVerses)) {
+                    if (typeof key === 'string' && typeof value === 'string') {
+                        const sanitizedValue = value.trim().replace(/[\x00-\x1F\x7F]/g, '');
+                        if (sanitizedValue.length > 0 && sanitizedValue.length <= 10000) {
+                            cleanEntries[key] = sanitizedValue;
+                        } else {
+                            console.warn('Skipping invalid cache entry for', key);
+                        }
+                    }
+                }
+                cachedVerses = cleanEntries;
+            }
+        }
+
+        // Add or update the new entry (overwrite if exists)
+        cachedVerses[verse.reference] = sanitizedText;
+
+        // Write back only if clean (JSON.stringify is safe for plain objects)
         localStorage.setItem('cachedVerses', JSON.stringify(cachedVerses));
     } catch (error) {
-        console.error('Error caching verse text:', error);
+        console.error('Error caching verse text for', verse.reference, ':', error);
     }
 }
 
@@ -139,7 +183,11 @@ function cacheVerseText(verse) {
 function processHeadingItem(heading, fragment) {
     const headingDiv = document.createElement('div');
     headingDiv.className = 'chapter-heading';
-    headingDiv.innerHTML = `<h3>${escapeHTML(heading.content)}</h3>`;
+    
+    const h3 = document.createElement('h3');
+    h3.textContent = heading.content;
+    
+    headingDiv.appendChild(h3);
     fragment.appendChild(headingDiv);
 }
 
@@ -177,10 +225,18 @@ function addFootnotesToContainer(container, footnotes) {
 function createFootnoteElement(footnote) {
     const footnoteElement = document.createElement('div');
     footnoteElement.className = 'footnote';
-    footnoteElement.innerHTML = `
-        <sup class="footnote-number">${footnote.number}</sup>
-        <span class="footnote-content">${escapeHTML(footnote.content)}</span>
-    `;
+    
+    const sup = document.createElement('sup');
+    sup.className = 'footnote-number';
+    sup.textContent = footnote.number;
+    
+    const span = document.createElement('span');
+    span.className = 'footnote-content';
+    span.textContent = escapeHTML(footnote.content);
+    
+    footnoteElement.appendChild(sup);
+    footnoteElement.appendChild(span);
+    
     footnoteElement.dataset.footnoteId = footnote.index;
     footnoteElement.dataset.footnoteNumber = footnote.number;
     return footnoteElement;

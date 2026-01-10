@@ -9,7 +9,7 @@ import { handleError } from '../main.js';
    CONSTANTS
 ==================================================================== */
 
-export const APP_VERSION = '2.0.2025.12.12';
+export const APP_VERSION = '2.1.2026.01.09';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;

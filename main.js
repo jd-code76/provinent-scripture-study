@@ -3,7 +3,7 @@ import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights
 import { showHelpModal } from './modules/hotkeys.js';
 import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
 import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings } from './modules/settings.js'
-import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToCookies, saveToStorage, state } from './modules/state.js'
+import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToStorage, state } from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
 import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
     updateMarkdownPreview, updateReferencePanel, updateNotesFontSize, updateScriptureFontSize } from './modules/ui.js'
@@ -46,17 +46,18 @@ class AppError extends Error {
 }
 export function handleError(error, context, userFriendlyMessage) {
     console.error(`Error in ${context}:`, error);
-    const messageToShow = userFriendlyMessage ??
+    const rawMsg = userFriendlyMessage ?? 
         (error instanceof AppError ? error.message : 'An unexpected error occurred');
-    showError(messageToShow);
+    const escapedMsg = escapeHTML(rawMsg);
+    showError(escapedMsg);
     if (window.errorTracker) {
         window.errorTracker.log(error, context);
     }
 }
-export function showError(msg) {
+export function showError(escapedMsg) {
     const errorContainer = document.getElementById('errorContainer');
     if (errorContainer) {
-        errorContainer.innerHTML = `<div class="error-message">${msg}</div>`;
+        errorContainer.innerHTML = `<div class="error-message">${escapedMsg}</div>`;
     }
 }
 export function clearError() {
@@ -191,12 +192,6 @@ export function escapeHTML(string) {
         };
         return escape[char];
     });
-}
-function toggleTheme() {
-    state.settings.theme = state.settings.theme === 'light' ? 'dark' : 'light';
-    applyTheme();
-    saveToStorage();
-    saveToCookies();
 }
 export function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.settings.theme);

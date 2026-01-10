@@ -334,9 +334,13 @@ export function syncBookChapterSelectors() {
 }
 async function getRandomBibleLocation() {
     try {
-        const randomBook = BOOK_ORDER[Math.floor(Math.random() * BOOK_ORDER.length)];
+        const randomBuffer = new Uint32Array(2); 
+        crypto.getRandomValues(randomBuffer);
+        const randomBookIndex = Math.floor((randomBuffer[0] / 0xFFFFFFFF) * BOOK_ORDER.length);
+        const randomBook = BOOK_ORDER[randomBookIndex];
         const maxChapters = CHAPTER_COUNTS[randomBook];
-        const randomChapter = Math.floor(Math.random() * maxChapters) + 1;
+        const randomChapterIndex = Math.floor((randomBuffer[1] / 0xFFFFFFFF) * maxChapters) + 1;
+        const randomChapter = Math.min(randomChapterIndex, maxChapters);
         const apiMap = apiTranslationCode(state.settings.bibleTranslation);
         const apiBook = bookNameMapping[randomBook] || randomBook.replace(/\s+/g, '').toUpperCase();
         const chapterData = await fetchChapter(apiMap, apiBook, randomChapter);
@@ -350,6 +354,24 @@ async function getRandomBibleLocation() {
             displayRef: `${randomBook} ${randomChapter}`
         };
     } catch (error) {
+        if (error.name === 'TypeError' || error.message.includes('crypto')) {
+            console.warn('crypto.getRandomValues unavailable; falling back to Math.random for random passage');
+            const randomBook = BOOK_ORDER[Math.floor(Math.random() * BOOK_ORDER.length)];
+            const maxChapters = CHAPTER_COUNTS[randomBook];
+            const randomChapter = Math.floor(Math.random() * maxChapters) + 1;
+            const apiMap = apiTranslationCode(state.settings.bibleTranslation);
+            const apiBook = bookNameMapping[randomBook] || randomBook.replace(/\s+/g, '').toUpperCase();
+            const chapterData = await fetchChapter(apiMap, apiBook, randomChapter);
+            const verses = chapterData.chapter.content.filter(v => v.type === 'verse');
+            const verseCount = verses.length || 1;
+            return {
+                book: randomBook,
+                chapter: randomChapter,
+                startVerse: 1,
+                endVerse: verseCount,
+                displayRef: `${randomBook} ${randomChapter}`
+            };
+        }
         handleError(error, 'getRandomBibleLocation');
         throw error;
     }
