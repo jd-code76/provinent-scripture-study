@@ -578,7 +578,7 @@ async function getRandomBibleLocation() {
 /**
  * Get current translation
  */
-export function getCurrentTranslation() {
+function getCurrentTranslation() {
     return state.settings.bibleTranslation || 'BSB';
 }
 

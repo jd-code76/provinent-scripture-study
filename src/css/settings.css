@@ -272,3 +272,189 @@
 #notesFontSizeSlider {
     accent-color: var(--accent-color);
 }
+
+/* ====================================================================
+   SYNC UI STYLES (Text-Based Pairing Only)
+==================================================================== */
+
+.sync-status-container {
+    margin: 15px 0;
+    padding: 15px;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.sync-status-connected {
+    color: #4CAF50;
+    margin-bottom: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sync-status-disconnected {
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sync-status-time {
+    font-size: 0.85em;
+    opacity: 0.7;
+    color: var(--text-color);
+    margin-top: 5px;
+}
+
+.device-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: var(--card-background);
+    transition: all 0.2s ease;
+}
+
+.device-item:hover {
+    background: var(--verse-hover);
+    border-color: var(--accent-color);
+}
+
+.device-item.device-active {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.05);
+}
+
+.device-info {
+    flex: 1;
+}
+
+.device-name-input {
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    padding: 6px 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    width: 100%;
+    background: var(--background);
+    color: var(--text-color);
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.device-name-input:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+    border-color: var(--accent-color);
+}
+
+.device-id {
+    display: block;
+    font-size: 0.8em;
+    color: var(--text-color);
+    opacity: 0.6;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 6px;
+}
+
+.device-id code {
+    background: var(--background);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+}
+
+.device-last-sync {
+    display: block;
+    font-size: 0.85em;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+.status-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 3px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.device-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 15px;
+}
+
+.no-devices-message {
+    color: var(--text-color);
+    opacity: 0.6;
+    font-style: italic;
+    text-align: center;
+    padding: 30px 20px;
+    background: var(--background);
+    border-radius: 6px;
+}
+
+/* Pairing code display styling */
+#pairingCodeContainer {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#enterPairingCodeInput:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+    border-color: var(--accent-color);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .device-item.device-active {
+    background: rgba(76, 175, 80, 0.1);
+}
+
+[data-theme="dark"] #pairingCodeDisplay {
+    background: var(--background);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}

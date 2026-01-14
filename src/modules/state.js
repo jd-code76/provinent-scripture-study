@@ -9,7 +9,7 @@ import { handleError } from '../main.js';
    CONSTANTS
 ==================================================================== */
 
-export const APP_VERSION = '2.1.2026.01.09';
+export const APP_VERSION = '2.2.2026.01.14';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -121,9 +121,8 @@ export const BOOK_NAME_TO_ABBREVIATION = Object.fromEntries(
 
 /* ====================================================================
    APPLICATION STATE
-   Central state object for app data and settings
 ==================================================================== */
-export const state = {
+const stateInternal = {
     currentVerse: null,
     currentVerseData: null,
     highlights: {},
@@ -153,7 +152,11 @@ export const state = {
         scriptureFontSize: 16,
         notesFontSize: 16,
         autoplayAudio: true,
-        footnotesCollapsed: false
+        footnotesCollapsed: false,
+        syncEnabled: false,
+        autoSync: false,
+        connectedDevices: [],
+        myPeerId: null  // Local PeerJS ID for auto-reconnect persistence
     },
 
     hotkeys: {
@@ -169,18 +172,247 @@ export const state = {
         toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false },
         exportData: { key: 'e', altKey: true, shiftKey: false, ctrlKey: false },
         importData: { key: 'i', altKey: true, shiftKey: false, ctrlKey: false },
-        exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false }
+        exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false },
+        manualSync: { key: 'd', altKey: true, shiftKey: false, ctrlKey: false }
     },
     
     hotkeysEnabled: true,
     currentPassageReference: '',
     audioPlayer: null,
-    currentChapterData: null
+    currentChapterData: null,
+    
+    // Sync metadata for timestamp-based conflict resolution
+    _syncMeta: {
+        highlights: {},  // { 'Genesis 1:1': { ts: 1234567890 } }
+        notes: null,     // { ts: 1234567890 }
+        settings: {}     // { bibleTranslation: { ts: 1234567890 } }
+    }
 };
 
 /* ====================================================================
+   REACTIVE STATE PROXY
+   Auto-saves and emits change events for sync
+==================================================================== */
+
+let stateChangeListeners = [];
+
+/**
+ * Subscribe to state change events
+ * @param {Function} listener - Callback with (detail) argument
+ * @returns {Function} - Unsubscribe function
+ */
+export function onStateChange(listener) {
+    stateChangeListeners.push(listener);
+    return () => {
+        const idx = stateChangeListeners.indexOf(listener);
+        if (idx > -1) stateChangeListeners.splice(idx, 1);
+    };
+}
+
+/**
+ * Emit state change event
+ * @param {string} type - Change type ('highlights', 'notes', 'settings')
+ * @param {string} key - Property key
+ * @param {*} oldValue - Previous value
+ * @param {*} newValue - New value
+ */
+function emitStateChange(type, key, oldValue, newValue) {
+    const detail = { type, key, oldValue, newValue, timestamp: Date.now() };
+    
+    // Notify listeners (sync.js uses this for auto-sync trigger)
+    stateChangeListeners.forEach(listener => {
+        try {
+            listener(detail);
+        } catch (e) {
+            console.error('State change listener error:', e);
+        }
+    });
+    
+    // Emit DOM event for UI
+    const ev = new CustomEvent('state:changed', { detail });
+    document.dispatchEvent(ev);
+}
+
+/**
+ * Create reactive proxy for state object with deep tracking for highlights
+ */
+export const state = new Proxy(stateInternal, {
+    set(target, prop, value) {
+        const oldValue = target[prop];
+        
+        // Skip no-op updates
+        if (oldValue === value) return true;
+        
+        let syncType = null;
+        
+        // Update sync metadata timestamps for conflict resolution
+        if (prop === 'highlights') {
+            syncType = 'highlights';
+            
+            // Wrap the highlights object in a proxy to track individual changes
+            if (typeof value === 'object' && value !== null) {
+                value = new Proxy(value, {
+                    set(highlightsTarget, ref, color) {
+                        const oldColor = highlightsTarget[ref];
+                        if (oldColor === color) return true;
+                        
+                        // Update timestamp for this specific highlight
+                        if (!target._syncMeta.highlights[ref]) {
+                            target._syncMeta.highlights[ref] = {};
+                        }
+                        target._syncMeta.highlights[ref].ts = Date.now();
+                        
+                        const success = Reflect.set(highlightsTarget, ref, color);
+                        
+                        if (success) {
+                            // Save and emit change
+                            saveToStorageImmediate();
+                            emitStateChange('highlight', ref, oldColor, color);
+                        }
+                        
+                        return success;
+                    },
+                    
+                    deleteProperty(highlightsTarget, ref) {
+                        const success = Reflect.deleteProperty(highlightsTarget, ref);
+                        if (success) {
+                            Reflect.deleteProperty(target._syncMeta.highlights, ref);
+                            saveToStorageImmediate();
+                            emitStateChange('highlight', ref, highlightsTarget[ref], undefined);
+                        }
+                        return success;
+                    }
+                });
+            }
+            
+            emitStateChange('highlights', prop, oldValue, value);
+        } else if (prop === 'notes') {
+            target._syncMeta.notes = { ts: Date.now() };
+            syncType = 'notes';
+            emitStateChange('notes', prop, oldValue, value);
+        } else if (prop === 'settings') {
+            syncType = 'settings';
+            if (typeof value === 'object' && value !== null) {
+                const skipKeys = [
+                    'collapsedSections', 'collapsedPanels', 'panelWidths', 
+                    'referencePanelOpen', 'hotkeys', 'hotkeysEnabled', 
+                    'currentPassageReference', 'audioPlayer', 'currentChapterData',
+                    'myPeerId'
+                ];
+                Object.entries(value).forEach(([k, v]) => {
+                    if (!skipKeys.includes(k) && (k in oldValue ? v !== oldValue[k] : v !== undefined)) {
+                        if (!target._syncMeta.settings[k]) {
+                            target._syncMeta.settings[k] = {};
+                        }
+                        target._syncMeta.settings[k].ts = Date.now();
+                    }
+                });
+            }
+            emitStateChange('settings', prop, oldValue, value);
+        }
+        
+        // Apply the change
+        const success = Reflect.set(target, prop, value);
+        
+        // Auto-save after mutation (skip metadata to avoid recursion)
+        if (success && prop !== '_syncMeta') {
+            saveToStorage();
+        }
+        
+        return success;
+    },
+    
+    get(target, prop) {
+        // If getting highlights, ensure it's proxied
+        if (prop === 'highlights') {
+            const highlights = Reflect.get(target, prop);
+            if (highlights && typeof highlights === 'object' && !highlights.__isProxy) {
+                const proxied = new Proxy(highlights, {
+                    set(highlightsTarget, ref, color) {
+                        const oldColor = highlightsTarget[ref];
+                        if (oldColor === color) return true;
+                        
+                        if (!target._syncMeta.highlights[ref]) {
+                            target._syncMeta.highlights[ref] = {};
+                        }
+                        target._syncMeta.highlights[ref].ts = Date.now();
+                        
+                        const success = Reflect.set(highlightsTarget, ref, color);
+                        
+                        if (success) {
+                            saveToStorageImmediate();
+                            emitStateChange('highlight', ref, oldColor, color);
+                        }
+                        
+                        return success;
+                    },
+                    
+                    deleteProperty(highlightsTarget, ref) {
+                        const success = Reflect.deleteProperty(highlightsTarget, ref);
+                        if (success) {
+                            Reflect.deleteProperty(target._syncMeta.highlights, ref);
+                            saveToStorageImmediate();
+                            emitStateChange('highlight', ref, highlightsTarget[ref], undefined);
+                        }
+                        return success;
+                    }
+                });
+                
+                // Mark as proxied to avoid re-wrapping
+                Object.defineProperty(proxied, '__isProxy', {
+                    value: true,
+                    enumerable: false
+                });
+                
+                Reflect.set(target, prop, proxied);
+                return proxied;
+            }
+        }
+        
+        return Reflect.get(target, prop);
+    }
+});
+
+/**
+ * Update a single highlight and track timestamp
+ * Use this instead of directly modifying state.highlights
+ */
+export function setHighlight(reference, color) {
+    if (color === 'none' || !color) {
+        delete state.highlights[reference];
+        delete state._syncMeta.highlights[reference];
+    } else {
+        state.highlights[reference] = color;
+        if (!state._syncMeta.highlights[reference]) {
+            state._syncMeta.highlights[reference] = {};
+        }
+        state._syncMeta.highlights[reference].ts = Date.now();
+    }
+    
+    // Trigger save and sync
+    saveToStorageImmediate();
+    
+    // Emit change event for sync
+    const ev = new CustomEvent('state:changed', { 
+        detail: { 
+            type: 'highlight', 
+            reference, 
+            color, 
+            timestamp: Date.now() 
+        } 
+    });
+    document.dispatchEvent(ev);
+}
+
+/**
+ * Remove a highlight
+ */
+export function removeHighlight(reference) {
+    setHighlight(reference, 'none');
+}
+
+/* ====================================================================
    BOOK FORMATTING
-   Source-specific book name formatting
 ==================================================================== */
 
 /**
@@ -226,7 +458,6 @@ export function formatBookNameForSource(bookName, source) {
 
 /* ====================================================================
    PERSISTENCE
-   State save/load operations
 ==================================================================== */
 
 /**
@@ -234,7 +465,7 @@ export function formatBookNameForSource(bookName, source) {
  */
 export function saveToStorage() {
     if (saveTimeout) clearTimeout(saveTimeout);
-    
+
     saveTimeout = setTimeout(() => {
         try {
             const cleanState = {
@@ -242,10 +473,11 @@ export function saveToStorage() {
                 currentVerseData: state.currentVerseData,
                 highlights: state.highlights,
                 notes: state.notes,
-                settings: { ...state.settings },
-                currentPassageReference: state.currentPassageReference
+                settings: { ...state.settings },  // Includes myPeerId (local), connectedDevices
+                currentPassageReference: state.currentPassageReference,
+                _syncMeta: state._syncMeta  // Include sync metadata
             };
-            
+
             localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
             saveToCookies();
         } catch (error) {
@@ -256,7 +488,32 @@ export function saveToStorage() {
 }
 
 /**
- * Load state from localStorage
+ * Save state immediately (no debounce) - used by sync.js
+ */
+export function saveToStorageImmediate() {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    
+    try {
+        const cleanState = {
+            currentVerse: null,
+            currentVerseData: state.currentVerseData,
+            highlights: state.highlights,
+            notes: state.notes,
+            settings: { ...state.settings },
+            currentPassageReference: state.currentPassageReference,
+            _syncMeta: state._syncMeta
+        };
+
+        localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
+        saveToCookies();
+    } catch (error) {
+        console.error('Immediate storage save error:', error);
+        handleError(error, 'saveToStorageImmediate');
+    }
+}
+
+/**
+ * Load state from localStorage (with validation)
  */
 export function loadFromStorage() {
     try {
@@ -265,45 +522,159 @@ export function loadFromStorage() {
         
         const parsed = JSON.parse(raw);
         
-        if (parsed.settings) {
-            state.settings = { ...state.settings, ...parsed.settings };
+        // Validate and restore settings
+        if (parsed.settings && typeof parsed.settings === 'object') {
+            // Sanitize: Ensure required fields and bounds
+            const validSettings = {
+                bibleTranslation: AVAILABLE_TRANSLATIONS.includes(parsed.settings.bibleTranslation) ? parsed.settings.bibleTranslation : 'BSB',
+                referenceVersion: parsed.settings.referenceVersion || 'NASB',
+                footnotes: typeof parsed.settings.footnotes === 'object' ? parsed.settings.footnotes : {},
+                audioControlsVisible: parsed.settings.audioControlsVisible === true || parsed.settings.audioControlsVisible === false,
+                audioNarrator: parsed.settings.audioNarrator || 'gilbert',
+                manualBook: BOOK_ORDER.includes(parsed.settings.manualBook) ? parsed.settings.manualBook : BOOK_ORDER[0],
+                manualChapter: Math.max(1, Math.min(150, parseInt(parsed.settings.manualChapter) || 1)),
+                theme: ['light', 'dark'].includes(parsed.settings.theme) ? parsed.settings.theme : 'dark',
+                colorTheme: parsed.settings.colorTheme || 'blue',
+                notesView: ['text', 'markdown'].includes(parsed.settings.notesView) ? parsed.settings.notesView : 'text',
+                referencePanelOpen: typeof parsed.settings.referencePanelOpen === 'boolean' ? parsed.settings.referencePanelOpen : true,
+                referenceSource: ['biblegateway', 'biblecom', 'ebibleorg', 'stepbible'].includes(parsed.settings.referenceSource) ? parsed.settings.referenceSource : 'biblegateway',
+                collapsedSections: typeof parsed.settings.collapsedSections === 'object' ? parsed.settings.collapsedSections : {},
+                collapsedPanels: typeof parsed.settings.collapsedPanels === 'object' ? parsed.settings.collapsedPanels : {},
+                panelWidths: {
+                    sidebar: Math.max(200, Math.min(500, parseInt(parsed.settings.panelWidths?.sidebar) || 280)),
+                    referencePanel: Math.max(250, Math.min(500, parseInt(parsed.settings.panelWidths?.referencePanel) || 350)),
+                    scriptureSection: parsed.settings.panelWidths?.scriptureSection || null,
+                    notesSection: Math.max(250, Math.min(500, parseInt(parsed.settings.panelWidths?.notesSection) || 350))
+                },
+                scriptureFontSize: Math.max(12, Math.min(32, parseInt(parsed.settings.scriptureFontSize) || 16)),
+                notesFontSize: Math.max(12, Math.min(32, parseInt(parsed.settings.notesFontSize) || 16)),
+                autoplayAudio: parsed.settings.autoplayAudio === true || parsed.settings.autoplayAudio === false,
+                footnotesCollapsed: parsed.settings.footnotesCollapsed === true || parsed.settings.footnotesCollapsed === false,
+                syncEnabled: parsed.settings.syncEnabled === true || parsed.settings.syncEnabled === false,
+                autoSync: parsed.settings.autoSync === true || parsed.settings.autoSync === false,
+                connectedDevices: Array.isArray(parsed.settings.connectedDevices) ? parsed.settings.connectedDevices.map(d => ({
+                    id: typeof d.id === 'string' ? d.id : '',
+                    peerId: typeof d.peerId === 'string' && d.peerId.length === 8 ? d.peerId : d.id,
+                    name: typeof d.name === 'string' ? d.name : 'Unknown',
+                    customName: d.customName || null,
+                    connectedAt: typeof d.connectedAt === 'number' ? d.connectedAt : Date.now(),
+                    lastConnectedAt: typeof d.lastConnectedAt === 'number' ? d.lastConnectedAt : Date.now()
+                })).filter(d => d.peerId && d.id) : [],
+                myPeerId: typeof parsed.settings.myPeerId === 'string' && parsed.settings.myPeerId.length === 8 ? parsed.settings.myPeerId : null
+            };
+            Object.assign(stateInternal.settings, validSettings);
         }
         
-        if (parsed.highlights) {
-            state.highlights = parsed.highlights;
+        // Restore highlights with validation
+        if (parsed.highlights && typeof parsed.highlights === 'object') {
+            const tempHighlights = {};
+            Object.entries(parsed.highlights).forEach(([ref, color]) => {
+                if (typeof ref === 'string' && /^[^ ]+ \d+:\d+$/.test(ref) && 
+                    ['yellow', 'orange', 'red', 'blue', 'green', 'purple', 'pink'].includes(color)) {
+                tempHighlights[ref] = color;
+                }
+            });
+            
+            // Trigger proxy wrapping via state setter (don't assign to stateInternal directly)
+            state.highlights = tempHighlights;
+        }
+
+        // Ensure all loaded highlights have timestamps
+        Object.keys(state.highlights).forEach(ref => {
+            if (!state._syncMeta.highlights[ref]) {
+                state._syncMeta.highlights[ref] = { 
+                    ts: parsed._syncMeta?.highlights?.[ref]?.ts || Date.now() 
+                };
+            }
+        });
+        
+        // Restore notes
+        if (parsed.notes !== undefined && typeof parsed.notes === 'string') {
+            stateInternal.notes = parsed.notes;
         }
         
-        if (parsed.notes !== undefined) {
-            state.notes = parsed.notes;
+        // Restore passage reference
+        if (typeof parsed.currentPassageReference === 'string') {
+            stateInternal.currentPassageReference = parsed.currentPassageReference;
         }
         
-        if (parsed.currentPassageReference !== undefined) {
-            state.currentPassageReference = parsed.currentPassageReference;
+        // Validate and restore sync metadata (FIXED: Check for null/undefined before using 'in')
+        if (parsed._syncMeta && typeof parsed._syncMeta === 'object') {
+            // Initialize with empty structure
+            stateInternal._syncMeta = {
+                highlights: {},
+                notes: null,
+                settings: {}
+            };
+
+            // Restore highlights metadata
+            if (parsed._syncMeta.highlights && typeof parsed._syncMeta.highlights === 'object') {
+                Object.entries(parsed._syncMeta.highlights).forEach(([ref, meta]) => {
+                    if (typeof ref === 'string' && meta && typeof meta === 'object' && typeof meta.ts === 'number') {
+                        stateInternal._syncMeta.highlights[ref] = { ts: meta.ts };
+                    }
+                });
+            }
+
+            // Restore notes metadata (FIXED: Check if meta exists and has ts property)
+            if (parsed._syncMeta.notes && typeof parsed._syncMeta.notes === 'object' && typeof parsed._syncMeta.notes.ts === 'number') {
+                stateInternal._syncMeta.notes = { ts: parsed._syncMeta.notes.ts };
+            }
+
+            // Restore settings metadata
+            if (parsed._syncMeta.settings && typeof parsed._syncMeta.settings === 'object') {
+                Object.entries(parsed._syncMeta.settings).forEach(([key, meta]) => {
+                    if (typeof key === 'string' && meta && typeof meta === 'object' && typeof meta.ts === 'number') {
+                        stateInternal._syncMeta.settings[key] = { ts: meta.ts };
+                    }
+                });
+            }
         }
         
+        // Update UI elements post-load
         const notesInput = document.getElementById('notesInput');
-        if (notesInput) notesInput.value = state.notes;
+        if (notesInput) notesInput.value = stateInternal.notes;
         
     } catch (error) {
         console.error('Storage load error:', error);
         handleError(error, 'loadFromStorage');
+        // Reset to safe defaults on failure
+        initializeDefaultState();
     }
 }
 
+function initializeDefaultState() {
+    stateInternal.highlights = {};
+    stateInternal.notes = '';
+    stateInternal.currentPassageReference = '';
+    stateInternal._syncMeta = { highlights: {}, notes: null, settings: {} };
+    // Settings already have defaults
+}
+
 /**
- * Firefox (and newer Chrome/Edge) reject cookies with SameSite=Lax/Strict
- * when they are set from a cross‑site context (e.g. OneTrust scripts).
- * Setting SameSite=None; Secure tells the browser the cookie is
- * intentionally allowed to be sent cross‑origin.
- * NOTE: Secure requires HTTPS. Our app is always served over HTTPS
- * (GitHub Pages, Netlify, etc.), so this is safe.
+ * Save settings to cookies (Include myPeerId)
  */
 export function saveToCookies() {
     try {
         const expiry = new Date();
         expiry.setFullYear(expiry.getFullYear() + COOKIE_LENGTH);
 
-        const cookieData = encodeURIComponent(JSON.stringify(state.settings));
+        // Only save critical cookie-safe settings (exclude large arrays/objects)
+        const cookieSettings = {
+            bibleTranslation: state.settings.bibleTranslation,
+            referenceVersion: state.settings.referenceVersion,
+            theme: state.settings.theme,
+            colorTheme: state.settings.colorTheme,
+            audioNarrator: state.settings.audioNarrator,
+            audioControlsVisible: state.settings.audioControlsVisible,
+            autoplayAudio: state.settings.autoplayAudio,
+            syncEnabled: state.settings.syncEnabled,
+            autoSync: state.settings.autoSync,
+            myPeerId: state.settings.myPeerId,  // Include for local persistence
+            manualBook: state.settings.manualBook,
+            manualChapter: state.settings.manualChapter
+        };
+        const cookieData = encodeURIComponent(JSON.stringify(cookieSettings));
 
         const cookieParts = [
             `bibleStudySettings=${cookieData}`,
@@ -321,7 +692,7 @@ export function saveToCookies() {
 }
 
 /**
- * Load settings from cookies
+ * Load settings from cookies (Validate myPeerId and other fields)
  */
 export function loadFromCookies() {
     try {
@@ -331,7 +702,24 @@ export function loadFromCookies() {
             const [key, value] = cookie.trim().split('=');
             if (key === 'bibleStudySettings') {
                 const settings = JSON.parse(decodeURIComponent(value));
-                Object.assign(state.settings, settings);
+                
+                if (settings && typeof settings === 'object') {
+                    // Apply validated settings (subset for cookies)
+                    Object.assign(stateInternal.settings, {
+                        bibleTranslation: AVAILABLE_TRANSLATIONS.includes(settings.bibleTranslation) ? settings.bibleTranslation : 'BSB',
+                        referenceVersion: settings.referenceVersion || 'NASB',
+                        theme: ['light', 'dark'].includes(settings.theme) ? settings.theme : 'dark',
+                        colorTheme: settings.colorTheme || 'blue',
+                        audioNarrator: settings.audioNarrator || 'gilbert',
+                        audioControlsVisible: settings.audioControlsVisible === true || settings.audioControlsVisible === false,
+                        autoplayAudio: settings.autoplayAudio === true || settings.autoplayAudio === false,
+                        syncEnabled: settings.syncEnabled === true || settings.syncEnabled === false,
+                        autoSync: settings.autoSync === true || settings.autoSync === false,
+                        myPeerId: typeof settings.myPeerId === 'string' && settings.myPeerId.length === 8 ? settings.myPeerId : null,
+                        manualBook: BOOK_ORDER.includes(settings.manualBook) ? settings.manualBook : BOOK_ORDER[0],
+                        manualChapter: Math.max(1, parseInt(settings.manualChapter) || 1)
+                    });
+                }
                 break;
             }
         }
@@ -343,12 +731,8 @@ export function loadFromCookies() {
 
 /* ====================================================================
    BOOK-NAME MAPPINGS
-   API and reference source mappings
 ==================================================================== */
 
-/**
- * USFM/API book code mappings
- */
 export const bookNameMapping = {
     Genesis: 'GEN', Exodus: 'EXO', Leviticus: 'LEV', Numbers: 'NUM', Deuteronomy: 'DEU',
     Joshua: 'JOS', Judges: 'JDG', Ruth: 'RUT', '1 Samuel': '1SA', '2 Samuel': '2SA',
@@ -366,99 +750,37 @@ export const bookNameMapping = {
     '1 John': '1JN', '2 John': '2JN', '3 John': '3JN', Jude: 'JUD', Revelation: 'REV'
 };
 
-/**
- * Bible Hub translation URL mappings
- */
 export const bibleHubUrlMap = {
-    LSB: 'lsb',
-    NASB1995: 'nasb',
-    NASB: 'nasb_',
-    ASV: 'asv', 
-    ESV: 'esv', 
-    KJV: 'kjv', 
-    GNV: 'geneva',
-    NKJV: 'nkjv', 
-    BSB: 'bsb', 
-    CSB: 'csb', 
-    NET: 'net', 
-    NIV: 'niv', 
-    NLT: 'nlt'
+    LSB: 'lsb', NASB1995: 'nasb', NASB: 'nasb_', ASV: 'asv', ESV: 'esv', 
+    KJV: 'kjv', GNV: 'geneva', NKJV: 'nkjv', BSB: 'bsb', CSB: 'csb', 
+    NET: 'net', NIV: 'niv', NLT: 'nlt'
 };
 
-/**
- * Bible.com translation URL mappings
- */
 export const bibleComUrlMap = {
-    LSB: '3345',
-    NASB1995: '100',
-    NASB: '2692',
-    ASV: '12',
-    ESV: '59',
-    KJV: '1',
-    GNV: '2163',
-    NKJV: '114',
-    BSB: '3034',
-    CSB: '1713',
-    NET: '107',
-    NIV: '111',
-    NLT: '116'
+    LSB: '3345', NASB1995: '100', NASB: '2692', ASV: '12', ESV: '59',
+    KJV: '1', GNV: '2163', NKJV: '114', BSB: '3034', CSB: '1713',
+    NET: '107', NIV: '111', NLT: '116'
 };
 
-/**
- * eBible.org translation URL mappings
- */
 export const ebibleOrgUrlMap = {
-    NASB1995: 'local:engnasb',
-    ASV: 'local:eng-asv',
-    KJV: 'local:eng-kjv2006',
-    GNV: 'local:enggnv',
-    BSB: 'local:engbsb',
-    NET: 'local:engnet'
+    NASB1995: 'local:engnasb', ASV: 'local:eng-asv', KJV: 'local:eng-kjv2006',
+    GNV: 'local:enggnv', BSB: 'local:engbsb', NET: 'local:engnet'
 };
 
-/**
- * STEP Bible translation URL mappings
- */
 export const stepBibleUrlMap = {
-    LSB: 'LSB',
-    NASB1995: 'NASB1995',
-    NASB: 'NASB2020',
-    ASV: 'ASV',
-    ESV: 'ESV',
-    KJV: 'KJV',
-    GNV: 'Gen',
-    BSB: 'BSB',
-    NET: 'NET2full',
-    NIV: 'NIV'
+    LSB: 'LSB', NASB1995: 'NASB1995', NASB: 'NASB2020', ASV: 'ASV',
+    ESV: 'ESV', KJV: 'KJV', GNV: 'Gen', BSB: 'BSB', NET: 'NET2full', NIV: 'NIV'
 };
 
-/**
- * Bible Gateway version code mapping
- * @param {string} appTranslation - App translation code
- * @returns {string} Bible Gateway version code
- */
 function getBibleGatewayVersionCode(appTranslation) {
     const versionMap = {
-        LSB: 'LSB',
-        NASB1995: 'NASB1995',
-        NASB: 'NASB',
-        ASV: 'ASV',
-        ESV: 'ESV', 
-        KJV: 'KJV',
-        GNV: 'GNV',
-        NKJV: 'NKJV',
-        BSB: 'BSB',
-        CSB: 'CSB',
-        NET: 'NET',
-        NIV: 'NIV',
-        NLT: 'NLT'
+        LSB: 'LSB', NASB1995: 'NASB1995', NASB: 'NASB', ASV: 'ASV',
+        ESV: 'ESV', KJV: 'KJV', GNV: 'GNV', NKJV: 'NKJV', BSB: 'BSB',
+        CSB: 'CSB', NET: 'NET', NIV: 'NIV', NLT: 'NLT'
     };
     return versionMap[appTranslation] || 'NASB1995';
 }
 
-/**
- * Update Bible Gateway version in UI
- */
 export function updateBibleGatewayVersion() {
     try {
         const versionCode = getBibleGatewayVersionCode(state.settings.referenceVersion);
@@ -475,17 +797,8 @@ export function updateBibleGatewayVersion() {
 
 /* ====================================================================
    URL HANDLING
-   URL parsing and updating
 ==================================================================== */
 
-/**
- * Update URL with current navigation state and manage history
- * @param {string} translation - Bible translation
- * @param {string} book - Book name
- * @param {number} chapter - Chapter number
- * @param {number} verse - Verse number (optional)
- * @param {string} action - History action ('push' or 'replace')
- */
 export function updateURL(translation, book, chapter, action = 'push') {
     try {
         const cleanTranslation = translation.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -500,11 +813,7 @@ export function updateURL(translation, book, chapter, action = 'push') {
         const cleanChapter = Math.max(1, parseInt(chapter) || 1);
         const newQuery = `?p=${cleanTranslation}/${cleanBook}/${cleanChapter}`;
         
-        const newState = { 
-            translation, 
-            book, 
-            chapter
-        };
+        const newState = { translation, book, chapter };
         
         if (action === 'replace') {
             window.history.replaceState(newState, '', newQuery);
@@ -517,10 +826,6 @@ export function updateURL(translation, book, chapter, action = 'push') {
     }
 }
 
-/**
- * Parse URL parameters for navigation
- * @returns {Object|null} - Parsed navigation data or null
- */
 export function parseURL() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -547,7 +852,7 @@ export function parseURL() {
                 return null;
             }
             
-            if (isNaN(chapter) || chapter <= 0 || chapter > 150) {
+            if (isNaN(chapter) || chapter <= 0 || chapter > CHAPTER_COUNTS[book]) {
                 console.warn('Invalid chapter:', chapter);
                 return null;
             }

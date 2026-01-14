@@ -81,8 +81,21 @@ export function applyHighlight(color) {
         if (color !== 'none') {
             state.currentVerse.classList.add(`highlight-${color}`);
             state.highlights[verseRef] = color;
+            
+            // Update timestamp
+            if (!state._syncMeta.highlights[verseRef]) {
+                state._syncMeta.highlights[verseRef] = {};
+            }
+            state._syncMeta.highlights[verseRef].ts = Date.now();
         } else {
+            // DELETION: Keep metadata but mark as deleted
             delete state.highlights[verseRef];
+            
+            if (!state._syncMeta.highlights[verseRef]) {
+                state._syncMeta.highlights[verseRef] = {};
+            }
+            state._syncMeta.highlights[verseRef].deleted = true;
+            state._syncMeta.highlights[verseRef].ts = Date.now();
         }
         
         saveToStorage();
@@ -104,6 +117,17 @@ export function clearHighlights() {
             return;
         }
         
+        // Mark ALL existing highlights as deleted with timestamps
+        const now = Date.now();
+        Object.keys(state.highlights).forEach(ref => {
+            if (!state._syncMeta.highlights) state._syncMeta.highlights = {};
+            state._syncMeta.highlights[ref] = {
+                deleted: true,
+                ts: now
+            };
+        });
+        
+        // Clear the highlights object
         state.highlights = {};
         
         // Remove highlight classes from all verses
@@ -118,6 +142,8 @@ export function clearHighlights() {
         if (modal?.classList.contains('active')) {
             renderHighlights('all', '');
         }
+        
+        console.log('[Highlights] Cleared all highlights with sync tombstones');
         
     } catch (error) {
         console.error('Error clearing highlights:', error);

@@ -42,8 +42,17 @@ export function applyHighlight(color) {
         if (color !== 'none') {
             state.currentVerse.classList.add(`highlight-${color}`);
             state.highlights[verseRef] = color;
+            if (!state._syncMeta.highlights[verseRef]) {
+                state._syncMeta.highlights[verseRef] = {};
+            }
+            state._syncMeta.highlights[verseRef].ts = Date.now();
         } else {
             delete state.highlights[verseRef];
+            if (!state._syncMeta.highlights[verseRef]) {
+                state._syncMeta.highlights[verseRef] = {};
+            }
+            state._syncMeta.highlights[verseRef].deleted = true;
+            state._syncMeta.highlights[verseRef].ts = Date.now();
         }
         saveToStorage();
         const picker = document.getElementById('colorPicker');
@@ -57,6 +66,14 @@ export function clearHighlights() {
         if (!confirm('Are you sure you want to delete ALL highlights? This cannot be undone.')) {
             return;
         }
+        const now = Date.now();
+        Object.keys(state.highlights).forEach(ref => {
+            if (!state._syncMeta.highlights) state._syncMeta.highlights = {};
+            state._syncMeta.highlights[ref] = {
+                deleted: true,
+                ts: now
+            };
+        });
         state.highlights = {};
         document.querySelectorAll('.verse').forEach(verse => {
             verse.classList.remove(...HIGHLIGHT_COLORS.map(col => `highlight-${col}`));
@@ -66,6 +83,7 @@ export function clearHighlights() {
         if (modal?.classList.contains('active')) {
             renderHighlights('all', '');
         }
+        console.log('[Highlights] Cleared all highlights with sync tombstones');
     } catch (error) {
         console.error('Error clearing highlights:', error);
     }

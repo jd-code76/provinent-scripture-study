@@ -16,13 +16,14 @@ This project was developed with assistance from AI tools including [Gab AI](http
 - **Verse Highlighting**: Right-click verses to highlight in one of six colors for study emphasis
 - **Reference Bible**: Use the reference Bible to select from multiple translation options to compare with (ASV, BSB, CSB, ESV, GNV, KJV, LSB, NASB 1995, NASB 2020, NET, NIV, NKJV, NLT); this also sets the translation for Bible Gateway searches and the Verse Analysis popup
 - **Search Integration**: Built-in [Bible Gateway search](https://www.biblegateway.com/usage/) functionality to search for any word or passage
+- **Theming**: Dark/light mode with six color themes
 
 ### Advanced Features
 - **Highlights Management**: Search and filter highlighted verses by color/content
 - **Keyboard Navigation**: Extensive keyboard shortcuts (F1 to toggle help)
 - **Data Portability**: Import/export highlights, notes, and settings
+- **Local Device Syncing**: Pair devices on your local network to sync your highlights, notes, and settings using a simple, 8-digit code
 - **Responsive Design**: Optimized for both desktop and mobile devices (mobile has limited features)
-- **Theming**: Dark/light mode with six color themes
 
 ## Markdown Keyboard Shortcuts
 ### Basic Formatting (Ctrl/Cmd + Key)
@@ -63,12 +64,13 @@ This project was developed with assistance from AI tools including [Gab AI](http
 | `Alt + E` | Export Data |
 | `Alt + I` | Import Data |
 | `Alt + M` | Export Notes |
+| `Alt + D` | Manual Sync (if devices paired) |
 | `F1` | Show Help Modal |
 
 *Note: Hotkeys can be customized in the settings menu*
 
 ### Study Resources Integration
-The sidebar provides organized access to extensive theological resources (Reformed Theology/Calvinism focused) including:
+The sidebar provides organized access to extensive theological resources (Reformed Theology/Calvinism) including:
 - Online Bible platforms
 - Christian doctrine references
 - Theological resources
@@ -80,8 +82,10 @@ The sidebar provides organized access to extensive theological resources (Reform
 
 - **Frontend**: Pure HTML5, CSS3, and Vanilla JavaScript (ES6+)
 - **Libraries**: 
-  - Marked.js for Markdown processing
   - Font Awesome for icons
+  - Marked.js for Markdown processing
+  - PeerJS for discovery (local device syncing)
+  - Google for STUN servers (local device syncing)
 - **API**: Bible.helloao.org for scripture text, footnotes, and BSB audio
 - **Storage**: LocalStorage for user data persistence
 - **Build**: Use the provided scripts for setup and consistency
@@ -109,7 +113,7 @@ The sidebar provides organized access to extensive theological resources (Reform
 
 ## Privacy & Data
 
-Highlights, notes, and settings are stored locally in your browser. 
+No cloud storage: Highlights, notes, and settings are stored locally in your browser and never pass through servers (only signaling for discovery). Device sync is optional.
 
 Data that is transmitted to external servers:
 - Bible passage requests are handled by bible.helloao.org
@@ -117,7 +121,11 @@ Data that is transmitted to external servers:
 - Bible Gateway searches
 - Reference Bible websites while the panel is opened
 - Resource links opened in external sites via the sidebar
-- Third-party library usage for Font Awesome and Marked.js
+- Third-party libraries:
+  - Font Awesome
+  - Marked.js
+  - PeerJS
+  - Google STUN servers
 
 ## Attribution
 
@@ -126,6 +134,8 @@ Data that is transmitted to external servers:
 - Audio files hosted by [Open Bible](https://openbible.com/audio/)
 - Icons by [Font Awesome](https://fontawesome.com)
 - Markdown processing by [Marked.js](https://cdn.jsdelivr.net/npm/marked/)
+- Local device syncing by [PeerJS](https://unpkg.com)
+- STUN servers by [Google]("stun.l.google.com" and "stun1.l.google.com")
 - **Reference Bible websites**
   - [Bible Gateway](https://www.biblegateway.com)
   - [Bible.com (YouVersion)](https://www.bible.com)

@@ -80,6 +80,7 @@ def main():
         "../src/modules/settings.js",
         "../src/modules/state.js",
         "../src/modules/strongs.js",
+        "../src/modules/sync.js",
         "../src/modules/ui.js"
     ]
 

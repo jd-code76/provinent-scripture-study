@@ -8,6 +8,7 @@ import { escapeHTML } from '../main.js';
 import { nextPassage, prevPassage, randomPassage, updateManualNavigation } from './navigation.js';
 import { exportData } from './settings.js';
 import { BOOK_ORDER, saveToStorage, state } from './state.js';
+import { syncNow, isConnected } from './sync.js';
 import { exportNotes, togglePanelCollapse } from './ui.js';
 
 /* ====================================================================
@@ -27,7 +28,8 @@ const DEFAULT_HOTKEYS = {
     toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false },
     exportData: { key: 'e', altKey: true, shiftKey: false, ctrlKey: false },
     importData: { key: 'i', altKey: true, shiftKey: false, ctrlKey: false },
-    exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false }
+    exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false },
+    manualSync: { key: 'd', altKey: true, shiftKey: false, ctrlKey: false }
 };
 
 const IGNORED_KEYS = new Set([
@@ -158,7 +160,7 @@ function getHotkeyAction(event) {
  * Execute hotkey action
  * @param {string} action - Hotkey action identifier
  */
-function executeHotkeyAction(action) {
+async function executeHotkeyAction(action) {
     const actions = {
         toggleReferencePanel: toggleReferencePanel,
         toggleNotes: () => togglePanelCollapse('notesSection'),
@@ -172,12 +174,90 @@ function executeHotkeyAction(action) {
         showHelp: showHelpModal,
         exportData: exportData,
         importData: () => document.getElementById('importFile').click(),
-        exportNotes: () => exportNotes()
+        exportNotes: () => exportNotes(),
+        manualSync: handleManualSync
     };
     
     if (actions[action]) {
-        actions[action]();
+        await actions[action]();
     }
+}
+
+/**
+ * Handle manual sync with proper checks and feedback
+ */
+async function handleManualSync() {
+    // Check if sync is enabled
+    if (!state.settings.syncEnabled) {
+        showSyncNotification('Device sync must be enabled in Settings first.', 'error');
+        return;
+    }
+    
+    // Check if any devices are connected
+    if (!isConnected()) {
+        showSyncNotification('No devices connected. Pair a device first.', 'error');
+        return;
+    }
+    
+    try {
+        // Show syncing notification
+        const notification = showSyncNotification('Syncing...', 'info');
+        
+        // Perform sync
+        await syncNow();
+        
+        // Update to success
+        notification.textContent = 'Sync completed successfully!';
+        notification.style.background = '#4CAF50';
+        setTimeout(() => notification.remove(), 2000);
+        
+    } catch (error) {
+        console.error('Manual sync error:', error);
+        showSyncNotification('Sync failed: ' + error.message, 'error', 3000);
+    }
+}
+
+/**
+ * Show sync notification toast
+ * @param {string} message - Notification message
+ * @param {string} type - Notification type ('info', 'success', 'error')
+ * @param {number} duration - Auto-hide duration in ms (0 = no auto-hide)
+ * @returns {HTMLElement} - Notification element
+ */
+function showSyncNotification(message, type = 'info', duration = 0) {
+    const colors = {
+        info: 'var(--accent-color)',
+        success: '#4CAF50',
+        error: '#f44336'
+    };
+    
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 10px;
+        padding: 12px 20px;
+        background: ${colors[type] || colors.info};
+        color: white;
+        border-radius: 5px;
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        animation: slideInRight 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Auto-remove if duration specified
+    if (duration > 0) {
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
+    }
+    
+    return notification;
 }
 
 /**
@@ -416,6 +496,7 @@ function populateHotkeysList() {
             { action: 'exportData', label: 'Export Data' },
             { action: 'importData', label: 'Import Data' },
             { action: 'exportNotes', label: 'Export Notes' },
+            { action: 'manualSync', label: 'Manual Sync (if devices paired)' },
             { action: 'showHelp', label: 'Show This Help' }
         ];
         
