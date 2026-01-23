@@ -257,6 +257,13 @@ export function escapeHTML(string) {
     });
 }
 
+function syncAudioControlsToggleUI() {
+    const audioToggle = document.getElementById('audioControlsToggle');
+    if (audioToggle) {
+        audioToggle.checked = !!state.settings.audioControlsVisible;
+    }
+}
+
 /* ====================================================================
    THEMING
 ==================================================================== */
@@ -695,8 +702,9 @@ async function init() {
     try {
         showLoading(true);
 
-        await loadFromStorage();
         await loadFromCookies();
+        await loadFromStorage();
+        syncAudioControlsToggleUI();
 
         // Add offline styles
         const style = document.createElement('style');
@@ -712,6 +720,7 @@ async function init() {
         initBookChapterControls();
         initializeAudioControls();
         initialiseNarratorSelect();
+        updateAudioControlsVisibility();
         setupNavigationWithURL();
         setupPopStateListener();
         

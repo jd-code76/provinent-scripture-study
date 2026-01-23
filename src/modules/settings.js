@@ -222,9 +222,23 @@ function populateSettingsForm() {
     }
 
     if (translationSelect) translationSelect.value = state.settings.bibleTranslation;
-    if (audioToggle) audioToggle.checked = state.settings.audioControlsVisible;
-    if (versionElement) versionElement.textContent = APP_VERSION;
-    if (themeToggle) themeToggle.checked = state.settings.theme === 'dark';
+
+    if (audioToggle) {
+        audioToggle.checked = state.settings.audioControlsVisible;
+        audioToggle.addEventListener('change', () => {
+            state.settings.audioControlsVisible = audioToggle.checked;
+            saveToStorage();
+            updateAudioControlsVisibility();
+        });
+    }
+
+    if (autoplayToggle) {
+        autoplayToggle.checked = !!state.settings.autoplayAudio;
+        autoplayToggle.addEventListener('change', () => {
+            state.settings.autoplayAudio = autoplayToggle.checked;
+            saveToStorage();
+        });
+    }
 
     if (scriptureFontSizeSlider) {
         scriptureFontSizeSlider.value = state.settings.scriptureFontSize || 16;
@@ -233,6 +247,7 @@ function populateSettingsForm() {
             if (scriptureFontSizeValue) scriptureFontSizeValue.textContent = `${val}px`;
         });
     }
+
     if (scriptureFontSizeValue) {
         scriptureFontSizeValue.textContent = `${state.settings.scriptureFontSize || 16}px`;
     }
@@ -244,12 +259,22 @@ function populateSettingsForm() {
             if (notesFontSizeValue) notesFontSizeValue.textContent = `${val}px`;
         });
     }
+
     if (notesFontSizeValue) {
         notesFontSizeValue.textContent = `${state.settings.notesFontSize || 16}px`;
     }
-
-    if (autoplayToggle) autoplayToggle.checked = !!state.settings.autoplayAudio;
     
+    if (themeToggle) {
+        themeToggle.checked = state.settings.theme === 'dark';
+        themeToggle.addEventListener('change', () => {
+            state.settings.theme = themeToggle.checked ? 'dark' : 'light';
+            saveToStorage();
+            applyTheme();
+        });
+    }
+
+    if (versionElement) versionElement.textContent = APP_VERSION;
+
     updateColorThemeSelection();
 }
 
@@ -266,6 +291,13 @@ function showSettingsModal() {
     if (modal) modal.classList.add('active');
     if (overlay) overlay.classList.add('active');
     attachSyncUiHandlers();
+    
+    // Reset scrollbar to top after render and paint
+    requestAnimationFrame(() => {
+        if (modal) {
+            modal.scrollTop = 0;
+        }
+    });
 }
 
 export function closeSettings() {
@@ -761,10 +793,6 @@ export function updateAudioControlsVisibility() {
 }
 
 export function initializeAudioControls() {
-    if (typeof state.settings.audioControlsVisible === 'undefined') {
-        state.settings.audioControlsVisible = true;
-        saveToStorage();
-    }
     updateAudioControlsVisibility();
 }
 

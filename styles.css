@@ -475,7 +475,6 @@ span#bible-tb-divider{display:none}
 #notesInput,.strongs-content{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
 }
 @media(max-width:420px){button.stop-audio-btn{display:none!important}
-div#keyboard-shortcuts{display:none}
 .highlights-search{display:flex;align-items:center;gap:8px;background:var(--bg-secondary)}
 #highlightsSearch{max-width:100px}
 .highlights-search{max-width:200px}

@@ -211,43 +211,11 @@ export function closeHighlightsModal() {
 }
 
 /**
- * Set up search functionality for highlights
+ * Handle search input changes (named for removeEventListener)
  */
-function setupHighlightsSearch() {
+function handleSearchInput(e) {
     try {
-        const searchInput = document.getElementById('highlightsSearch');
-        const clearSearchBtn = document.getElementById('clearSearch');
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', handleSearchInput);
-        }
-        
-        if (clearSearchBtn) {
-            clearSearchBtn.addEventListener('click', handleClearSearch);
-        }
-
-        document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const color = this.dataset.color;
-                const searchTerm = document.getElementById('highlightsSearch').value || '';
-                renderHighlights(color, searchTerm);
-                
-                // Update active state
-                document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });        
-    } catch (error) {
-        console.error('Error setting up highlights search:', error);
-    }
-}
-
-/**
- * Handle search input changes
- */
-function handleSearchInput() {
-    try {
-        const searchTerm = this.value.toLowerCase().trim();
+        const searchTerm = e.target.value.toLowerCase().trim();
         const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
         renderHighlights(activeFilter, searchTerm);
     } catch (error) {
@@ -256,7 +224,26 @@ function handleSearchInput() {
 }
 
 /**
- * Handle clear search button click
+ * Handle filter button clicks (named for removeEventListener)
+ */
+function handleFilterClick(e) {
+    try {
+        const btn = e.currentTarget;
+        const color = btn.dataset.color;
+        const searchInput = document.getElementById('highlightsSearch');
+        const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+        renderHighlights(color, searchTerm);
+        
+        // Update active state
+        document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    } catch (error) {
+        console.error('Error handling filter click:', error);
+    }
+}
+
+/**
+ * Handle clear search button click (named for removeEventListener)
  */
 function handleClearSearch() {
     try {
@@ -268,6 +255,35 @@ function handleClearSearch() {
         renderHighlights(activeFilter, '');
     } catch (error) {
         console.error('Error clearing search:', error);
+    }
+}
+
+/**
+ * Set up search functionality for highlights (prevents duplicate listeners)
+ */
+function setupHighlightsSearch() {
+    try {
+        const searchInput = document.getElementById('highlightsSearch');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        
+        // Remove existing listeners to prevent duplicates
+        if (searchInput) {
+            searchInput.removeEventListener('input', handleSearchInput);
+            searchInput.addEventListener('input', handleSearchInput);
+        }
+        
+        if (clearSearchBtn) {
+            clearSearchBtn.removeEventListener('click', handleClearSearch);
+            clearSearchBtn.addEventListener('click', handleClearSearch);
+        }
+
+        // Remove existing filter listeners, then add new ones
+        document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
+            btn.removeEventListener('click', handleFilterClick);
+            btn.addEventListener('click', handleFilterClick);
+        });        
+    } catch (error) {
+        console.error('Error setting up highlights search:', error);
     }
 }
 
@@ -337,7 +353,7 @@ function getValidatedCache(forceClearOnInvalid = false) {
 /**
  * Render highlights list in modal
  * @param {string} filterColor - Color filter
- * @param {string} searchTerm - Search term
+ * @param {string} searchTerm - Search term (already lowercased/trimmed)
  */
 export function renderHighlights(filterColor = 'all', searchTerm = '') {
     try {
@@ -446,7 +462,7 @@ function sortHighlightReferences(highlights) {
  * Filter highlight references by color and search term
  * @param {Array} references - Sorted references
  * @param {string} filterColor - Color filter
- * @param {string} searchTerm - Search term
+ * @param {string} searchTerm - Search term (lowercased)
  * @param {Object} validatedCache - Pre-validated cache object
  * @returns {Array} - Filtered references
  */
@@ -457,7 +473,7 @@ function filterHighlightReferences(references, filterColor, searchTerm, validate
             return false;
         }
         
-        // Filter by search term using cache
+        // Filter by search term using cache (case-insensitive)
         if (searchTerm) {
             const verseText = validatedCache[ref.reference] || '';
             if (!verseText.toLowerCase().includes(searchTerm) && 
@@ -473,7 +489,7 @@ function filterHighlightReferences(references, filterColor, searchTerm, validate
 /**
  * Generate HTML for highlight items
  * @param {Array} references - Filtered references
- * @param {string} searchTerm - Search term for highlighting
+ * @param {string} searchTerm - Search term for highlighting (lowercased, but regex uses 'gi')
  * @param {Object} validatedCache - Pre-validated cache object
  * @returns {string} - HTML string
  */
@@ -482,7 +498,7 @@ function generateHighlightItemsHTML(references, searchTerm, validatedCache) {
         const verseText = validatedCache[ref.reference] || 'Text not cached, visit to refresh';
         let displayText = verseText;
         
-        // Highlight search terms
+        // Highlight search terms (preserves original case via 'gi' regex)
         if (searchTerm) {
             const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
             displayText = verseText.replace(regex, '<mark>$1</mark>');
@@ -582,7 +598,6 @@ function navigateToHighlightedVerse(reference) {
         
         const translation = state.settings.bibleTranslation;
         
-        // Update URL with proper history state including verse
         updateURL(translation, book, chapter, 'push');
         
         loadSelectedChapter(book, chapter);

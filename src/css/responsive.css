@@ -201,10 +201,6 @@
         display: none !important;
     }
 
-    div#keyboard-shortcuts {
-        display: none;
-    }
-
     .highlights-search {
         display: flex;
         align-items: center;

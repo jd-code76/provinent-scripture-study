@@ -201,6 +201,12 @@ export function escapeHTML(string) {
         return escape[char];
     });
 }
+function syncAudioControlsToggleUI() {
+    const audioToggle = document.getElementById('audioControlsToggle');
+    if (audioToggle) {
+        audioToggle.checked = !!state.settings.audioControlsVisible;
+    }
+}
 export function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.settings.theme);
     const themeIcon = document.getElementById('themeIcon');
@@ -541,8 +547,9 @@ function setupSyncManagement() {
 async function init() {
     try {
         showLoading(true);
-        await loadFromStorage();
         await loadFromCookies();
+        await loadFromStorage();
+        syncAudioControlsToggleUI();
         const style = document.createElement('style');
         style.textContent = OFFLINE_STYLES;
         document.head.appendChild(style);
@@ -552,6 +559,7 @@ async function init() {
         initBookChapterControls();
         initializeAudioControls();
         initialiseNarratorSelect();
+        updateAudioControlsVisibility();
         setupNavigationWithURL();
         setupPopStateListener();
         if (!navigateFromURL()) {

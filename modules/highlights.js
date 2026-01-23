@@ -124,36 +124,26 @@ export function closeHighlightsModal() {
         console.error('Error closing highlights modal:', error);
     }
 }
-function setupHighlightsSearch() {
+function handleSearchInput(e) {
     try {
-        const searchInput = document.getElementById('highlightsSearch');
-        const clearSearchBtn = document.getElementById('clearSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', handleSearchInput);
-        }
-        if (clearSearchBtn) {
-            clearSearchBtn.addEventListener('click', handleClearSearch);
-        }
-        document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const color = this.dataset.color;
-                const searchTerm = document.getElementById('highlightsSearch').value || '';
-                renderHighlights(color, searchTerm);
-                document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });        
-    } catch (error) {
-        console.error('Error setting up highlights search:', error);
-    }
-}
-function handleSearchInput() {
-    try {
-        const searchTerm = this.value.toLowerCase().trim();
+        const searchTerm = e.target.value.toLowerCase().trim();
         const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
         renderHighlights(activeFilter, searchTerm);
     } catch (error) {
         console.error('Error handling search input:', error);
+    }
+}
+function handleFilterClick(e) {
+    try {
+        const btn = e.currentTarget;
+        const color = btn.dataset.color;
+        const searchInput = document.getElementById('highlightsSearch');
+        const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+        renderHighlights(color, searchTerm);
+        document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    } catch (error) {
+        console.error('Error handling filter click:', error);
     }
 }
 function handleClearSearch() {
@@ -165,6 +155,26 @@ function handleClearSearch() {
         renderHighlights(activeFilter, '');
     } catch (error) {
         console.error('Error clearing search:', error);
+    }
+}
+function setupHighlightsSearch() {
+    try {
+        const searchInput = document.getElementById('highlightsSearch');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        if (searchInput) {
+            searchInput.removeEventListener('input', handleSearchInput);
+            searchInput.addEventListener('input', handleSearchInput);
+        }
+        if (clearSearchBtn) {
+            clearSearchBtn.removeEventListener('click', handleClearSearch);
+            clearSearchBtn.addEventListener('click', handleClearSearch);
+        }
+        document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
+            btn.removeEventListener('click', handleFilterClick);
+            btn.addEventListener('click', handleFilterClick);
+        });        
+    } catch (error) {
+        console.error('Error setting up highlights search:', error);
     }
 }
 function getValidatedCache(forceClearOnInvalid = false) {

@@ -9,8 +9,7 @@ import { handleError } from '../main.js';
    CONSTANTS
 ==================================================================== */
 
-export const APP_VERSION = '2.2.2026.01.14';
-const SAVE_DEBOUNCE_MS = 500;
+export const APP_VERSION = '2.3.2026.01.23';
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
 
@@ -461,38 +460,13 @@ export function formatBookNameForSource(bookName, source) {
 ==================================================================== */
 
 /**
- * Save state to localStorage with debouncing
+ * Save state to localStorage.
  */
 export function saveToStorage() {
-    if (saveTimeout) clearTimeout(saveTimeout);
-
-    saveTimeout = setTimeout(() => {
-        try {
-            const cleanState = {
-                currentVerse: null,
-                currentVerseData: state.currentVerseData,
-                highlights: state.highlights,
-                notes: state.notes,
-                settings: { ...state.settings },  // Includes myPeerId (local), connectedDevices
-                currentPassageReference: state.currentPassageReference,
-                _syncMeta: state._syncMeta  // Include sync metadata
-            };
-
-            localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
-            saveToCookies();
-        } catch (error) {
-            console.error('Storage save error:', error);
-            handleError(error, 'saveToStorage');
-        }
-    }, SAVE_DEBOUNCE_MS);
-}
-
-/**
- * Save state immediately (no debounce) - used by sync.js
- */
-export function saveToStorageImmediate() {
-    if (saveTimeout) clearTimeout(saveTimeout);
-    
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+        saveTimeout = null;
+    }
     try {
         const cleanState = {
             currentVerse: null,
@@ -500,15 +474,16 @@ export function saveToStorageImmediate() {
             highlights: state.highlights,
             notes: state.notes,
             settings: { ...state.settings },
+            hotkeys: { ...state.hotkeys },
+            hotkeysEnabled: state.hotkeysEnabled,
             currentPassageReference: state.currentPassageReference,
             _syncMeta: state._syncMeta
         };
-
         localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
         saveToCookies();
     } catch (error) {
-        console.error('Immediate storage save error:', error);
-        handleError(error, 'saveToStorageImmediate');
+        console.error('Storage save error:', error);
+        handleError(error, 'saveToStorage');
     }
 }
 
@@ -529,7 +504,7 @@ export function loadFromStorage() {
                 bibleTranslation: AVAILABLE_TRANSLATIONS.includes(parsed.settings.bibleTranslation) ? parsed.settings.bibleTranslation : 'BSB',
                 referenceVersion: parsed.settings.referenceVersion || 'NASB',
                 footnotes: typeof parsed.settings.footnotes === 'object' ? parsed.settings.footnotes : {},
-                audioControlsVisible: parsed.settings.audioControlsVisible === true || parsed.settings.audioControlsVisible === false,
+                audioControlsVisible: typeof parsed.settings.audioControlsVisible === 'boolean' ? parsed.settings.audioControlsVisible : true,
                 audioNarrator: parsed.settings.audioNarrator || 'gilbert',
                 manualBook: BOOK_ORDER.includes(parsed.settings.manualBook) ? parsed.settings.manualBook : BOOK_ORDER[0],
                 manualChapter: Math.max(1, Math.min(150, parseInt(parsed.settings.manualChapter) || 1)),
@@ -548,9 +523,10 @@ export function loadFromStorage() {
                 },
                 scriptureFontSize: Math.max(12, Math.min(32, parseInt(parsed.settings.scriptureFontSize) || 16)),
                 notesFontSize: Math.max(12, Math.min(32, parseInt(parsed.settings.notesFontSize) || 16)),
-                autoplayAudio: parsed.settings.autoplayAudio === true || parsed.settings.autoplayAudio === false,
-                footnotesCollapsed: parsed.settings.footnotesCollapsed === true || parsed.settings.footnotesCollapsed === false,
-                syncEnabled: parsed.settings.syncEnabled === true || parsed.settings.syncEnabled === false,
+                autoplayAudio: typeof parsed.settings.autoplayAudio === 'boolean' ? parsed.settings.autoplayAudio : true,
+                footnotesCollapsed: typeof parsed.settings.footnotesCollapsed === 'boolean' ? parsed.settings.footnotesCollapsed : false,
+                syncEnabled: typeof parsed.settings.syncEnabled === 'boolean' ? parsed.settings.syncEnabled : false,
+                autoSync: typeof parsed.settings.autoSync === 'boolean' ? parsed.settings.autoSync : false,
                 autoSync: parsed.settings.autoSync === true || parsed.settings.autoSync === false,
                 connectedDevices: Array.isArray(parsed.settings.connectedDevices) ? parsed.settings.connectedDevices.map(d => ({
                     id: typeof d.id === 'string' ? d.id : '',
@@ -563,6 +539,13 @@ export function loadFromStorage() {
                 myPeerId: typeof parsed.settings.myPeerId === 'string' && parsed.settings.myPeerId.length === 8 ? parsed.settings.myPeerId : null
             };
             Object.assign(stateInternal.settings, validSettings);
+
+            // Restore hotkeys (basic validation)
+            if (parsed.hotkeys && typeof parsed.hotkeys === 'object') {
+                stateInternal.hotkeys = { ...parsed.hotkeys };
+            }
+            // Restore hotkeysEnabled
+            stateInternal.hotkeysEnabled = parsed.hotkeysEnabled === true || false;
         }
         
         // Restore highlights with validation
@@ -711,10 +694,10 @@ export function loadFromCookies() {
                         theme: ['light', 'dark'].includes(settings.theme) ? settings.theme : 'dark',
                         colorTheme: settings.colorTheme || 'blue',
                         audioNarrator: settings.audioNarrator || 'gilbert',
-                        audioControlsVisible: settings.audioControlsVisible === true || settings.audioControlsVisible === false,
-                        autoplayAudio: settings.autoplayAudio === true || settings.autoplayAudio === false,
-                        syncEnabled: settings.syncEnabled === true || settings.syncEnabled === false,
-                        autoSync: settings.autoSync === true || settings.autoSync === false,
+                        audioControlsVisible: typeof settings.audioControlsVisible === 'boolean' ? settings.audioControlsVisible : true,
+                        autoplayAudio: typeof settings.autoplayAudio === 'boolean' ? settings.autoplayAudio : true,
+                        syncEnabled: typeof settings.syncEnabled === 'boolean' ? settings.syncEnabled : false,
+                        autoSync: typeof settings.autoSync === 'boolean' ? settings.autoSync : false,
                         myPeerId: typeof settings.myPeerId === 'string' && settings.myPeerId.length === 8 ? settings.myPeerId : null,
                         manualBook: BOOK_ORDER.includes(settings.manualBook) ? settings.manualBook : BOOK_ORDER[0],
                         manualChapter: Math.max(1, parseInt(settings.manualChapter) || 1)

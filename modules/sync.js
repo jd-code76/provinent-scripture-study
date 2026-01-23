@@ -1,4 +1,4 @@
-import { state, onStateChange, saveToStorageImmediate, APP_VERSION } from "./state.js";
+import { state, onStateChange, saveToStorage, APP_VERSION } from "./state.js";
 function safeJSONParse(str) {
   try {
     const obj = JSON.parse(str);
@@ -23,7 +23,7 @@ class SyncManager {
     this.autoSyncTimer = null;
     this.AUTO_SYNC_DELAY_MS = 5000;
     this.reconnectTimer = null;
-    this.RECONNECT_INTERVAL_MS = 10000;
+    this.RECONNECT_INTERVAL_MS = 15000;
     this.broadcastChannel = null;
     this._myPeerId = null;
     this.messageRateLimit = new Map();
@@ -137,7 +137,10 @@ class SyncManager {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' }
         ]
       }
     });
@@ -145,7 +148,7 @@ class SyncManager {
       console.info("[Sync] Peer ready – ID:", id);
       this._myPeerId = id;
       state.settings.myPeerId = id;
-      saveToStorageImmediate();
+      saveToStorage();
       document.dispatchEvent(new CustomEvent("sync:peerReady", { detail: { peerId: id } }));
     });
     this.peer.on('error', (err) => {
@@ -225,7 +228,7 @@ class SyncManager {
               this.reconnectAttempts.delete(conn.peer);
               if (!state.settings.autoSync && this.connections.size === 1) {
                   state.settings.autoSync = true;
-                  saveToStorageImmediate();
+                  saveToStorage();
                   console.log('[Sync] Auto-sync enabled on first connection');
                   const autoSyncToggle = document.getElementById('autoSyncToggle');
                   if (autoSyncToggle) {
@@ -412,7 +415,7 @@ class SyncManager {
       }
     }
     if (changesMade) {
-      saveToStorageImmediate();
+      saveToStorage();
       document.dispatchEvent(new CustomEvent("sync:merged", { 
         detail: { peerId, changesMade, timestamp: Date.now() }
       }));
@@ -436,7 +439,7 @@ class SyncManager {
       this.connectedDevices.push(deviceInfo);
     }
     state.settings.connectedDevices = [...this.connectedDevices];
-    saveToStorageImmediate();
+    saveToStorage();
     const eventType = index > -1 ? "sync:deviceUpdated" : "sync:deviceAdded";
     document.dispatchEvent(new CustomEvent(eventType, { detail: deviceInfo }));
   }
@@ -511,7 +514,7 @@ class SyncManager {
   async startPairing() {
     this._myPeerId = this._generatePairingCode();
     state.settings.myPeerId = this._myPeerId;
-    saveToStorageImmediate();
+    saveToStorage();
     await this.initPeer();
     console.log("[Sync] Pairing code ready:", this._myPeerId);
     document.dispatchEvent(new CustomEvent("sync:pairingStarted", { 
@@ -615,7 +618,7 @@ class SyncManager {
     if (this.connectedDevices.length > 0) {
       this._startReconnectPolling();
     }
-    saveToStorageImmediate();
+    saveToStorage();
     if (!peerId) {
       document.dispatchEvent(new CustomEvent("sync:disconnected"));
     }
@@ -636,7 +639,7 @@ class SyncManager {
       this._myPeerId = null;
       state.settings.myPeerId = null;
     }
-    saveToStorageImmediate();
+    saveToStorage();
     document.dispatchEvent(new CustomEvent("sync:deviceRemoved", { 
       detail: { id: deviceIdOrPeerId } 
     }));
@@ -648,7 +651,7 @@ class SyncManager {
     if (device) {
       device.customName = customName || null;
       state.settings.connectedDevices = [...this.connectedDevices];
-      saveToStorageImmediate();
+      saveToStorage();
       document.dispatchEvent(new CustomEvent("sync:deviceUpdated", { 
         detail: device 
       }));
@@ -694,19 +697,22 @@ class SyncManager {
       console.info("[Sync] Loaded", this.connectedDevices.length, "device(s)");
     }
     if (state.settings.myPeerId && typeof state.settings.myPeerId === 'string') {
-      this._myPeerId = state.settings.myPeerId;
+        this._myPeerId = state.settings.myPeerId;
     }
-    onStateChange(() => {
-      if (state.settings.autoSync && this.isConnected()) {
-        this.scheduleAutoSync();
-      }
+    onStateChange((detail) => {
+        if (state.settings.autoSync && this.isConnected()) {
+            this.scheduleAutoSync();
+        }
     });
+    if (state.settings.autoSync && this.isConnected()) {
+        this.scheduleAutoSync();
+    }
     if (this.connectedDevices.length > 0) {
-      if (!this._myPeerId) {
-        this.generateNewPeerId();
-      }
-      this.initPeer();
-      this._startReconnectPolling();
+        if (!this._myPeerId) {
+            this.generateNewPeerId();
+        }
+        this.initPeer();
+        this._startReconnectPolling();
     }
     console.info("[Sync] Initialized – Device ID:", this.localDeviceId);
   }

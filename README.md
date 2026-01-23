@@ -135,13 +135,20 @@ Data that is transmitted to external servers:
 - Icons by [Font Awesome](https://fontawesome.com)
 - Markdown processing by [Marked.js](https://cdn.jsdelivr.net/npm/marked/)
 - Local device syncing by [PeerJS](https://unpkg.com)
-- STUN servers by [Google]("stun.l.google.com" and "stun1.l.google.com")
+- STUN servers by Google
+  - stun.l.google.com:19302
+  - stun1.l.google.com:19302
+  - stun2.l.google.com:19302
+  - stun3.l.google.com:19302
+  - stun4.l.google.com:19302
+
 - **Reference Bible websites**
   - [Bible Gateway](https://www.biblegateway.com)
   - [Bible.com (YouVersion)](https://www.bible.com)
   - [Bible Hub](https://biblehub.com)
   - [STEP Bible](https://www.stepbible.org)
   - [eBible.org](https://ebible.org)
+
 - All copyrights, trademarks, and attributions belong to their respective owners
 
 ## License
