@@ -1,6 +1,9 @@
-import { escapeHTML, handleError } from '../main.js';
-import { state } from './state.js';
+import { loadPassageFromAPI } from './api.js';
+import { escapeHTML, handleError, updateHeaderTitle } from '../main.js';
+import { getCurrentTranslation } from './navigation.js';
+import { saveToStorage, state } from './state.js';
 import { showStrongsReference } from './strongs.js';
+import { updateReferencePanel } from './ui.js';
 const SINGLE_CHAPTER_BOOKS = new Set([
     'Obadiah', 'Philemon', '2 John', '3 John', 'Jude'
 ]);
@@ -302,6 +305,35 @@ function cleanText(text) {
 function ensureProperSpacing(text) {
     if (!text) return '';
     return text.replace(/\s+/g, ' ').trim();
+}
+export async function loadPassage(book = null, chapter = null, translation = null) {
+    if (window._isLoadingPassage) return;
+    if (!book && !chapter && state.settings.readingMode === 'manual') {
+        return;
+    }
+    window._isLoadingPassage = true;
+    try {
+        state.settings.manualBook = book || state.settings.manualBook;
+        state.settings.manualChapter = chapter || state.settings.manualChapter;
+        updateHeaderTitle();
+        updateDisplayRef(state.settings.manualBook, state.settings.manualChapter);
+        await loadPassageFromAPI({
+            book: state.settings.manualBook,
+            chapter: state.settings.manualChapter,
+            startVerse: 1,
+            endVerse: 999,
+            displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`,
+            translation: translation || getCurrentTranslation()
+        });
+        if (state.settings.referencePanelOpen) {
+            updateReferencePanel();
+        }
+        saveToStorage();
+    } catch (error) {
+        handleError(error, 'loadPassage');
+    } finally {
+        window._isLoadingPassage = false;
+    }
 }
 export function afterContentLoad() {
     const event = new CustomEvent('contentLoaded');

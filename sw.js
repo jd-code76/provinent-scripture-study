@@ -3,7 +3,7 @@ const CORE_ASSETS = [
     '/modules/api.js', '/modules/highlights.js', '/modules/hotkeys.js',
     '/modules/navigation.js', '/modules/passage.js', '/modules/settings.js',
     '/modules/state.js', '/modules/strongs.js', '/modules/ui.js',
-    '/sw.js', '/404.html',
+    '/sw.js', '/404.html', '/manifest.json',
     '/favicons/apple-touch-icon.png', '/favicons/favicon.ico',
     '/favicons/favicon-16x16.png', '/favicons/favicon-32x32.png'
 ];

@@ -1,5 +1,6 @@
 import { handleError } from '../main.js';
-export const APP_VERSION = '2.3.2026.01.23';
+export const APP_VERSION = '2.1-2026.02.17r';
+const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
 export const BOOK_ORDER = [
@@ -64,7 +65,7 @@ export const ABBREVIATION_TO_BOOK_NAME = {
 export const BOOK_NAME_TO_ABBREVIATION = Object.fromEntries(
     Object.entries(ABBREVIATION_TO_BOOK_NAME).map(([abbr, name]) => [name, abbr])
 );
-const stateInternal = {
+export const state = {
     currentVerse: null,
     currentVerseData: null,
     highlights: {},
@@ -94,10 +95,8 @@ const stateInternal = {
         notesFontSize: 16,
         autoplayAudio: true,
         footnotesCollapsed: false,
-        syncEnabled: false,
-        autoSync: false,
-        connectedDevices: [],
-        myPeerId: null  
+        lastExport: null,  
+        lastImport: null
     },
     hotkeys: {
         toggleReferencePanel: { key: 'b', altKey: true, shiftKey: false, ctrlKey: false },
@@ -112,169 +111,13 @@ const stateInternal = {
         toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false },
         exportData: { key: 'e', altKey: true, shiftKey: false, ctrlKey: false },
         importData: { key: 'i', altKey: true, shiftKey: false, ctrlKey: false },
-        exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false },
-        manualSync: { key: 'd', altKey: true, shiftKey: false, ctrlKey: false }
+        exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false }
     },
     hotkeysEnabled: true,
     currentPassageReference: '',
     audioPlayer: null,
-    currentChapterData: null,
-    _syncMeta: {
-        highlights: {},  
-        notes: null,     
-        settings: {}     
-    }
+    currentChapterData: null
 };
-let stateChangeListeners = [];
-export function onStateChange(listener) {
-    stateChangeListeners.push(listener);
-    return () => {
-        const idx = stateChangeListeners.indexOf(listener);
-        if (idx > -1) stateChangeListeners.splice(idx, 1);
-    };
-}
-function emitStateChange(type, key, oldValue, newValue) {
-    const detail = { type, key, oldValue, newValue, timestamp: Date.now() };
-    stateChangeListeners.forEach(listener => {
-        try {
-            listener(detail);
-        } catch (e) {
-            console.error('State change listener error:', e);
-        }
-    });
-    const ev = new CustomEvent('state:changed', { detail });
-    document.dispatchEvent(ev);
-}
-export const state = new Proxy(stateInternal, {
-    set(target, prop, value) {
-        const oldValue = target[prop];
-        if (oldValue === value) return true;
-        let syncType = null;
-        if (prop === 'highlights') {
-            syncType = 'highlights';
-            if (typeof value === 'object' && value !== null) {
-                value = new Proxy(value, {
-                    set(highlightsTarget, ref, color) {
-                        const oldColor = highlightsTarget[ref];
-                        if (oldColor === color) return true;
-                        if (!target._syncMeta.highlights[ref]) {
-                            target._syncMeta.highlights[ref] = {};
-                        }
-                        target._syncMeta.highlights[ref].ts = Date.now();
-                        const success = Reflect.set(highlightsTarget, ref, color);
-                        if (success) {
-                            saveToStorageImmediate();
-                            emitStateChange('highlight', ref, oldColor, color);
-                        }
-                        return success;
-                    },
-                    deleteProperty(highlightsTarget, ref) {
-                        const success = Reflect.deleteProperty(highlightsTarget, ref);
-                        if (success) {
-                            Reflect.deleteProperty(target._syncMeta.highlights, ref);
-                            saveToStorageImmediate();
-                            emitStateChange('highlight', ref, highlightsTarget[ref], undefined);
-                        }
-                        return success;
-                    }
-                });
-            }
-            emitStateChange('highlights', prop, oldValue, value);
-        } else if (prop === 'notes') {
-            target._syncMeta.notes = { ts: Date.now() };
-            syncType = 'notes';
-            emitStateChange('notes', prop, oldValue, value);
-        } else if (prop === 'settings') {
-            syncType = 'settings';
-            if (typeof value === 'object' && value !== null) {
-                const skipKeys = [
-                    'collapsedSections', 'collapsedPanels', 'panelWidths', 
-                    'referencePanelOpen', 'hotkeys', 'hotkeysEnabled', 
-                    'currentPassageReference', 'audioPlayer', 'currentChapterData',
-                    'myPeerId'
-                ];
-                Object.entries(value).forEach(([k, v]) => {
-                    if (!skipKeys.includes(k) && (k in oldValue ? v !== oldValue[k] : v !== undefined)) {
-                        if (!target._syncMeta.settings[k]) {
-                            target._syncMeta.settings[k] = {};
-                        }
-                        target._syncMeta.settings[k].ts = Date.now();
-                    }
-                });
-            }
-            emitStateChange('settings', prop, oldValue, value);
-        }
-        const success = Reflect.set(target, prop, value);
-        if (success && prop !== '_syncMeta') {
-            saveToStorage();
-        }
-        return success;
-    },
-    get(target, prop) {
-        if (prop === 'highlights') {
-            const highlights = Reflect.get(target, prop);
-            if (highlights && typeof highlights === 'object' && !highlights.__isProxy) {
-                const proxied = new Proxy(highlights, {
-                    set(highlightsTarget, ref, color) {
-                        const oldColor = highlightsTarget[ref];
-                        if (oldColor === color) return true;
-                        if (!target._syncMeta.highlights[ref]) {
-                            target._syncMeta.highlights[ref] = {};
-                        }
-                        target._syncMeta.highlights[ref].ts = Date.now();
-                        const success = Reflect.set(highlightsTarget, ref, color);
-                        if (success) {
-                            saveToStorageImmediate();
-                            emitStateChange('highlight', ref, oldColor, color);
-                        }
-                        return success;
-                    },
-                    deleteProperty(highlightsTarget, ref) {
-                        const success = Reflect.deleteProperty(highlightsTarget, ref);
-                        if (success) {
-                            Reflect.deleteProperty(target._syncMeta.highlights, ref);
-                            saveToStorageImmediate();
-                            emitStateChange('highlight', ref, highlightsTarget[ref], undefined);
-                        }
-                        return success;
-                    }
-                });
-                Object.defineProperty(proxied, '__isProxy', {
-                    value: true,
-                    enumerable: false
-                });
-                Reflect.set(target, prop, proxied);
-                return proxied;
-            }
-        }
-        return Reflect.get(target, prop);
-    }
-});
-export function setHighlight(reference, color) {
-    if (color === 'none' || !color) {
-        delete state.highlights[reference];
-        delete state._syncMeta.highlights[reference];
-    } else {
-        state.highlights[reference] = color;
-        if (!state._syncMeta.highlights[reference]) {
-            state._syncMeta.highlights[reference] = {};
-        }
-        state._syncMeta.highlights[reference].ts = Date.now();
-    }
-    saveToStorageImmediate();
-    const ev = new CustomEvent('state:changed', { 
-        detail: { 
-            type: 'highlight', 
-            reference, 
-            color, 
-            timestamp: Date.now() 
-        } 
-    });
-    document.dispatchEvent(ev);
-}
-export function removeHighlight(reference) {
-    setHighlight(reference, 'none');
-}
 export function formatBookNameForSource(bookName, source) {
     const book = bookName.toLowerCase();
     switch(source) {
@@ -307,159 +150,54 @@ export function formatBookNameForSource(bookName, source) {
     }
 }
 export function saveToStorage() {
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-        saveTimeout = null;
-    }
-    try {
-        const cleanState = {
-            currentVerse: null,
-            currentVerseData: state.currentVerseData,
-            highlights: state.highlights,
-            notes: state.notes,
-            settings: { ...state.settings },
-            hotkeys: { ...state.hotkeys },
-            hotkeysEnabled: state.hotkeysEnabled,
-            currentPassageReference: state.currentPassageReference,
-            _syncMeta: state._syncMeta
-        };
-        localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
-        saveToCookies();
-    } catch (error) {
-        console.error('Storage save error:', error);
-        handleError(error, 'saveToStorage');
-    }
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        try {
+            const cleanState = {
+                currentVerse: null,
+                currentVerseData: state.currentVerseData,
+                highlights: state.highlights,
+                notes: state.notes,
+                settings: { ...state.settings },
+                currentPassageReference: state.currentPassageReference
+            };
+            localStorage.setItem('bibleStudyState', JSON.stringify(cleanState));
+            saveToCookies();
+        } catch (error) {
+            console.error('Storage save error:', error);
+            handleError(error, 'saveToStorage');
+        }
+    }, SAVE_DEBOUNCE_MS);
 }
 export function loadFromStorage() {
     try {
         const raw = localStorage.getItem('bibleStudyState');
         if (!raw) return;
         const parsed = JSON.parse(raw);
-        if (parsed.settings && typeof parsed.settings === 'object') {
-            const validSettings = {
-                bibleTranslation: AVAILABLE_TRANSLATIONS.includes(parsed.settings.bibleTranslation) ? parsed.settings.bibleTranslation : 'BSB',
-                referenceVersion: parsed.settings.referenceVersion || 'NASB',
-                footnotes: typeof parsed.settings.footnotes === 'object' ? parsed.settings.footnotes : {},
-                audioControlsVisible: typeof parsed.settings.audioControlsVisible === 'boolean' ? parsed.settings.audioControlsVisible : true,
-                audioNarrator: parsed.settings.audioNarrator || 'gilbert',
-                manualBook: BOOK_ORDER.includes(parsed.settings.manualBook) ? parsed.settings.manualBook : BOOK_ORDER[0],
-                manualChapter: Math.max(1, Math.min(150, parseInt(parsed.settings.manualChapter) || 1)),
-                theme: ['light', 'dark'].includes(parsed.settings.theme) ? parsed.settings.theme : 'dark',
-                colorTheme: parsed.settings.colorTheme || 'blue',
-                notesView: ['text', 'markdown'].includes(parsed.settings.notesView) ? parsed.settings.notesView : 'text',
-                referencePanelOpen: typeof parsed.settings.referencePanelOpen === 'boolean' ? parsed.settings.referencePanelOpen : true,
-                referenceSource: ['biblegateway', 'biblecom', 'ebibleorg', 'stepbible'].includes(parsed.settings.referenceSource) ? parsed.settings.referenceSource : 'biblegateway',
-                collapsedSections: typeof parsed.settings.collapsedSections === 'object' ? parsed.settings.collapsedSections : {},
-                collapsedPanels: typeof parsed.settings.collapsedPanels === 'object' ? parsed.settings.collapsedPanels : {},
-                panelWidths: {
-                    sidebar: Math.max(200, Math.min(500, parseInt(parsed.settings.panelWidths?.sidebar) || 280)),
-                    referencePanel: Math.max(250, Math.min(500, parseInt(parsed.settings.panelWidths?.referencePanel) || 350)),
-                    scriptureSection: parsed.settings.panelWidths?.scriptureSection || null,
-                    notesSection: Math.max(250, Math.min(500, parseInt(parsed.settings.panelWidths?.notesSection) || 350))
-                },
-                scriptureFontSize: Math.max(12, Math.min(32, parseInt(parsed.settings.scriptureFontSize) || 16)),
-                notesFontSize: Math.max(12, Math.min(32, parseInt(parsed.settings.notesFontSize) || 16)),
-                autoplayAudio: typeof parsed.settings.autoplayAudio === 'boolean' ? parsed.settings.autoplayAudio : true,
-                footnotesCollapsed: typeof parsed.settings.footnotesCollapsed === 'boolean' ? parsed.settings.footnotesCollapsed : false,
-                syncEnabled: typeof parsed.settings.syncEnabled === 'boolean' ? parsed.settings.syncEnabled : false,
-                autoSync: typeof parsed.settings.autoSync === 'boolean' ? parsed.settings.autoSync : false,
-                autoSync: parsed.settings.autoSync === true || parsed.settings.autoSync === false,
-                connectedDevices: Array.isArray(parsed.settings.connectedDevices) ? parsed.settings.connectedDevices.map(d => ({
-                    id: typeof d.id === 'string' ? d.id : '',
-                    peerId: typeof d.peerId === 'string' && d.peerId.length === 8 ? d.peerId : d.id,
-                    name: typeof d.name === 'string' ? d.name : 'Unknown',
-                    customName: d.customName || null,
-                    connectedAt: typeof d.connectedAt === 'number' ? d.connectedAt : Date.now(),
-                    lastConnectedAt: typeof d.lastConnectedAt === 'number' ? d.lastConnectedAt : Date.now()
-                })).filter(d => d.peerId && d.id) : [],
-                myPeerId: typeof parsed.settings.myPeerId === 'string' && parsed.settings.myPeerId.length === 8 ? parsed.settings.myPeerId : null
-            };
-            Object.assign(stateInternal.settings, validSettings);
-            if (parsed.hotkeys && typeof parsed.hotkeys === 'object') {
-                stateInternal.hotkeys = { ...parsed.hotkeys };
-            }
-            stateInternal.hotkeysEnabled = parsed.hotkeysEnabled === true || false;
+        if (parsed.settings) {
+            state.settings = { ...state.settings, ...parsed.settings };
         }
-        if (parsed.highlights && typeof parsed.highlights === 'object') {
-            const tempHighlights = {};
-            Object.entries(parsed.highlights).forEach(([ref, color]) => {
-                if (typeof ref === 'string' && /^[^ ]+ \d+:\d+$/.test(ref) && 
-                    ['yellow', 'orange', 'red', 'blue', 'green', 'purple', 'pink'].includes(color)) {
-                tempHighlights[ref] = color;
-                }
-            });
-            state.highlights = tempHighlights;
+        if (parsed.highlights) {
+            state.highlights = parsed.highlights;
         }
-        Object.keys(state.highlights).forEach(ref => {
-            if (!state._syncMeta.highlights[ref]) {
-                state._syncMeta.highlights[ref] = { 
-                    ts: parsed._syncMeta?.highlights?.[ref]?.ts || Date.now() 
-                };
-            }
-        });
-        if (parsed.notes !== undefined && typeof parsed.notes === 'string') {
-            stateInternal.notes = parsed.notes;
+        if (parsed.notes !== undefined) {
+            state.notes = parsed.notes;
         }
-        if (typeof parsed.currentPassageReference === 'string') {
-            stateInternal.currentPassageReference = parsed.currentPassageReference;
-        }
-        if (parsed._syncMeta && typeof parsed._syncMeta === 'object') {
-            stateInternal._syncMeta = {
-                highlights: {},
-                notes: null,
-                settings: {}
-            };
-            if (parsed._syncMeta.highlights && typeof parsed._syncMeta.highlights === 'object') {
-                Object.entries(parsed._syncMeta.highlights).forEach(([ref, meta]) => {
-                    if (typeof ref === 'string' && meta && typeof meta === 'object' && typeof meta.ts === 'number') {
-                        stateInternal._syncMeta.highlights[ref] = { ts: meta.ts };
-                    }
-                });
-            }
-            if (parsed._syncMeta.notes && typeof parsed._syncMeta.notes === 'object' && typeof parsed._syncMeta.notes.ts === 'number') {
-                stateInternal._syncMeta.notes = { ts: parsed._syncMeta.notes.ts };
-            }
-            if (parsed._syncMeta.settings && typeof parsed._syncMeta.settings === 'object') {
-                Object.entries(parsed._syncMeta.settings).forEach(([key, meta]) => {
-                    if (typeof key === 'string' && meta && typeof meta === 'object' && typeof meta.ts === 'number') {
-                        stateInternal._syncMeta.settings[key] = { ts: meta.ts };
-                    }
-                });
-            }
+        if (parsed.currentPassageReference !== undefined) {
+            state.currentPassageReference = parsed.currentPassageReference;
         }
         const notesInput = document.getElementById('notesInput');
-        if (notesInput) notesInput.value = stateInternal.notes;
+        if (notesInput) notesInput.value = state.notes;
     } catch (error) {
         console.error('Storage load error:', error);
         handleError(error, 'loadFromStorage');
-        initializeDefaultState();
     }
-}
-function initializeDefaultState() {
-    stateInternal.highlights = {};
-    stateInternal.notes = '';
-    stateInternal.currentPassageReference = '';
-    stateInternal._syncMeta = { highlights: {}, notes: null, settings: {} };
 }
 export function saveToCookies() {
     try {
         const expiry = new Date();
         expiry.setFullYear(expiry.getFullYear() + COOKIE_LENGTH);
-        const cookieSettings = {
-            bibleTranslation: state.settings.bibleTranslation,
-            referenceVersion: state.settings.referenceVersion,
-            theme: state.settings.theme,
-            colorTheme: state.settings.colorTheme,
-            audioNarrator: state.settings.audioNarrator,
-            audioControlsVisible: state.settings.audioControlsVisible,
-            autoplayAudio: state.settings.autoplayAudio,
-            syncEnabled: state.settings.syncEnabled,
-            autoSync: state.settings.autoSync,
-            myPeerId: state.settings.myPeerId,  
-            manualBook: state.settings.manualBook,
-            manualChapter: state.settings.manualChapter
-        };
-        const cookieData = encodeURIComponent(JSON.stringify(cookieSettings));
+        const cookieData = encodeURIComponent(JSON.stringify(state.settings));
         const cookieParts = [
             `bibleStudySettings=${cookieData}`,
             `expires=${expiry.toUTCString()}`,
@@ -480,22 +218,7 @@ export function loadFromCookies() {
             const [key, value] = cookie.trim().split('=');
             if (key === 'bibleStudySettings') {
                 const settings = JSON.parse(decodeURIComponent(value));
-                if (settings && typeof settings === 'object') {
-                    Object.assign(stateInternal.settings, {
-                        bibleTranslation: AVAILABLE_TRANSLATIONS.includes(settings.bibleTranslation) ? settings.bibleTranslation : 'BSB',
-                        referenceVersion: settings.referenceVersion || 'NASB',
-                        theme: ['light', 'dark'].includes(settings.theme) ? settings.theme : 'dark',
-                        colorTheme: settings.colorTheme || 'blue',
-                        audioNarrator: settings.audioNarrator || 'gilbert',
-                        audioControlsVisible: typeof settings.audioControlsVisible === 'boolean' ? settings.audioControlsVisible : true,
-                        autoplayAudio: typeof settings.autoplayAudio === 'boolean' ? settings.autoplayAudio : true,
-                        syncEnabled: typeof settings.syncEnabled === 'boolean' ? settings.syncEnabled : false,
-                        autoSync: typeof settings.autoSync === 'boolean' ? settings.autoSync : false,
-                        myPeerId: typeof settings.myPeerId === 'string' && settings.myPeerId.length === 8 ? settings.myPeerId : null,
-                        manualBook: BOOK_ORDER.includes(settings.manualBook) ? settings.manualBook : BOOK_ORDER[0],
-                        manualChapter: Math.max(1, parseInt(settings.manualChapter) || 1)
-                    });
-                }
+                Object.assign(state.settings, settings);
                 break;
             }
         }
@@ -521,28 +244,70 @@ export const bookNameMapping = {
     '1 John': '1JN', '2 John': '2JN', '3 John': '3JN', Jude: 'JUD', Revelation: 'REV'
 };
 export const bibleHubUrlMap = {
-    LSB: 'lsb', NASB1995: 'nasb', NASB: 'nasb_', ASV: 'asv', ESV: 'esv', 
-    KJV: 'kjv', GNV: 'geneva', NKJV: 'nkjv', BSB: 'bsb', CSB: 'csb', 
-    NET: 'net', NIV: 'niv', NLT: 'nlt'
+    LSB: 'lsb',
+    NASB1995: 'nasb',
+    NASB: 'nasb_',
+    ASV: 'asv', 
+    ESV: 'esv', 
+    KJV: 'kjv', 
+    GNV: 'geneva',
+    NKJV: 'nkjv', 
+    BSB: 'bsb', 
+    CSB: 'csb', 
+    NET: 'net', 
+    NIV: 'niv', 
+    NLT: 'nlt'
 };
 export const bibleComUrlMap = {
-    LSB: '3345', NASB1995: '100', NASB: '2692', ASV: '12', ESV: '59',
-    KJV: '1', GNV: '2163', NKJV: '114', BSB: '3034', CSB: '1713',
-    NET: '107', NIV: '111', NLT: '116'
+    LSB: '3345',
+    NASB1995: '100',
+    NASB: '2692',
+    ASV: '12',
+    ESV: '59',
+    KJV: '1',
+    GNV: '2163',
+    NKJV: '114',
+    BSB: '3034',
+    CSB: '1713',
+    NET: '107',
+    NIV: '111',
+    NLT: '116'
 };
 export const ebibleOrgUrlMap = {
-    NASB1995: 'local:engnasb', ASV: 'local:eng-asv', KJV: 'local:eng-kjv2006',
-    GNV: 'local:enggnv', BSB: 'local:engbsb', NET: 'local:engnet'
+    NASB1995: 'local:engnasb',
+    ASV: 'local:eng-asv',
+    KJV: 'local:eng-kjv2006',
+    GNV: 'local:enggnv',
+    BSB: 'local:engbsb',
+    NET: 'local:engnet'
 };
 export const stepBibleUrlMap = {
-    LSB: 'LSB', NASB1995: 'NASB1995', NASB: 'NASB2020', ASV: 'ASV',
-    ESV: 'ESV', KJV: 'KJV', GNV: 'Gen', BSB: 'BSB', NET: 'NET2full', NIV: 'NIV'
+    LSB: 'LSB',
+    NASB1995: 'NASB1995',
+    NASB: 'NASB2020',
+    ASV: 'ASV',
+    ESV: 'ESV',
+    KJV: 'KJV',
+    GNV: 'Gen',
+    BSB: 'BSB',
+    NET: 'NET2full',
+    NIV: 'NIV'
 };
 function getBibleGatewayVersionCode(appTranslation) {
     const versionMap = {
-        LSB: 'LSB', NASB1995: 'NASB1995', NASB: 'NASB', ASV: 'ASV',
-        ESV: 'ESV', KJV: 'KJV', GNV: 'GNV', NKJV: 'NKJV', BSB: 'BSB',
-        CSB: 'CSB', NET: 'NET', NIV: 'NIV', NLT: 'NLT'
+        LSB: 'LSB',
+        NASB1995: 'NASB1995',
+        NASB: 'NASB',
+        ASV: 'ASV',
+        ESV: 'ESV', 
+        KJV: 'KJV',
+        GNV: 'GNV',
+        NKJV: 'NKJV',
+        BSB: 'BSB',
+        CSB: 'CSB',
+        NET: 'NET',
+        NIV: 'NIV',
+        NLT: 'NLT'
     };
     return versionMap[appTranslation] || 'NASB1995';
 }
@@ -569,7 +334,11 @@ export function updateURL(translation, book, chapter, action = 'push') {
         const cleanBook = bookAbbr.toLowerCase();
         const cleanChapter = Math.max(1, parseInt(chapter) || 1);
         const newQuery = `?p=${cleanTranslation}/${cleanBook}/${cleanChapter}`;
-        const newState = { translation, book, chapter };
+        const newState = { 
+            translation, 
+            book, 
+            chapter
+        };
         if (action === 'replace') {
             window.history.replaceState(newState, '', newQuery);
         } else {
@@ -599,7 +368,7 @@ export function parseURL() {
                 console.warn('Invalid translation:', translation);
                 return null;
             }
-            if (isNaN(chapter) || chapter <= 0 || chapter > CHAPTER_COUNTS[book]) {
+            if (isNaN(chapter) || chapter <= 0 || chapter > 150) {
                 console.warn('Invalid chapter:', chapter);
                 return null;
             }

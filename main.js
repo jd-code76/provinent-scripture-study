@@ -2,10 +2,9 @@ import { isKJV, playChapterAudio, pauseChapterAudio, resumeChapterAudio, stopCha
 import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights, showColorPicker, showHighlightsModal } from './modules/highlights.js';
 import { showHelpModal } from './modules/hotkeys.js';
 import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
-import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings, updateAudioControlsVisibility } from './modules/settings.js'
+import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings } from './modules/settings.js'
 import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToStorage, state } from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
-import { initSync, syncManager } from './modules/sync.js';
 import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
     updateMarkdownPreview, updateReferencePanel, updateNotesFontSize, updateScriptureFontSize } from './modules/ui.js'
 const OFFLINE_STYLES = `
@@ -31,11 +30,10 @@ let touchStartTime = 0;
 let longPressTimer = null;
 let touchStartY = 0;
 let isScrolling = false;
-let syncResumedToastShown = false;
 if (typeof marked !== 'undefined') {
     marked.setOptions({ 
-        breaks: true,
-        gfm: true
+        breaks: true,       
+        gfm: true          
     });
 }
 class AppError extends Error {
@@ -48,11 +46,6 @@ class AppError extends Error {
 }
 export function handleError(error, context, userFriendlyMessage) {
     console.error(`Error in ${context}:`, error);
-    if (error.type === 'unavailable-id') {
-        console.warn('[Sync] Peer ID unavailable – regenerating');
-        const syncEvent = new CustomEvent('sync:regenerateId');
-        document.dispatchEvent(syncEvent);
-    }
     const rawMsg = userFriendlyMessage ?? 
         (error instanceof AppError ? error.message : 'An unexpected error occurred');
     const escapedMsg = escapeHTML(rawMsg);
@@ -101,6 +94,28 @@ export function getSimpleDate() {
     const year = String(now.getFullYear()).slice(-2);
     return `${month}-${day}-${year}`;
 }
+export function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+}
+export function formatDateTime(isoDate) {
+    const date = new Date(isoDate);
+    const dateStr = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+    const timeStr = date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    return `${dateStr}, ${timeStr}`;
+}
 export function showLoading(flag) {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.classList.toggle('active', flag);
@@ -124,9 +139,8 @@ function updateOfflineStatus(isOffline) {
         `;
         document.body.appendChild(indicator);
     }
-    indicator.textContent = isOffline ? 'Offline Mode (Sync Paused)' : 'Online';
+    indicator.textContent = isOffline ? 'Offline Mode' : 'Online';
     indicator.style.background = isOffline ? '#ff6b6b' : '#51cf66';
-    document.dispatchEvent(new CustomEvent('offlineStatus', { detail: { isOffline } }));
     setTimeout(() => {
         indicator.style.opacity = '0';
         setTimeout(() => indicator.remove(), 300);
@@ -201,12 +215,6 @@ export function escapeHTML(string) {
         return escape[char];
     });
 }
-function syncAudioControlsToggleUI() {
-    const audioToggle = document.getElementById('audioControlsToggle');
-    if (audioToggle) {
-        audioToggle.checked = !!state.settings.audioControlsVisible;
-    }
-}
 export function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.settings.theme);
     const themeIcon = document.getElementById('themeIcon');
@@ -248,7 +256,6 @@ function setupEventListeners() {
     setupModalControls();
     setupMarkdownShortcuts();
     setupTouchEvents();
-    setupSyncManagement();
 }
 function setupHeaderButtons() {
     const buttons = {
@@ -279,9 +286,15 @@ function setupAudioControls() {
         const playBtn = document.querySelector('.play-audio-btn');
         const pauseBtn = document.querySelector('.pause-audio-btn');
         const stopBtn = document.querySelector('.stop-audio-btn');
-        if (playBtn) playBtn.addEventListener('click', handleAudioPlayback);
-        if (pauseBtn) pauseBtn.addEventListener('click', pauseChapterAudio);
-        if (stopBtn) stopBtn.addEventListener('click', stopChapterAudio);
+        if (playBtn) {
+            playBtn.addEventListener('click', handleAudioPlayback);
+        }
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', pauseChapterAudio);
+        }
+        if (stopBtn) {
+            stopBtn.addEventListener('click', stopChapterAudio);
+        }
     });
 }
 function handleAudioPlayback() {
@@ -464,92 +477,10 @@ function setupTouchEvents() {
     document.addEventListener('touchend', handleTouchEnd);
     document.addEventListener('touchcancel', handleTouchCancel);
 }
-function setupSyncManagement() {
-    initSync();
-    if (state.settings.connectedDevices?.length > 0) {
-        syncManager.initPeer().catch(err => {
-            console.error('[App] Failed to init peer on load:', err);
-        });
-    }
-    document.addEventListener('sync:peerConnected', (ev) => {
-        console.log('[App] Peer connected:', ev.detail.peerId);
-        if (!syncResumedToastShown) {
-            const notification = document.createElement('div');
-            notification.textContent = 'Device connected!';
-            notification.style.cssText = `
-                position: fixed;
-                top: 70px;
-                right: 10px;
-                padding: 12px 20px;
-                background: #4caf50;
-                color: white;
-                border-radius: 5px;
-                z-index: 10000;
-                font-size: 14px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            `;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-            syncResumedToastShown = true;
-        } else {
-            syncResumedToastShown = false;
-        }
-    });
-    document.addEventListener('sync:merged', (ev) => {
-        if (!ev.detail.changesMade) return;
-        console.log('[App] Applying real-time sync changes from', ev.detail.peerId);
-        const currentBook = state.settings.manualBook;
-        const currentChapter = state.settings.manualChapter;
-        document.querySelectorAll('.verse').forEach(verseEl => {
-            const ref = verseEl.dataset.verse;
-            if (!ref) return;
-            const versePattern = new RegExp(`^${currentBook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} ${currentChapter}:`);
-            if (!versePattern.test(ref)) return; 
-            const newColor = state.highlights[ref];
-            const currentClasses = Array.from(verseEl.classList);
-            const currentHighlight = currentClasses.find(c => c.startsWith('highlight-'));
-            if (newColor && currentHighlight !== `highlight-${newColor}`) {
-                currentClasses.filter(c => c.startsWith('highlight-'))
-                            .forEach(c => verseEl.classList.remove(c));
-                verseEl.classList.add(`highlight-${newColor}`);
-                console.log(`[App] Updated highlight for ${ref} to ${newColor}`);
-            } else if (!newColor && currentHighlight) {
-                verseEl.classList.remove(currentHighlight);
-                console.log(`[App] Removed highlight for ${ref}`);
-            }
-        });
-        const notesInput = document.getElementById('notesInput');
-        if (notesInput && document.activeElement !== notesInput) {
-            notesInput.value = state.notes;
-            if (state.settings.notesView === 'markdown') {
-                updateMarkdownPreview();
-            }
-            console.log('[App] Updated notes from sync');
-        }
-        applyTheme();
-        applyColorTheme();
-        updateBibleGatewayVersion();
-        initialiseNarratorSelect();
-        updateAudioControlsVisibility();
-        console.log('[App] UI updated from sync');
-    });
-    document.addEventListener('sync:error', (ev) => {
-        console.error('[App] Sync error:', ev.detail.error);
-        alert('Sync error: ' + ev.detail.error);
-    });
-    document.addEventListener('offlineStatus', (ev) => {
-        if (ev.detail.isOffline) {
-            console.log('[App] Pausing sync due to offline');
-            document.dispatchEvent(new CustomEvent('sync:pauseReconnect'));
-        }
-    });
-}
 async function init() {
     try {
-        showLoading(true);
-        await loadFromCookies();
         await loadFromStorage();
-        syncAudioControlsToggleUI();
+        loadFromCookies();
         const style = document.createElement('style');
         style.textContent = OFFLINE_STYLES;
         document.head.appendChild(style);
@@ -559,7 +490,6 @@ async function init() {
         initBookChapterControls();
         initializeAudioControls();
         initialiseNarratorSelect();
-        updateAudioControlsVisibility();
         setupNavigationWithURL();
         setupPopStateListener();
         if (!navigateFromURL()) {
@@ -586,8 +516,10 @@ async function init() {
         setupEventListeners();
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
-                .then(reg => navigator.serviceWorker.ready)
                 .then(reg => {
+                    return navigator.serviceWorker.ready;
+                })
+            .then(reg => {
                     reg.active.postMessage({ type: 'VERSION', version: APP_VERSION });
                     console.log('Sent version to SW:', APP_VERSION);
                 })
@@ -596,8 +528,6 @@ async function init() {
         console.log('App initialized successfully');
     } catch (error) {
         handleError(error, 'app initialization');
-    } finally {
-        showLoading(false);
     }
 }
 if (document.readyState === 'loading') {

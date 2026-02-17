@@ -6,10 +6,9 @@ import { isKJV, playChapterAudio, pauseChapterAudio, resumeChapterAudio, stopCha
 import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights, showColorPicker, showHighlightsModal } from './modules/highlights.js';
 import { showHelpModal } from './modules/hotkeys.js';
 import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
-import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings, updateAudioControlsVisibility } from './modules/settings.js'
+import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings } from './modules/settings.js'
 import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToStorage, state } from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
-import { initSync, syncManager } from './modules/sync.js';
 import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
     updateMarkdownPreview, updateReferencePanel, updateNotesFontSize, updateScriptureFontSize } from './modules/ui.js'
 
@@ -43,22 +42,26 @@ let touchStartTime = 0;
 let longPressTimer = null;
 let touchStartY = 0;
 let isScrolling = false;
-let syncResumedToastShown = false;
 
 /* ====================================================================
    Marked.js Configuration
+   GitHub-flavored markdown parsing setup
 ==================================================================== */
 if (typeof marked !== 'undefined') {
     marked.setOptions({ 
-        breaks: true,
-        gfm: true
+        breaks: true,       // Convert line breaks to <br>
+        gfm: true          // GitHub Flavored Markdown
     });
 }
 
 /* ====================================================================
    ERROR HANDLING
+   Centralized error management utilities
 ==================================================================== */
 
+/**
+ * Custom application error class for better error tracking
+ */
 class AppError extends Error {
     constructor(message, type, originalError) {
         super(message);
@@ -68,14 +71,14 @@ class AppError extends Error {
     }
 }
 
+/**
+ * Handle application errors with context awareness
+ * @param {Error} error - The error object
+ * @param {string} context - Where the error occurred
+ * @param {string} userFriendlyMessage - Optional user-facing message
+ */
 export function handleError(error, context, userFriendlyMessage) {
     console.error(`Error in ${context}:`, error);
-
-    if (error.type === 'unavailable-id') {
-        console.warn('[Sync] Peer ID unavailable – regenerating');
-        const syncEvent = new CustomEvent('sync:regenerateId');
-        document.dispatchEvent(syncEvent);
-    }
 
     const rawMsg = userFriendlyMessage ?? 
         (error instanceof AppError ? error.message : 'An unexpected error occurred');
@@ -88,6 +91,10 @@ export function handleError(error, context, userFriendlyMessage) {
     }
 }
 
+/**
+ * Display error message to user (HTML-escaped)
+ * @param {string} escapedMsg - Pre-escaped message to display
+ */
 export function showError(escapedMsg) {
     const errorContainer = document.getElementById('errorContainer');
     if (errorContainer) {
@@ -95,6 +102,9 @@ export function showError(escapedMsg) {
     }
 }
 
+/**
+ * Clear any displayed error messages
+ */
 export function clearError() {
     const errorContainer = document.getElementById('errorContainer');
     if (errorContainer) {
@@ -104,8 +114,13 @@ export function clearError() {
 
 /* ====================================================================
    GENERAL UTILITIES
+   Helper functions for application functionality
 ==================================================================== */
 
+/**
+ * Get formatted date string for filenames (MM-DD-YY-HHMM)
+ * @returns {string} Formatted date string
+ */
 export function getFormattedDateForFilename() {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -117,6 +132,10 @@ export function getFormattedDateForFilename() {
     return `${month}-${day}-${year}-${hours}${minutes}`;
 }
 
+/**
+ * Get formatted date string for display
+ * @returns {string} Localized date/time string
+ */
 export function getFormattedDateForDisplay() {
     const now = new Date();
     return now.toLocaleString('en-US', {
@@ -130,6 +149,10 @@ export function getFormattedDateForDisplay() {
     });
 }
 
+/**
+ * Get simple date string (MM-DD-YY) for basic filenames
+ * @returns {string} Simple date string
+ */
 export function getSimpleDate() {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -139,11 +162,55 @@ export function getSimpleDate() {
     return `${month}-${day}-${year}`;
 }
 
+/**
+ * Format file size in human-readable format
+ * @param {number} bytes - File size in bytes
+ * @returns {string} - Formatted file size
+ */
+export function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
+ * Format date and time for display (24-hour format)
+ * @param {string} isoDate - ISO date string
+ * @returns {string} - Formatted date and time
+ */
+export function formatDateTime(isoDate) {
+    const date = new Date(isoDate);
+    const dateStr = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+    const timeStr = date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    return `${dateStr}, ${timeStr}`;
+}
+
+/**
+ * Show or hide loading overlay
+ * @param {boolean} flag - Whether to show loading
+ */
 export function showLoading(flag) {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.classList.toggle('active', flag);
 }
 
+/**
+ * Update offline status indicator
+ * @param {boolean} isOffline - Whether app is offline
+ */
 function updateOfflineStatus(isOffline) {
     let indicator = document.getElementById('offlineIndicator');
     
@@ -165,17 +232,19 @@ function updateOfflineStatus(isOffline) {
         document.body.appendChild(indicator);
     }
     
-    indicator.textContent = isOffline ? 'Offline Mode (Sync Paused)' : 'Online';
+    indicator.textContent = isOffline ? 'Offline Mode' : 'Online';
     indicator.style.background = isOffline ? '#ff6b6b' : '#51cf66';
     
-    document.dispatchEvent(new CustomEvent('offlineStatus', { detail: { isOffline } }));
-    
+    // Auto-hide after 3 seconds
     setTimeout(() => {
         indicator.style.opacity = '0';
         setTimeout(() => indicator.remove(), 300);
     }, 3000);
 }
 
+/**
+ * Update header title with current translation
+ */
 export function updateHeaderTitle() {
     const headerTitleEl = document.getElementById('passageHeaderTitle');
     if (headerTitleEl) {
@@ -184,6 +253,9 @@ export function updateHeaderTitle() {
     }
 }
 
+/**
+ * Handle touch start for mobile highlighting
+ */
 function handleTouchStart(e) {
     const verse = e.target.closest('.verse');
     if (verse) {
@@ -203,6 +275,9 @@ function handleTouchStart(e) {
     }
 }
 
+/**
+ * Handle touch move to detect scrolling
+ */
 function handleTouchMove(e) {
     if (longPressTimer && e.touches && e.touches[0]) {
         const currentY = e.touches[0].clientY;
@@ -214,6 +289,9 @@ function handleTouchMove(e) {
     }
 }
 
+/**
+ * Handle touch cancel
+ */
 function handleTouchCancel() {
     if (longPressTimer) {
         clearTimeout(longPressTimer);
@@ -222,6 +300,9 @@ function handleTouchCancel() {
     isScrolling = false;
 }
 
+/**
+ * Handle touch end for highlighting
+ */
 function handleTouchEnd(e) {
     if (longPressTimer) {
         clearTimeout(longPressTimer);
@@ -244,6 +325,11 @@ function handleTouchEnd(e) {
     isScrolling = false;
 }
 
+/**
+ * Escape HTML special characters
+ * @param {string} string - String to escape
+ * @returns {string} - Escaped string
+ */
 export function escapeHTML(string) {
     return string.replace(/[&<>"']/g, char => {
         const escape = {
@@ -257,17 +343,14 @@ export function escapeHTML(string) {
     });
 }
 
-function syncAudioControlsToggleUI() {
-    const audioToggle = document.getElementById('audioControlsToggle');
-    if (audioToggle) {
-        audioToggle.checked = !!state.settings.audioControlsVisible;
-    }
-}
-
 /* ====================================================================
    THEMING
+   Theme management functions
 ==================================================================== */
 
+/**
+ * Apply current theme to document
+ */
 export function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.settings.theme);
     const themeIcon = document.getElementById('themeIcon');
@@ -280,6 +363,10 @@ export function applyTheme() {
     refreshHighlightsModalTheme();
 }
 
+/**
+ * Select a color theme
+ * @param {string} theme - Theme identifier
+ */
 export function selectColorTheme(theme) {
     state.settings.colorTheme = theme;
     applyColorTheme();
@@ -294,11 +381,17 @@ export function selectColorTheme(theme) {
     refreshHighlightsModalTheme();
 }
 
+/**
+ * Apply current color theme
+ */
 export function applyColorTheme() {
     document.documentElement.setAttribute('data-color-theme', state.settings.colorTheme);
     refreshHighlightsModalTheme();
 }
 
+/**
+ * Refresh highlights modal theme
+ */
 function refreshHighlightsModalTheme() {
     const modal = document.getElementById('highlightsModal');
     if (modal?.classList.contains('show')) {
@@ -309,8 +402,12 @@ function refreshHighlightsModalTheme() {
 
 /* ====================================================================
    EVENT LISTENERS
+   Centralized event binding for UI interactions
 ==================================================================== */
 
+/**
+ * Set up all application event listeners
+ */
 function setupEventListeners() {
     setupHeaderButtons();
     setupToolbarNavigation();
@@ -322,7 +419,6 @@ function setupEventListeners() {
     setupModalControls();
     setupMarkdownShortcuts();
     setupTouchEvents();
-    setupSyncManagement();
 }
 
 function setupHeaderButtons() {
@@ -360,9 +456,17 @@ function setupAudioControls() {
         const pauseBtn = document.querySelector('.pause-audio-btn');
         const stopBtn = document.querySelector('.stop-audio-btn');
         
-        if (playBtn) playBtn.addEventListener('click', handleAudioPlayback);
-        if (pauseBtn) pauseBtn.addEventListener('click', pauseChapterAudio);
-        if (stopBtn) stopBtn.addEventListener('click', stopChapterAudio);
+        if (playBtn) {
+            playBtn.addEventListener('click', handleAudioPlayback);
+        }
+        
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', pauseChapterAudio);
+        }
+        
+        if (stopBtn) {
+            stopBtn.addEventListener('click', stopChapterAudio);
+        }
     });
 }
 
@@ -410,13 +514,16 @@ function setupKeyboardShortcuts() {
 }
 
 function setupSidebarControls() {
+    // Reference panel toggle
     const refToggle = document.getElementById('referencePanelToggle');
     if (refToggle) refToggle.addEventListener('click', toggleReferencePanel);
     
+    // Section headers
     document.querySelectorAll('.sidebar-section-header').forEach(h => {
         h.addEventListener('click', () => toggleSection(h.dataset.section));
     });
     
+    // Collapse toggles
     document.querySelectorAll('.collapse-toggle').forEach(btn => {
         btn.addEventListener('click', function() {
             const panel = this.closest('[id]');
@@ -424,6 +531,7 @@ function setupSidebarControls() {
         });
     });
     
+    // Reference panel controls
     const refSource = document.getElementById('referenceSource');
     const refTranslation = document.getElementById('referenceTranslation');
     const refClose = document.querySelector('.reference-panel-close');
@@ -463,10 +571,12 @@ function setupNotesControls() {
         markdownViewBtn.addEventListener('click', () => switchNotesView('markdown'));
     }
     
+    // Markdown formatting buttons
     document.querySelectorAll('.markdown-btn').forEach(btn => {
         btn.addEventListener('click', () => insertMarkdown(btn.dataset.format));
     });
     
+    // Export buttons
     document.querySelectorAll('.notes-controls button').forEach(btn => {
         btn.addEventListener('click', () => exportNotes(btn.dataset.format));
     });
@@ -481,18 +591,24 @@ function handleNotesInput(e) {
 }
 
 function setupHighlightingControls() {
+    // Color options
     document.querySelectorAll('.color-option').forEach(opt => {
         opt.addEventListener('click', () => applyHighlight(opt.dataset.color));
     });
     
+    // Remove highlight
     const removeHighlight = document.getElementById('removeHighlight');
     if (removeHighlight) {
         removeHighlight.addEventListener('click', () => applyHighlight('none'));
     }
     
+    // Context menu for highlighting
     document.addEventListener('contextmenu', handleContextMenu);
+    
+    // Click outside color picker
     document.addEventListener('click', handleOutsideColorPickerClick);
     
+    // Highlights modal
     const showHighlightsBtn = document.getElementById('showHighlightsBtn');
     const closeHighlightsBtn = document.getElementById('closeHighlightsBtn');
     const highlightsOverlay = document.getElementById('highlightsOverlay');
@@ -518,12 +634,14 @@ function handleOutsideColorPickerClick(e) {
 }
 
 function setupModalControls() {
+    // Strong's popup
     const popupOverlay = document.getElementById('popupOverlay');
     const strongsClose = document.querySelector('#strongsPopup .popup-close');
     
     if (popupOverlay) popupOverlay.addEventListener('click', closeStrongsPopup);
     if (strongsClose) strongsClose.addEventListener('click', closeStrongsPopup);
     
+    // Settings modal
     const settingsOverlay = document.getElementById('settingsOverlay');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
@@ -536,12 +654,14 @@ function setupModalControls() {
     if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
     if (clearHighlightsBtn) clearHighlightsBtn.addEventListener('click', clearHighlights);
     
+    // Clear cache and delete data
     const clearCacheBtn = document.getElementById('clearCacheBtn');
     const deleteAllDataBtn = document.getElementById('deleteAllDataBtn');
     
     if (clearCacheBtn) clearCacheBtn.addEventListener('click', clearCache);
     if (deleteAllDataBtn) deleteAllDataBtn.addEventListener('click', deleteAllData);
     
+    // Color themes
     document.querySelectorAll('.color-theme-option').forEach(opt => {
         opt.addEventListener('click', () => selectColorTheme(opt.dataset.theme));
     });
@@ -585,127 +705,19 @@ function setupTouchEvents() {
     document.addEventListener('touchcancel', handleTouchCancel);
 }
 
-function setupSyncManagement() {
-    // Initialize sync
-    initSync();
-
-    // Ensure peer is initialized if devices exist
-    if (state.settings.connectedDevices?.length > 0) {
-        syncManager.initPeer().catch(err => {
-            console.error('[App] Failed to init peer on load:', err);
-        });
-    }
-    
-    // Sync event listeners
-    document.addEventListener('sync:peerConnected', (ev) => {
-        console.log('[App] Peer connected:', ev.detail.peerId);
-        if (!syncResumedToastShown) {
-            const notification = document.createElement('div');
-            notification.textContent = 'Device connected!';
-            notification.style.cssText = `
-                position: fixed;
-                top: 70px;
-                right: 10px;
-                padding: 12px 20px;
-                background: #4caf50;
-                color: white;
-                border-radius: 5px;
-                z-index: 10000;
-                font-size: 14px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            `;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-            syncResumedToastShown = true;
-        } else {
-            syncResumedToastShown = false;
-        }
-    });
-
-    // Real-time UI updates from sync
-    document.addEventListener('sync:merged', (ev) => {
-        if (!ev.detail.changesMade) return;
-        
-        console.log('[App] Applying real-time sync changes from', ev.detail.peerId);
-        
-        // Get current chapter context
-        const currentBook = state.settings.manualBook;
-        const currentChapter = state.settings.manualChapter;
-        
-        // Update highlights in DOM (only if on same chapter)
-        document.querySelectorAll('.verse').forEach(verseEl => {
-            const ref = verseEl.dataset.verse;
-            if (!ref) return;
-            
-            // Check if this verse belongs to current chapter
-            const versePattern = new RegExp(`^${currentBook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} ${currentChapter}:`);
-            if (!versePattern.test(ref)) return; // Skip if different chapter
-            
-            const newColor = state.highlights[ref];
-            const currentClasses = Array.from(verseEl.classList);
-            const currentHighlight = currentClasses.find(c => c.startsWith('highlight-'));
-            
-            if (newColor && currentHighlight !== `highlight-${newColor}`) {
-                // Remove old highlight, add new
-                currentClasses.filter(c => c.startsWith('highlight-'))
-                            .forEach(c => verseEl.classList.remove(c));
-                verseEl.classList.add(`highlight-${newColor}`);
-                console.log(`[App] Updated highlight for ${ref} to ${newColor}`);
-            } else if (!newColor && currentHighlight) {
-                // Highlight was deleted remotely
-                verseEl.classList.remove(currentHighlight);
-                console.log(`[App] Removed highlight for ${ref}`);
-            }
-        });
-        
-        // Update notes in textarea (if not currently focused)
-        const notesInput = document.getElementById('notesInput');
-        if (notesInput && document.activeElement !== notesInput) {
-            notesInput.value = state.notes;
-            
-            // Update markdown preview if visible
-            if (state.settings.notesView === 'markdown') {
-                updateMarkdownPreview();
-            }
-            
-            console.log('[App] Updated notes from sync');
-        }
-        
-        // Update settings (skip fonts - per-device preference)
-        applyTheme();
-        applyColorTheme();
-        updateBibleGatewayVersion();
-        initialiseNarratorSelect();
-        updateAudioControlsVisibility();
-        
-        console.log('[App] UI updated from sync');
-    });
-
-    document.addEventListener('sync:error', (ev) => {
-        console.error('[App] Sync error:', ev.detail.error);
-        alert('Sync error: ' + ev.detail.error);
-    });
-
-    document.addEventListener('offlineStatus', (ev) => {
-        if (ev.detail.isOffline) {
-            console.log('[App] Pausing sync due to offline');
-            document.dispatchEvent(new CustomEvent('sync:pauseReconnect'));
-        }
-    });
-}
-
 /* ====================================================================
    INITIALIZATION
+   Application startup sequence
 ==================================================================== */
 
+/**
+ * Initialize the application
+ */
 async function init() {
     try {
-        showLoading(true);
-
-        await loadFromCookies();
         await loadFromStorage();
-        syncAudioControlsToggleUI();
-
+        loadFromCookies();
+        
         // Add offline styles
         const style = document.createElement('style');
         style.textContent = OFFLINE_STYLES;
@@ -720,7 +732,6 @@ async function init() {
         initBookChapterControls();
         initializeAudioControls();
         initialiseNarratorSelect();
-        updateAudioControlsVisibility();
         setupNavigationWithURL();
         setupPopStateListener();
         
@@ -752,8 +763,12 @@ async function init() {
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
-                .then(reg => navigator.serviceWorker.ready)
                 .then(reg => {
+                    // Wait until the worker is controlling the page
+                    return navigator.serviceWorker.ready;
+                })
+            .then(reg => {
+                    // Now the worker is active – send the version
                     reg.active.postMessage({ type: 'VERSION', version: APP_VERSION });
                     console.log('Sent version to SW:', APP_VERSION);
                 })
@@ -763,13 +778,12 @@ async function init() {
         console.log('App initialized successfully');
     } catch (error) {
         handleError(error, 'app initialization');
-    } finally {
-        showLoading(false);
     }
 }
 
 /* ====================================================================
    START THE APP
+   Execute initialization when DOM is ready
 ==================================================================== */
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

@@ -376,7 +376,7 @@ async function getRandomBibleLocation() {
         throw error;
     }
 }
-function getCurrentTranslation() {
+export function getCurrentTranslation() {
     return state.settings.bibleTranslation || 'BSB';
 }
 export function navigateFromURL() {

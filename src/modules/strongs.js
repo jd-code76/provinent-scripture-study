@@ -190,6 +190,8 @@ function buildPopupContent(verseData, greekUrl, stepUrl) {
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
+                padding: 5px;
+                margin-bottom: 5px;
                 title="${state.settings.footnotesCollapsed ? 'Expand footnotes' : 'Collapse footnotes'}"
                 aria-label="${state.settings.footnotesCollapsed ? 'Expand footnotes' : 'Collapse footnotes'}
             ">
@@ -509,7 +511,6 @@ function populateStrongsFootnotes(verseRef) {
     
     // Respect the persisted collapsed setting
     container.style.display = state.settings.footnotesCollapsed ? 'none' : 'block';
-    container.innerHTML = '<h4 class="footnotes-heading"></h4>';
     
     verseFootnotes.forEach(fn => {
         const footnoteDiv = document.createElement('div');

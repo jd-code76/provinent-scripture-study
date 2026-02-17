@@ -3,7 +3,6 @@ import { escapeHTML } from '../main.js';
 import { nextPassage, prevPassage, randomPassage, updateManualNavigation } from './navigation.js';
 import { exportData } from './settings.js';
 import { BOOK_ORDER, saveToStorage, state } from './state.js';
-import { syncNow, isConnected } from './sync.js';
 import { exportNotes, togglePanelCollapse } from './ui.js';
 const DEFAULT_HOTKEYS = {
     toggleReferencePanel: { key: 'b', altKey: true, shiftKey: false, ctrlKey: false },
@@ -18,8 +17,7 @@ const DEFAULT_HOTKEYS = {
     toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false },
     exportData: { key: 'e', altKey: true, shiftKey: false, ctrlKey: false },
     importData: { key: 'i', altKey: true, shiftKey: false, ctrlKey: false },
-    exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false },
-    manualSync: { key: 'd', altKey: true, shiftKey: false, ctrlKey: false }
+    exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false }
 };
 const IGNORED_KEYS = new Set([
     'Control', 'Shift', 'Alt', 'Meta', 'CapsLock', 'Escape', 'Tab'
@@ -29,11 +27,11 @@ const DISALLOWED_KEYS = new Set([
 ]);
 function initializeHotkeys() {
     try {
-        if (!state.hotkeys) {
-            state.hotkeys = { ...DEFAULT_HOTKEYS };
+        if (!state.settings.hotkeys) {
+            state.settings.hotkeys = { ...DEFAULT_HOTKEYS };
         }
-        if (state.hotkeysEnabled === undefined) {
-            state.hotkeysEnabled = true;
+        if (state.settings.hotkeysEnabled === undefined) {
+            state.settings.hotkeysEnabled = true;
         }
         saveToStorage();
     } catch (error) {
@@ -73,7 +71,7 @@ function isF1HelpKey(event) {
            !event.metaKey;
 }
 function shouldProcessHotkey(event) {
-    if (!state.hotkeysEnabled) return false; 
+    if (!state.settings.hotkeysEnabled) return false;
     const target = event.target;
     if (target.tagName === 'INPUT' || 
         target.tagName === 'TEXTAREA' || 
@@ -86,7 +84,7 @@ function shouldProcessHotkey(event) {
     return true;
 }
 function getHotkeyAction(event) {
-    const hotkeys = state.hotkeys; 
+    const hotkeys = state.settings.hotkeys;
     for (const [action, config] of Object.entries(hotkeys)) {
         if (checkHotkey(event, config)) {
             return action;
@@ -94,7 +92,7 @@ function getHotkeyAction(event) {
     }
     return null;
 }
-async function executeHotkeyAction(action) {
+function executeHotkeyAction(action) {
     const actions = {
         toggleReferencePanel: toggleReferencePanel,
         toggleNotes: () => togglePanelCollapse('notesSection'),
@@ -108,63 +106,11 @@ async function executeHotkeyAction(action) {
         showHelp: showHelpModal,
         exportData: exportData,
         importData: () => document.getElementById('importFile').click(),
-        exportNotes: () => exportNotes(),
-        manualSync: handleManualSync
+        exportNotes: () => exportNotes()
     };
     if (actions[action]) {
-        await actions[action]();
+        actions[action]();
     }
-}
-async function handleManualSync() {
-    if (!state.settings.syncEnabled) {
-        showSyncNotification('Device sync must be enabled in Settings first.', 'error');
-        return;
-    }
-    if (!isConnected()) {
-        showSyncNotification('No devices connected. Pair a device first.', 'error');
-        return;
-    }
-    try {
-        const notification = showSyncNotification('Syncing...', 'info');
-        await syncNow();
-        notification.textContent = 'Sync completed successfully!';
-        notification.style.background = '#4CAF50';
-        setTimeout(() => notification.remove(), 2000);
-    } catch (error) {
-        console.error('Manual sync error:', error);
-        showSyncNotification('Sync failed: ' + error.message, 'error', 3000);
-    }
-}
-function showSyncNotification(message, type = 'info', duration = 0) {
-    const colors = {
-        info: 'var(--accent-color)',
-        success: '#4CAF50',
-        error: '#f44336'
-    };
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 10px;
-        padding: 12px 20px;
-        background: ${colors[type] || colors.info};
-        color: white;
-        border-radius: 5px;
-        z-index: 10000;
-        font-size: 14px;
-        font-weight: 500;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        animation: slideInRight 0.3s ease-out;
-    `;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    if (duration > 0) {
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
-        }, duration);
-    }
-    return notification;
 }
 function checkHotkey(event, config) {
     return event.key === config.key &&
@@ -244,7 +190,7 @@ export function updateHotkey(action, newKey, altKey, shiftKey, ctrlKey) {
         if (DISALLOWED_KEYS.has(newKey)) {
             throw new Error(`Cannot use reserved key: ${newKey}`);
         }
-        state.hotkeys[action] = { 
+        state.settings.hotkeys[action] = { 
             key: newKey, 
             altKey: !!altKey, 
             shiftKey: !!shiftKey, 
@@ -258,12 +204,12 @@ export function updateHotkey(action, newKey, altKey, shiftKey, ctrlKey) {
 }
 export function toggleHotkeysEnabled() {
     try {
-        state.hotkeysEnabled = !state.hotkeysEnabled;
+        state.settings.hotkeysEnabled = !state.settings.hotkeysEnabled;
         saveToStorage();
-        return state.hotkeysEnabled;
+        return state.settings.hotkeysEnabled;
     } catch (error) {
         console.error('Error toggling hotkeys:', error);
-        return state.hotkeysEnabled;
+        return state.settings.hotkeysEnabled;
     }
 }
 function toggleReferencePanel() {
@@ -309,11 +255,11 @@ function populateHotkeysList() {
         const hotkeysList = document.getElementById('hotkeysList');
         const enabledCheckbox = document.getElementById('hotkeysEnabled');
         if (!hotkeysList || !enabledCheckbox) return;
-        enabledCheckbox.checked = state.hotkeysEnabled;
+        enabledCheckbox.checked = state.settings.hotkeysEnabled;
         const hotkeyDefinitions = [
             { action: 'toggleReferencePanel', label: 'Toggle Reference Bible' },
-            { action: 'toggleNotes', label: 'Toggle Notes' },
-            { action: 'toggleSidebar', label: 'Toggle Sidebar' },
+            { action: 'toggleNotes',          label: 'Toggle Notes' },
+            { action: 'toggleSidebar',     label: 'Toggle Sidebar' },
             { action: 'prevChapter', label: 'Previous Chapter' },
             { action: 'nextChapter', label: 'Next Chapter' },
             { action: 'prevBook', label: 'Previous Book' },
@@ -323,11 +269,10 @@ function populateHotkeysList() {
             { action: 'exportData', label: 'Export Data' },
             { action: 'importData', label: 'Import Data' },
             { action: 'exportNotes', label: 'Export Notes' },
-            { action: 'manualSync', label: 'Manual Sync (if devices paired)' },
             { action: 'showHelp', label: 'Show This Help' }
         ];
         hotkeysList.innerHTML = hotkeyDefinitions.map(hotkey => {
-            const display = getHotkeyDisplay(state.hotkeys[hotkey.action]);
+            const display = getHotkeyDisplay(state.settings.hotkeys[hotkey.action]);
             return `
                 <div class="hotkey-item">
                     <div class="hotkey-label">${escapeHTML(hotkey.label)}</div>
@@ -369,7 +314,7 @@ function setupHelpModalEvents() {
 }
 function handleHotkeysEnabledChange(event) {
     try {
-        state.hotkeysEnabled = event.target.checked;
+        state.settings.hotkeysEnabled = event.target.checked;
         saveToStorage();
     } catch (error) {
         console.error('Error changing hotkeys enabled state:', error);
@@ -377,7 +322,7 @@ function handleHotkeysEnabledChange(event) {
 }
 function resetHotkeysToDefaults() {
     try {
-        state.hotkeys = { ...DEFAULT_HOTKEYS };
+        state.settings.hotkeys = { ...DEFAULT_HOTKEYS };
         saveToStorage();
         populateHotkeysList();
     } catch (error) {
@@ -404,10 +349,10 @@ function startHotkeyRecording(action, buttonElement) {
             return;
         }
         const originalText = keysSpan.textContent;
-        const originalHotkeysEnabled = state.hotkeysEnabled;
+        const originalHotkeysEnabled = state.settings.hotkeysEnabled;
         keysSpan.innerHTML = '<em>Press any key combination...</em>';
         keysSpan.style.color = 'var(--accent-color)';
-        state.hotkeysEnabled = false;
+        state.settings.hotkeysEnabled = false;
         const overlay = createRecordingOverlay();
         const cleanup = setupRecordingHandlers(
             action, 
@@ -448,7 +393,7 @@ function setupRecordingHandlers(action, keysSpan, originalHotkeysEnabled, origin
         }
         try {
             updateHotkey(action, event.key, event.altKey, event.shiftKey, event.ctrlKey);
-            keysSpan.textContent = getHotkeyDisplay(state.hotkeys[action]);
+            keysSpan.textContent = getHotkeyDisplay(state.settings.hotkeys[action]);
             keysSpan.style.color = '';
             finishRecording();
         } catch (error) {
@@ -463,7 +408,7 @@ function setupRecordingHandlers(action, keysSpan, originalHotkeysEnabled, origin
         finishRecording();
     }
     function finishRecording() {
-        state.hotkeysEnabled = originalHotkeysEnabled;
+        state.settings.hotkeysEnabled = originalHotkeysEnabled;
         cleanup();
     }
     function cleanup() {

@@ -19,13 +19,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Provinent Scripture Study</title>
 
-        <!-- Content Security Policy -->
+    <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
-        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
         frame-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
         child-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
     ">
-
     
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -37,6 +36,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+    
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#600">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -290,6 +291,7 @@
                         <li><a href="https://www.bibletools.org" target="_blank" rel="noopener noreferrer">BibleTools</a></li>
                         <li><a href="https://dbs.org/en/bibles/" target="_blank" rel="noopener noreferrer">The Bible Cloud (DBS)</a></li>
                         <li><a href="https://www.blueletterbible.org/resources/prefaces.cfm" target="_blank" rel="noopener noreferrer">Bible Prefaces (BLB)</a></li>
+                        <li><a href="https://gab.ai/app" target="_blank" rel="noopener noreferrer">Gab AI</a></li>
                         <li><a href="https://openbible.com" target="_blank" rel="noopener noreferrer">Open Bible</a></li>
                         <li><a href="https://biblehub.com/strongs.htm" target="_blank" rel="noopener noreferrer">Strong's Exhaustive Concordance</a></li>
                     </ul>
@@ -575,92 +577,6 @@
             <button class="popup-close" id="closeSettingsBtn" aria-label="Close settings"><i class="fas fa-xmark"></i></button>
         </div>
 
-        <!-- SYNC SETTINGS -->
-        <div class="settings-group" id="syncSettingsGroup">
-            <div id="syncControls" style="display: none; margin-top: 20px;">
-                <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--text-color);">Connected Devices</h4>
-                
-                <div id="connectedDevicesList" style="margin-bottom: 20px;">
-                    <p class="no-devices-message">No devices paired</p>
-                </div>
-
-                <div id="syncStatus" style="margin: 20px 0;">
-                    <!-- Status rendered by JS -->
-                </div>
-
-                <div style="padding: 20px; background: var(--card-background); border-radius: 8px; border: 1px solid var(--border-color); margin-top: 20px;">
-                    <h4 style="margin-top: 0; color: var(--text-color);">Pair a New Device</h4>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <p style="margin-bottom: 10px; color: var(--text-color); opacity: 0.9;">
-                            <strong>Option 1:</strong> Share your pairing code
-                        </p>
-                        <button id="showPairingCodeBtn" class="btn btn-primary" style="width: 100%;">
-                            <i class="fas fa-link"></i> Show My Pairing Code
-                        </button>
-                        
-                        <div id="pairingCodeContainer" style="display: none; margin-top: 15px; padding: 15px; background: var(--background); border-radius: 6px; text-align: center;">
-                            <p style="margin-bottom: 10px; color: var(--text-color); opacity: 0.8; font-size: 0.9em;">
-                                Share this code with the other device:
-                            </p>
-                            <code id="pairingCodeDisplay" style="
-                                display: block;
-                                font-size: 1.8em;
-                                font-weight: bold;
-                                letter-spacing: 0.2em;
-                                padding: 15px;
-                                background: var(--card-background);
-                                border: 2px solid var(--accent-color);
-                                border-radius: 6px;
-                                color: var(--accent-color);
-                                margin: 10px 0;
-                                font-family: 'Courier New', monospace;
-                            "></code>
-                            <button id="copyPairingCodeBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">
-                                <i class="fas fa-copy"></i> Copy Code
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="
-                        margin: 20px 0;
-                        border-top: 1px solid var(--border-color);
-                        padding-top: 20px;
-                    ">
-                        <p style="margin-bottom: 10px; color: var(--text-color); opacity: 0.9;">
-                            <strong>Option 2:</strong> Enter a pairing code
-                        </p>
-                        <input type="text" 
-                               id="enterPairingCodeInput" 
-                               placeholder="Enter 8-character code" 
-                               maxlength="8"
-                               style="
-                                   width: 100%;
-                                   padding: 12px;
-                                   margin-bottom: 10px;
-                                   border: 1px solid var(--border-color);
-                                   border-radius: 5px;
-                                   font-size: 16px;
-                                   font-family: 'Courier New', monospace;
-                                   text-transform: uppercase;
-                                   letter-spacing: 0.1em;
-                                   background: var(--card-background);
-                                   color: var(--text-color);
-                               "
-                               aria-label="Enter pairing code">
-                        <button id="connectPairingCodeBtn" class="btn btn-primary" style="width: 100%;">
-                            <i class="fas fa-link"></i> Connect to Device
-                        </button>
-                    </div>
-                    
-                    <small style="display: block; margin-top: 15px; opacity: 0.7; color: var(--text-color); font-size: 0.85em;">
-                        <strong>How it works:</strong> Generate a code on one device and enter it on another. 
-                        Devices will automatically reconnect when both are online.
-                    </small>
-                </div>
-            </div>
-        </div>
-
         <!-- SCRIPTURE TRANSLATION -->
         <div class="settings-group">
             <label for="bibleTranslationSetting">Bible Translation</label>
@@ -671,7 +587,7 @@
                 <option value="BSB">Berean Standard Bible (BSB)</option>
                 <option value="NET">New English Translation (NET)</option>
             </select>
-            <small>Set the translation for the Scripture section.</small>
+            <small>Set the translation for Scripture section.</small>
         </div>
 
         <!-- DARK MODE TOGGLE -->
@@ -756,41 +672,47 @@
         </div>
 
         <!-- DATA MANAGEMENT -->
-        <div class="settings-group">
+        <div class="settings-group" id="fileInfoSection">
             <label>Data Management</label>
-            <div class="settings-group">
-                <button class="btn btn-secondary" id="exportDataBtn" aria-label="Export data">
-                    <i class="fas fa-download" aria-hidden="true"></i> Export
-                </button>
-                <small style="display:block;margin-top:5px;">
-                    Export your highlights, notes, and settings.
-                </small>
-            </div>
-            <div class="settings-group">
-                <button class="btn btn-secondary" id="importDataBtn" aria-label="Import data">
-                    <i class="fas fa-upload" aria-hidden="true"></i> Import
-                </button>
-                <small style="display:block;margin-top:5px;">
-                    Import your data (overwrites existing).
-                </small>
+            <div class="file-info-container">
+                <div class="file-info-block">
+                    <h4><i class="fas fa-download" aria-hidden="true"></i> Last Export</h4>
+                    <div id="lastExportInfo">
+                        <p class="no-data">No exports yet</p>
+                    </div>
+                    <button class="btn btn-secondary file-action-btn" id="exportDataBtn" aria-label="Export data">
+                        <i class="fas fa-download" aria-hidden="true"></i> Export Data
+                    </button>
+                    <small class="file-action-note">
+                        Export your highlights, notes, and settings to a JSON file.
+                    </small>
+                </div>
+                
+                <div class="file-info-block">
+                    <h4><i class="fas fa-upload" aria-hidden="true"></i> Last Import</h4>
+                    <div id="lastImportInfo">
+                        <p class="no-data">No imports yet</p>
+                    </div>
+                    <button class="btn btn-secondary file-action-btn" id="importDataBtn" aria-label="Import data">
+                        <i class="fas fa-upload" aria-hidden="true"></i> Import Data
+                    </button>
+                    <small class="file-action-note">
+                        Import your data from a backup file (overwrites existing data).
+                    </small>
+                </div>
             </div>
         </div>
 
-        <!-- LOCAL STORAGE -->
         <div class="settings-group">
             <label>Local Storage</label>
             <div class="settings-group">
-                <button class="btn btn-secondary" id="clearHighlightsBtn">
-                    <i class="fas fa-eraser"></i> Clear Highlights
-                </button>
+                <button class="btn btn-secondary" id="clearHighlightsBtn"><i class="fas fa-eraser"></i> Clear Highlights</button>
                 <small style="display:block;margin-top:5px;">
                     Removes all highlighted verses.
                 </small>
             </div>
             <div class="settings-group">
-                <button class="btn btn-secondary" id="clearCacheBtn">
-                    <i class="fas fa-broom"></i> Clear Cached Data
-                </button>
+                <button class="btn btn-secondary" id="clearCacheBtn"><i class="fas fa-broom"></i> Clear Cached Data</button>
                 <small style="display:block;margin-top:5px;">
                     Clear all cached Bible passages and resources. This will free up storage space
                     but remove offline access to previously viewed content.
@@ -798,18 +720,17 @@
             </div>
         </div>
 
-        <!-- RESET APPLICATION -->
         <div class="settings-group">
             <label>Reset Application</label>
-            <div class="settings-group">
-                <button class="btn btn-danger" id="deleteAllDataBtn">
-                    <i class="fas fa-trash" aria-hidden="true"></i> Delete All Data
-                </button>
-                <small style="display:block;margin-top:5px;color:#f44336;">
-                    <strong>Warning:</strong> This will permanently delete all your highlights, notes, 
-                    and settings. This action cannot be undone!
-                </small>
-            </div>
+                <div class="settings-group">
+                    <button class="btn btn-danger" id="deleteAllDataBtn">
+                        <i class="fas fa-trash" aria-hidden="true"></i> Delete All Data
+                    </button>
+                    <small style="display:block;margin-top:5px;color:#f44336;">
+                        <strong>Warning:</strong> This will permanently delete all your highlights, notes, 
+                        and settings. This action cannot be undone!
+                    </small>
+                </div>
         </div>
 
         <!-- PDF DOWNLOADS -->

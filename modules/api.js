@@ -1,6 +1,6 @@
-import { handleError, showError } from '../main.js';
+import { clearError, handleError, showError, showLoading } from '../main.js';
 import { nextPassage } from './navigation.js';
-import { extractVerseText } from './passage.js';
+import { afterContentLoad, displayPassage, extractVerseText } from './passage.js';
 import { bookNameMapping, state, saveToStorage } from './state.js';
 const API_BASE_URL = 'https://bible.helloao.org/api';
 const AUDIO_TIMEOUT_MS = 10000; 
@@ -328,6 +328,39 @@ export function cleanupAudioPlayer() {
         state.audioPlayer.audio.src = '';
     }
     state.audioPlayer = null;
+}
+export async function loadPassageFromAPI(passageInfo) {
+    try {
+        showLoading(true);
+        const { book, chapter, startVerse, endVerse, displayRef, translation } = passageInfo;
+        state.currentPassageReference = displayRef;
+        const apiTranslation = translation ? apiTranslationCode(translation) : apiTranslationCode(state.settings.bibleTranslation);
+        const apiBook = getApiBookCode(book);
+        const chapterData = await fetchChapter(apiTranslation, apiBook, chapter);
+        state.currentChapterData = chapterData;
+        const chapterFootnotes = chapterData.chapter.footnotes || [];
+        const footnoteCounter = { value: 1 };
+        const contentItems = processChapterContent(
+            chapterData.chapter.content, 
+            book, 
+            chapter, 
+            startVerse, 
+            endVerse, 
+            chapterFootnotes, 
+            footnoteCounter
+        );
+        if (contentItems.length === 0) {
+            throw new Error('No content found in the requested range');
+        }
+        displayPassage(contentItems);
+        afterContentLoad();
+        clearError();
+        updateAudioControls(chapterData.thisChapterAudioLinks);
+    } catch (error) {
+        handleError(error, 'loadPassageFromAPI');
+    } finally {
+        showLoading(false);
+    }
 }
 function processChapterContent(content, book, chapter, startVerse, endVerse, footnotes, footnoteCounter) {
     return content

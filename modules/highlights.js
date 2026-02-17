@@ -42,17 +42,8 @@ export function applyHighlight(color) {
         if (color !== 'none') {
             state.currentVerse.classList.add(`highlight-${color}`);
             state.highlights[verseRef] = color;
-            if (!state._syncMeta.highlights[verseRef]) {
-                state._syncMeta.highlights[verseRef] = {};
-            }
-            state._syncMeta.highlights[verseRef].ts = Date.now();
         } else {
             delete state.highlights[verseRef];
-            if (!state._syncMeta.highlights[verseRef]) {
-                state._syncMeta.highlights[verseRef] = {};
-            }
-            state._syncMeta.highlights[verseRef].deleted = true;
-            state._syncMeta.highlights[verseRef].ts = Date.now();
         }
         saveToStorage();
         const picker = document.getElementById('colorPicker');
@@ -66,14 +57,6 @@ export function clearHighlights() {
         if (!confirm('Are you sure you want to delete ALL highlights? This cannot be undone.')) {
             return;
         }
-        const now = Date.now();
-        Object.keys(state.highlights).forEach(ref => {
-            if (!state._syncMeta.highlights) state._syncMeta.highlights = {};
-            state._syncMeta.highlights[ref] = {
-                deleted: true,
-                ts: now
-            };
-        });
         state.highlights = {};
         document.querySelectorAll('.verse').forEach(verse => {
             verse.classList.remove(...HIGHLIGHT_COLORS.map(col => `highlight-${col}`));
@@ -83,7 +66,6 @@ export function clearHighlights() {
         if (modal?.classList.contains('active')) {
             renderHighlights('all', '');
         }
-        console.log('[Highlights] Cleared all highlights with sync tombstones');
     } catch (error) {
         console.error('Error clearing highlights:', error);
     }
@@ -124,26 +106,36 @@ export function closeHighlightsModal() {
         console.error('Error closing highlights modal:', error);
     }
 }
-function handleSearchInput(e) {
+function setupHighlightsSearch() {
     try {
-        const searchTerm = e.target.value.toLowerCase().trim();
+        const searchInput = document.getElementById('highlightsSearch');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', handleSearchInput);
+        }
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', handleClearSearch);
+        }
+        document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const color = this.dataset.color;
+                const searchTerm = document.getElementById('highlightsSearch').value || '';
+                renderHighlights(color, searchTerm);
+                document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });        
+    } catch (error) {
+        console.error('Error setting up highlights search:', error);
+    }
+}
+function handleSearchInput() {
+    try {
+        const searchTerm = this.value.toLowerCase().trim();
         const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
         renderHighlights(activeFilter, searchTerm);
     } catch (error) {
         console.error('Error handling search input:', error);
-    }
-}
-function handleFilterClick(e) {
-    try {
-        const btn = e.currentTarget;
-        const color = btn.dataset.color;
-        const searchInput = document.getElementById('highlightsSearch');
-        const searchTerm = (searchInput?.value || '').toLowerCase().trim();
-        renderHighlights(color, searchTerm);
-        document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    } catch (error) {
-        console.error('Error handling filter click:', error);
     }
 }
 function handleClearSearch() {
@@ -155,26 +147,6 @@ function handleClearSearch() {
         renderHighlights(activeFilter, '');
     } catch (error) {
         console.error('Error clearing search:', error);
-    }
-}
-function setupHighlightsSearch() {
-    try {
-        const searchInput = document.getElementById('highlightsSearch');
-        const clearSearchBtn = document.getElementById('clearSearch');
-        if (searchInput) {
-            searchInput.removeEventListener('input', handleSearchInput);
-            searchInput.addEventListener('input', handleSearchInput);
-        }
-        if (clearSearchBtn) {
-            clearSearchBtn.removeEventListener('click', handleClearSearch);
-            clearSearchBtn.addEventListener('click', handleClearSearch);
-        }
-        document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
-            btn.removeEventListener('click', handleFilterClick);
-            btn.addEventListener('click', handleFilterClick);
-        });        
-    } catch (error) {
-        console.error('Error setting up highlights search:', error);
     }
 }
 function getValidatedCache(forceClearOnInvalid = false) {
