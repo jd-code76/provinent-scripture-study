@@ -7,9 +7,8 @@ import { stopChapterAudio } from './api.js';
 import { getVerseTextFromStorage } from './highlights.js';
 import { applyColorTheme, applyTheme, formatDateTime, formatFileSize, getFormattedDateForFilename, getFormattedDateForDisplay, handleError, handleNarratorChange, showLoading } from '../main.js';
 import { populateChapterDropdown, updateChapterDropdownVisibility } from './navigation.js';
-import { loadPassage } from './passage.js';
-import { APP_VERSION, saveToCookies, saveToStorage, state, updateBibleGatewayVersion, updateURL } from './state.js';
-import { restorePanelStates, restoreSidebarState, switchNotesView, updateMarkdownPreview, updateReferencePanel, updateScriptureFontSize } from './ui.js';
+import { APP_VERSION, BOOK_ORDER, saveToCookies, saveToStorage, state, updateBibleGatewayVersion, updateURL } from './state.js';
+import { restorePanelStates, restoreSidebarState, switchNotesView, updateMarkdownPreview, updateScriptureFontSize } from './ui.js';
 
 /* ====================================================================
    DATA EXPORT/IMPORT
@@ -42,7 +41,7 @@ export function exportData() {
         const jsonString = JSON.stringify(payload, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
         const fileSize = blob.size;
-        const filename = `provinent-scripture-study-backup-${fileDate}.json`;
+        const filename = `provinent-backup-${fileDate}.json`;
         
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -535,17 +534,6 @@ function updateUIAfterSettingsChange() {
     }
 }
 
-/**
- * Reload passage with new settings
- */
-async function reloadPassageWithNewSettings() {
-    await loadPassage();
-    
-    if (state.settings.referencePanelOpen) {
-        await updateReferencePanel();
-    }
-}
-
 /* ====================================================================
    DATA MANAGEMENT
 ==================================================================== */
@@ -626,11 +614,70 @@ export async function deleteAllData() {
 }
 
 /**
- * Clear all storage data
+ * Clear all storage data and reset entire state to defaults
  */
 function clearAllStorage() {
+    // Clear all localStorage items
     localStorage.removeItem('bibleStudyState');
     localStorage.removeItem('cachedVerses');
+    
+    // Reset entire state object to defaults
+    state.currentVerse = null;
+    state.currentVerseData = null;
+    state.highlights = {};
+    state.notes = '';
+    
+    // Reset all settings to defaults
+    state.settings = {
+        bibleTranslation: 'BSB',
+        referenceVersion: 'NASB',
+        footnotes: {},
+        audioControlsVisible: true,
+        audioNarrator: 'gilbert',
+        manualBook: BOOK_ORDER[0],
+        manualChapter: 1,
+        theme: 'dark',
+        colorTheme: 'blue',
+        notesView: 'text',
+        referencePanelOpen: true,
+        referenceSource: 'biblegateway',
+        collapsedSections: {},
+        collapsedPanels: {},
+        panelWidths: {
+            sidebar: 280,
+            referencePanel: 350,
+            scriptureSection: null,
+            notesSection: 350
+        },
+        scriptureFontSize: 16,
+        notesFontSize: 16,
+        autoplayAudio: true,
+        footnotesCollapsed: false,
+        lastExport: null,
+        lastImport: null
+    };
+    
+    // Reset hotkeys to defaults
+    state.hotkeys = {
+        toggleReferencePanel: { key: 'b', altKey: true, shiftKey: false, ctrlKey: false },
+        toggleNotes: { key: 'n', altKey: true, shiftKey: false, ctrlKey: false },
+        toggleSidebar: { key: 's', altKey: true, shiftKey: false, ctrlKey: false },
+        prevChapter: { key: 'ArrowLeft', altKey: true, shiftKey: false, ctrlKey: false },
+        nextChapter: { key: 'ArrowRight', altKey: true, shiftKey: false, ctrlKey: false },
+        prevBook: { key: 'ArrowUp', altKey: true, shiftKey: true, ctrlKey: false },
+        nextBook: { key: 'ArrowDown', altKey: true, shiftKey: true, ctrlKey: false },
+        randomPassage: { key: 'r', altKey: true, shiftKey: false, ctrlKey: false },
+        showHelp: { key: 'F1', altKey: false, shiftKey: false, ctrlKey: false },
+        toggleAudio: { key: 'p', altKey: true, shiftKey: false, ctrlKey: false },
+        exportData: { key: 'e', altKey: true, shiftKey: false, ctrlKey: false },
+        importData: { key: 'i', altKey: true, shiftKey: false, ctrlKey: false },
+        exportNotes: { key: 'm', altKey: true, shiftKey: false, ctrlKey: false }
+    };
+    
+    state.hotkeysEnabled = true;
+    state.currentPassageReference = '';
+    state.audioPlayer = null;
+    state.currentChapterData = null;
     
     // Clear cookies
     document.cookie = 'bibleStudySettings=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
