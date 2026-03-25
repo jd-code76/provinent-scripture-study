@@ -9,7 +9,7 @@ import { handleError } from '../main.js';
    CONSTANTS
 ==================================================================== */
 
-export const APP_VERSION = '2.2-2026.02.17';
+export const APP_VERSION = '2.3-2026.03.25';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -127,6 +127,7 @@ export const state = {
     currentVerse: null,
     currentVerseData: null,
     highlights: {},
+    highlightMeta: {},
     notes: '',
     
     settings: {
@@ -243,6 +244,7 @@ export function saveToStorage() {
                 currentVerse: null,
                 currentVerseData: state.currentVerseData,
                 highlights: state.highlights,
+                highlightMeta: state.highlightMeta || {},
                 notes: state.notes,
                 settings: { ...state.settings },
                 currentPassageReference: state.currentPassageReference
@@ -273,6 +275,13 @@ export function loadFromStorage() {
         
         if (parsed.highlights) {
             state.highlights = parsed.highlights;
+        }
+
+        if (parsed.highlightMeta) {
+            state.highlightMeta = parsed.highlightMeta;
+        } else {
+            // Initialize if it doesn't exist (for backwards compatibility)
+            state.highlightMeta = {};
         }
         
         if (parsed.notes !== undefined) {

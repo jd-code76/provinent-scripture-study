@@ -22,6 +22,7 @@ $FileOrder = @(
     "settings.css",
     "loading.css",
     "error.css",
+    "mobile.css",
     "responsive.css",
     "scrollbars.css",
     "hotkeys.css"

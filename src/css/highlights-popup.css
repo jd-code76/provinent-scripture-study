@@ -353,3 +353,74 @@ mark {
     padding: 1px 2px;
     border-radius: 2px;
 }
+
+/* Highlight sort buttons */
+.highlight-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.highlight-sort-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.highlight-sort-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--toolbar-background);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.highlight-sort-btn i {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.highlight-sort-btn:hover {
+    background: var(--verse-hover);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.highlight-sort-btn:active {
+    transform: translateY(0);
+}
+
+.highlight-sort-btn.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.highlight-sort-btn.active i {
+    opacity: 1;
+}
+
+.highlight-sort-btn:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .highlight-sort-btn {
+    background: var(--card-background);
+}
+
+[data-theme="dark"] .highlight-sort-btn:hover {
+    background: var(--verse-hover);
+}

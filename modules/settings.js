@@ -4,22 +4,27 @@ import { applyColorTheme, applyTheme, formatDateTime, formatFileSize, getFormatt
 import { populateChapterDropdown, updateChapterDropdownVisibility } from './navigation.js';
 import { APP_VERSION, BOOK_ORDER, saveToCookies, saveToStorage, state, updateBibleGatewayVersion, updateURL } from './state.js';
 import { restorePanelStates, restoreSidebarState, switchNotesView, updateMarkdownPreview, updateScriptureFontSize } from './ui.js';
+let pendingImportFile = null;
+let pendingImportData = null;
 export function exportData() {
     try {
         const fileDate = getFormattedDateForFilename();
         const exportDate = getFormattedDateForDisplay();
-        const highlightsWithText = Object.entries(state.highlights).reduce(
-            (acc, [reference, color]) => {
-                const verseText = getVerseTextFromStorage(reference) || '';
-                acc[reference] = { color: color, text: verseText };
-                return acc;
-            },
-            {}
-        );
+        const highlightsWithText = {};
+        Object.keys(state.highlights).forEach(reference => {
+            const verseText = getVerseTextFromStorage(reference) || '';
+            highlightsWithText[reference] = {
+                color: state.highlights[reference],
+                text: verseText,
+                timestamp: state.highlightMeta?.[reference]?.timestamp || null
+            };
+        });
         const payload = {
-            version: '2.0',
+            version: '2.1',  
             exportDate: exportDate,
-            highlights: highlightsWithText,
+            highlights: state.highlights,           
+            highlightMeta: state.highlightMeta,     
+            highlightsWithText: highlightsWithText, 
             notes: state.notes,
             settings: { ...state.settings }
         };
@@ -52,8 +57,22 @@ export function importData(event) {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => handleFileRead(e, file);
-        reader.onerror = handleFileError;
+        reader.onload = (e) => {
+            try {
+                const fileContent = e.target.result;
+                const data = JSON.parse(fileContent);
+                validateImportData(data);
+                pendingImportFile = file;
+                pendingImportData = data;
+                showImportOptionsModal();
+            } catch (error) {
+                console.error('Error reading import file:', error);
+                alert('Invalid backup file format: ' + error.message);
+            }
+        };
+        reader.onerror = () => {
+            alert('Error reading file. Please try again.');
+        };
         reader.readAsText(file);
         event.target.value = '';
     } catch (error) {
@@ -61,60 +80,275 @@ export function importData(event) {
         alert('Failed to import data. See console for details.');
     }
 }
-function handleFileRead(event, file) {
-    try {
-        const fileContent = event.target.result;
-        const incoming = JSON.parse(fileContent);
-        validateImportData(incoming);
-        if (!confirmImport()) return;
-        applyImportedData(incoming);
-        state.settings.lastImport = {
-            filename: file.name,
-            date: new Date().toISOString(),
-            size: file.size
-        };
-        saveImportedData();
-        updateUIAfterImport(incoming);
-        reloadApplication();
-    } catch (error) {
-        console.error('Error processing import:', error);
-        alert('Invalid backup file format.');
-    }
-}
-function handleFileError() {
-    alert('Error reading file. Please try again.');
-}
 function validateImportData(data) {
+    if (!data || typeof data !== 'object') {
+        throw new Error('Invalid backup file: not a valid JSON object');
+    }
     if (!data.settings || typeof data.settings !== 'object') {
         throw new Error('Invalid backup format: missing settings');
     }
+    if (data.version === '2.1') {
+        if (data.highlights && typeof data.highlights !== 'object') {
+            throw new Error('Invalid backup format: highlights must be an object');
+        }
+        if (data.highlightMeta && typeof data.highlightMeta !== 'object') {
+            throw new Error('Invalid backup format: highlightMeta must be an object');
+        }
+    }
+    if (data.version === '2.0' || !data.version) {
+        if (data.highlights && typeof data.highlights !== 'object') {
+            throw new Error('Invalid backup format: highlights must be an object');
+        }
+    }
+    if (data.notes !== undefined && typeof data.notes !== 'string') {
+        throw new Error('Invalid backup format: notes must be a string');
+    }
 }
-function confirmImport() {
-    return confirm('Import will overwrite all current data. Continue?');
+function showImportOptionsModal() {
+    const modal = document.getElementById('importOptionsModal');
+    const overlay = document.getElementById('importOptionsOverlay');
+    if (!modal || !overlay) {
+        console.error('Import options modal elements not found');
+        return;
+    }
+    const mergeHighlightsToggle = document.getElementById('mergeHighlightsToggle');
+    const mergeNotesToggle = document.getElementById('mergeNotesToggle');
+    const preserveSettingsToggle = document.getElementById('preserveSettingsToggle');
+    if (mergeHighlightsToggle) mergeHighlightsToggle.checked = true;
+    if (mergeNotesToggle) mergeNotesToggle.checked = false;
+    if (preserveSettingsToggle) preserveSettingsToggle.checked = true;
+    updateImportSummary();
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    setupImportOptionsListeners();
 }
-function applyImportedData(incoming) {
-    Object.assign(state.settings, incoming.settings);
-    const incomingHighlights = incoming.highlights || {};
+function closeImportOptionsModal() {
+    const modal = document.getElementById('importOptionsModal');
+    const overlay = document.getElementById('importOptionsOverlay');
+    if (modal) modal.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    pendingImportFile = null;
+    pendingImportData = null;
+}
+function setupImportOptionsListeners() {
+    const toggles = ['mergeHighlightsToggle', 'mergeNotesToggle', 'preserveSettingsToggle'];
+    toggles.forEach(id => {
+        const toggle = document.getElementById(id);
+        if (toggle) {
+            toggle.removeEventListener('change', updateImportSummary);
+            toggle.addEventListener('change', updateImportSummary);
+        }
+    });
+    const confirmBtn = document.getElementById('confirmImportBtn');
+    if (confirmBtn) {
+        confirmBtn.removeEventListener('click', handleConfirmImport);
+        confirmBtn.addEventListener('click', handleConfirmImport);
+    }
+    const cancelBtn = document.getElementById('cancelImportBtn');
+    if (cancelBtn) {
+        cancelBtn.removeEventListener('click', closeImportOptionsModal);
+        cancelBtn.addEventListener('click', closeImportOptionsModal);
+    }
+    const closeBtn = document.getElementById('closeImportOptionsBtn');
+    if (closeBtn) {
+        closeBtn.removeEventListener('click', closeImportOptionsModal);
+        closeBtn.addEventListener('click', closeImportOptionsModal);
+    }
+    const overlay = document.getElementById('importOptionsOverlay');
+    if (overlay) {
+        overlay.removeEventListener('click', closeImportOptionsModal);
+        overlay.addEventListener('click', closeImportOptionsModal);
+    }
+}
+function updateImportSummary() {
+    const mergeHighlights = document.getElementById('mergeHighlightsToggle')?.checked;
+    const mergeNotes = document.getElementById('mergeNotesToggle')?.checked;
+    const preserveSettings = document.getElementById('preserveSettingsToggle')?.checked;
+    const summaryList = document.getElementById('importSummaryList');
+    if (!summaryList) return;
+    const currentHighlights = Object.keys(state.highlights).length;
+    const importedHighlights = pendingImportData?.highlights ? 
+        Object.keys(pendingImportData.highlights).length : 0;
+    let html = '';
+    if (mergeHighlights) {
+        html += `<li class="success">
+            <i class="fas fa-check-circle"></i>
+            <strong>Highlights:</strong> Merge ${importedHighlights} imported with ${currentHighlights} existing
+        </li>`;
+    } else {
+        html += `<li class="warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Highlights:</strong> Replace all ${currentHighlights} existing with ${importedHighlights} imported
+        </li>`;
+    }
+    if (mergeNotes) {
+        html += `<li class="success">
+            <i class="fas fa-check-circle"></i>
+            <strong>Notes:</strong> Append imported notes to existing notes
+        </li>`;
+    } else {
+        html += `<li class="warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Notes:</strong> Replace existing notes with imported notes
+        </li>`;
+    }
+    if (preserveSettings) {
+        html += `<li class="success">
+            <i class="fas fa-check-circle"></i>
+            <strong>Settings:</strong> Keep your current device settings
+        </li>`;
+    } else {
+        html += `<li class="warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Settings:</strong> Apply imported settings (translation, theme, etc.)
+        </li>`;
+    }
+    summaryList.innerHTML = html;
+}
+function handleConfirmImport() {
+    if (!pendingImportData || !pendingImportFile) {
+        alert('No import data available');
+        return;
+    }
+    try {
+        const options = {
+            mergeHighlights: document.getElementById('mergeHighlightsToggle')?.checked ?? true,
+            mergeNotes: document.getElementById('mergeNotesToggle')?.checked ?? false,
+            preserveSettings: document.getElementById('preserveSettingsToggle')?.checked ?? true
+        };
+        const importData = pendingImportData;
+        const importFile = pendingImportFile;
+        closeImportOptionsModal();
+        applyImportedDataWithOptions(importData, options);
+        state.settings.lastImport = {
+            filename: importFile.name,
+            date: new Date().toISOString(),
+            size: importFile.size
+        };
+        saveImportedData();
+        updateUIAfterImport(importData);
+        alert('Import successful! Page will refresh to apply changes.');
+        setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+        console.error('Error during import:', error);
+        alert('Import failed: ' + error.message);
+    }
+}
+function applyImportedDataWithOptions(incoming, options) {
+    try {
+        if (!options.preserveSettings && incoming.settings) {
+            console.log('Applying imported settings...');
+            Object.assign(state.settings, incoming.settings);
+        } else {
+            console.log('Preserving current device settings');
+        }
+        if (!state.highlightMeta) {
+            state.highlightMeta = {};
+        }
+        if (incoming.version === '2.1') {
+            if (options.mergeHighlights) {
+                console.log('Merging highlights...');
+                state.highlights = { ...state.highlights, ...(incoming.highlights || {}) };
+                state.highlightMeta = { ...state.highlightMeta, ...(incoming.highlightMeta || {}) };
+            } else {
+                console.log('Replacing highlights...');
+                state.highlights = incoming.highlights || {};
+                state.highlightMeta = incoming.highlightMeta || {};
+            }
+            if (incoming.highlightsWithText) {
+                cacheVerseText(incoming.highlightsWithText, options.mergeHighlights);
+            }
+        } else {
+            console.log('Processing legacy format...');
+            const { colorMap, metaMap, verseTextMap } = extractLegacyHighlights(incoming.highlights || {});
+            if (options.mergeHighlights) {
+                console.log('Merging legacy highlights...');
+                state.highlights = { ...state.highlights, ...colorMap };
+                state.highlightMeta = { ...state.highlightMeta, ...metaMap };
+            } else {
+                console.log('Replacing with legacy highlights...');
+                state.highlights = colorMap;
+                state.highlightMeta = metaMap;
+            }
+            if (Object.keys(verseTextMap).length > 0) {
+                cacheVerseTextLegacy(verseTextMap, options.mergeHighlights);
+            }
+        }
+        if (options.mergeNotes) {
+            console.log('Merging notes...');
+            if (incoming.notes) {
+                if (state.notes && state.notes.trim()) {
+                    state.notes = state.notes + '\n\n---\n\n' + incoming.notes;
+                } else {
+                    state.notes = incoming.notes;
+                }
+            }
+        } else {
+            console.log('Replacing notes...');
+            state.notes = incoming.notes || '';
+        }
+        console.log('Import complete:', {
+            highlights: Object.keys(state.highlights).length,
+            metadata: Object.keys(state.highlightMeta).length,
+            notesLength: state.notes.length
+        });
+    } catch (error) {
+        console.error('Error applying imported data:', error);
+        throw new Error('Failed to apply imported data: ' + error.message);
+    }
+}
+function extractLegacyHighlights(incomingHighlights) {
     const colorMap = {};
-    const verseTextMap = {};          
+    const verseTextMap = {};
+    const metaMap = {};
     Object.entries(incomingHighlights).forEach(([reference, data]) => {
         if (typeof data === 'string') {
             colorMap[reference] = data;
         } else if (data && typeof data === 'object') {
-            colorMap[reference] = data.color;
-        verseTextMap[reference] = data.text;
+            if (data.color) {
+                colorMap[reference] = data.color;
+            }
+            if (data.text) {
+                verseTextMap[reference] = data.text;
+            }
+            if (data.timestamp) {
+                metaMap[reference] = { timestamp: data.timestamp };
+            }
         }
     });
-    state.highlights = colorMap;
+    return { colorMap, metaMap, verseTextMap };
+}
+function cacheVerseText(highlightsWithText, merge = true) {
     try {
-        const cachedRaw = localStorage.getItem('cachedVerses');
-        const cached = cachedRaw ? JSON.parse(cachedRaw) : {};
-        const merged = { ...cached, ...verseTextMap };
-        localStorage.setItem('cachedVerses', JSON.stringify(merged));
+        let cached = {};
+        if (merge) {
+            const cachedRaw = localStorage.getItem('cachedVerses');
+            cached = cachedRaw ? JSON.parse(cachedRaw) : {};
+        }
+        Object.entries(highlightsWithText).forEach(([reference, data]) => {
+            if (data && data.text && typeof data.text === 'string') {
+                cached[reference] = data.text;
+            }
+        });
+        localStorage.setItem('cachedVerses', JSON.stringify(cached));
+        console.log('Cached verse text for', Object.keys(highlightsWithText).length, 'verses');
     } catch (e) {
-        console.error('Failed to merge cached verses on import:', e);
+        console.error('Failed to cache verse text:', e);
     }
-    state.notes = incoming.notes || '';
+}
+function cacheVerseTextLegacy(verseTextMap, merge = true) {
+    try {
+        let cached = {};
+        if (merge) {
+            const cachedRaw = localStorage.getItem('cachedVerses');
+            cached = cachedRaw ? JSON.parse(cachedRaw) : {};
+        }
+        Object.assign(cached, verseTextMap);
+        localStorage.setItem('cachedVerses', JSON.stringify(cached));
+        console.log('Cached verse text for', Object.keys(verseTextMap).length, 'verses (legacy)');
+    } catch (e) {
+        console.error('Failed to cache verse text:', e);
+    }
 }
 function saveImportedData() {
     saveToStorage();
@@ -206,10 +440,6 @@ function updateFileInfoDisplay() {
     } else {
         lastImportInfo.innerHTML = '<p class="no-data">No imports yet</p>';
     }
-}
-function reloadApplication() {
-    alert('Backup imported successfully! Page will refresh to apply all changes.');
-    setTimeout(() => window.location.reload(), 1000);
 }
 export function openSettings() {
     try {
@@ -417,6 +647,7 @@ function clearAllStorage() {
     state.currentVerse = null;
     state.currentVerseData = null;
     state.highlights = {};
+    state.highlightMeta = {};
     state.notes = '';
     state.settings = {
         bibleTranslation: 'BSB',

@@ -371,3 +371,68 @@
 #notesFontSizeSlider {
     accent-color: var(--accent-color);
 }
+
+/* Import settings modal */
+.import-summary {
+    animation: fadeIn 0.3s ease-in;
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 6px;
+}
+
+.import-summary h4 {
+    margin-bottom: 12px;
+    color: var(--text-color);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.import-summary p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+    color: var(--text-color);
+}
+
+.import-summary p.merge {
+    color: #4caf50;  /* Green for merges */
+    font-weight: 500;
+}
+
+.import-summary p.replace {
+    color: #ff9800;  /* Yellow/Orange for replace */
+    font-weight: 500;
+}
+
+.import-summary ul li {
+    margin-bottom: 8px;
+    padding: 6px 0;
+}
+
+.import-summary ul li i {
+    margin-right: 8px;
+    width: 16px;
+}
+
+.import-summary ul li.warning {
+    color: #ff9800;
+    background-color: rgba(255, 152, 0, 0.1);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid #ff9800;
+}
+
+.import-summary ul li.success {
+    color: #4caf50;
+    background-color: rgba(76, 175, 80, 0.1);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid #4caf50;
+}
+
+.import-summary ul li.info {
+    color: var(--text-color);
+    background-color: var(--toolbar-background);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid var(--accent-color);
+}

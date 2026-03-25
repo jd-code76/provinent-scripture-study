@@ -16,6 +16,12 @@ const HIGHLIGHT_COLORS = [
     'yellow', 'green', 'blue', 'pink', 'orange', 'purple'
 ];
 
+const SORT_ORDERS = {
+    CANONICAL: 'canon',
+    ALPHABETICAL: 'alpha',
+    TIME: 'time'
+};
+
 /* ====================================================================
    HIGHLIGHTING FUNCTIONS
 ==================================================================== */
@@ -81,8 +87,23 @@ export function applyHighlight(color) {
         if (color !== 'none') {
             state.currentVerse.classList.add(`highlight-${color}`);
             state.highlights[verseRef] = color;
+            
+            // Store timestamp when highlight is created
+            if (!state.highlightMeta) {
+                state.highlightMeta = {};
+            }
+            if (!state.highlightMeta[verseRef]) {
+                state.highlightMeta[verseRef] = {};
+            }
+            state.highlightMeta[verseRef].timestamp = Date.now();
+            
         } else {
+            // Removing highlight
             delete state.highlights[verseRef];
+            // Also remove metadata
+            if (state.highlightMeta && state.highlightMeta[verseRef]) {
+                delete state.highlightMeta[verseRef];
+            }
         }
         
         saveToStorage();
@@ -103,8 +124,12 @@ export function clearHighlights() {
         if (!confirm('Are you sure you want to delete ALL highlights? This cannot be undone.')) {
             return;
         }
-        
+
         state.highlights = {};
+        state.highlightMeta = {};  // Clear metadata too
+        
+        // Clear cached verse text (used for export with highlights)
+        localStorage.removeItem('cachedVerses');
         
         // Remove highlight classes from all verses
         document.querySelectorAll('.verse').forEach(verse => {
@@ -116,7 +141,7 @@ export function clearHighlights() {
         // Refresh highlights modal if open
         const modal = document.getElementById('highlightsModal');
         if (modal?.classList.contains('active')) {
-            renderHighlights('all', '');
+            renderHighlights();
         }
         
     } catch (error) {
@@ -157,8 +182,20 @@ export function showHighlightsModal() {
             allButton.classList.add('active');
         }
         
-        renderHighlights('all', '');
+        // Initialize sort order from state or default to canonical
+        if (!state.settings.highlightSortOrder) {
+            state.settings.highlightSortOrder = SORT_ORDERS.CANONICAL;
+        }
+        
+        // Set active sort button
+        const sortButtons = document.querySelectorAll('.highlight-sort-btn');
+        sortButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.sort === state.settings.highlightSortOrder);
+        });
+        
+        renderHighlights();
         setupHighlightsSearch();
+        setupSortHandlers();
         
     } catch (error) {
         console.error('Error opening highlights modal:', error);
@@ -191,28 +228,63 @@ function setupHighlightsSearch() {
     try {
         const searchInput = document.getElementById('highlightsSearch');
         const clearSearchBtn = document.getElementById('clearSearch');
-        
+
         if (searchInput) {
+            searchInput.removeEventListener('input', handleSearchInput);
             searchInput.addEventListener('input', handleSearchInput);
         }
-        
+
         if (clearSearchBtn) {
+            clearSearchBtn.removeEventListener('click', handleClearSearch);
             clearSearchBtn.addEventListener('click', handleClearSearch);
         }
 
         document.querySelectorAll('.highlight-filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const color = this.dataset.color;
-                const searchTerm = document.getElementById('highlightsSearch').value || '';
-                renderHighlights(color, searchTerm);
-                
-                // Update active state
-                document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
+            btn.removeEventListener('click', handleFilterClick);
+            btn.addEventListener('click', handleFilterClick);
         });        
     } catch (error) {
         console.error('Error setting up highlights search:', error);
+    }
+}
+
+/**
+ * Set up sort button handlers
+ */
+function setupSortHandlers() {
+    try {
+        document.querySelectorAll('.highlight-sort-btn').forEach(btn => {
+            btn.removeEventListener('click', handleSortClick);
+            btn.addEventListener('click', handleSortClick);
+        });
+    } catch (error) {
+        console.error('Error setting up sort handlers:', error);
+    }
+}
+
+/**
+ * Handle sort button click
+ */
+function handleSortClick(e) {
+    try {
+        const btn = e.currentTarget;
+        const sortOrder = btn.dataset.sort;
+        
+        // Update state
+        state.settings.highlightSortOrder = sortOrder;
+        saveToStorage();
+        
+        // Update button states
+        document.querySelectorAll('.highlight-sort-btn').forEach(b => {
+            b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        
+        // Re-render with new sort order
+        renderHighlights();
+        
+    } catch (error) {
+        console.error('Error handling sort click:', error);
     }
 }
 
@@ -221,11 +293,23 @@ function setupHighlightsSearch() {
  */
 function handleSearchInput() {
     try {
-        const searchTerm = this.value.toLowerCase().trim();
-        const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
-        renderHighlights(activeFilter, searchTerm);
+        renderHighlights();
     } catch (error) {
         console.error('Error handling search input:', error);
+    }
+}
+
+/**
+ * Handle filters on click
+ */
+function handleFilterClick(e) {
+    try {
+        const btn = e.currentTarget;
+        document.querySelectorAll('.highlight-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderHighlights();
+    } catch (error) {
+        console.error('Error handling filter click:', error);
     }
 }
 
@@ -238,8 +322,7 @@ function handleClearSearch() {
         if (!searchInput) return;
         
         searchInput.value = '';
-        const activeFilter = document.querySelector('.highlight-filter-btn.active')?.dataset.color || 'all';
-        renderHighlights(activeFilter, '');
+        renderHighlights();
     } catch (error) {
         console.error('Error clearing search:', error);
     }
@@ -300,7 +383,6 @@ function getValidatedCache(forceClearOnInvalid = false) {
             }
         }
 
-        // If many invalids, optionally clear (but we clean per-entry here)
         return cachedVerses;
     } catch (error) {
         console.error('Error validating cache:', error);
@@ -310,12 +392,13 @@ function getValidatedCache(forceClearOnInvalid = false) {
 
 /**
  * Render highlights list in modal
- * @param {string} filterColor - Color filter
- * @param {string} searchTerm - Search term
  */
-export function renderHighlights(filterColor = 'all', searchTerm = '') {
+export function renderHighlights() {
     try {
         const highlightsList = document.getElementById('highlightsList');
+        const searchInput = document.getElementById('highlightsSearch');
+        const activeFilterBtn = document.querySelector('.highlight-filter-btn.active');
+        
         if (!highlightsList) return;
         
         const highlights = state.highlights || {};
@@ -325,15 +408,21 @@ export function renderHighlights(filterColor = 'all', searchTerm = '') {
             return;
         }
         
+        // Get current filter and search values
+        const filterColor = activeFilterBtn?.dataset.color || 'all';
+        const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+        
+        // Get sort order from state
+        const sortOrder = state.settings.highlightSortOrder || SORT_ORDERS.CANONICAL;
+        
         // Batch-validate cache once for efficiency
         const validatedCache = getValidatedCache(false);
         if (validatedCache === null) {
-            // If fully invalid, show warning but don't render empties
             highlightsList.innerHTML = '<div class="warning">Cached verse data is invalid. Visit verses to refresh highlights display.</div>';
             return;
         }
         
-        const sortedReferences = sortHighlightReferences(highlights);
+        const sortedReferences = sortHighlightReferences(highlights, sortOrder);
         const filteredReferences = filterHighlightReferences(sortedReferences, filterColor, searchTerm, validatedCache);
         
         let html = '';
@@ -360,60 +449,81 @@ export function renderHighlights(filterColor = 'all', searchTerm = '') {
 }
 
 /**
- * Sort highlight references by book, chapter, verse
+ * Sort highlight references by specified order
  * @param {Object} highlights - Highlights object
+ * @param {string} sortOrder - Sort order (canon, alpha, or time)
  * @returns {Array} - Sorted references
  */
-function sortHighlightReferences(highlights) {
-    return Object.keys(highlights)
-        .map(reference => {
-            const match = reference.match(/^(.+?)\s+(\d+):(\d+)$/);
-            if (!match) return null;
+function sortHighlightReferences(highlights, sortOrder) {
+    const references = Object.keys(highlights).map(reference => {
+        const match = reference.match(/^(.+?)\s+(\d+):(\d+)$/);
+        if (!match) return null;
+        
+        const [, bookName, chapter, verse] = match;
+        const color = highlights[reference];
+        
+        // Parse book name for canonical sorting
+        const bookParts = bookName.split(' ');
+        let bookNumber = '';
+        let baseBookName = bookName;
+        
+        if (bookParts.length > 1 && /^\d+$/.test(bookParts[0])) {
+            bookNumber = bookParts[0];
+            baseBookName = bookParts.slice(1).join(' ');
+        }
+        
+        const bookIndex = BOOK_ORDER.findIndex(book => {
+            const orderParts = book.split(' ');
+            let orderNumber = '';
+            let orderBaseName = book;
             
-            const [, bookName, chapter, verse] = match;
-            const color = highlights[reference];
-            
-            // Parse book name for sorting
-            const bookParts = bookName.split(' ');
-            let bookNumber = '';
-            let baseBookName = bookName;
-            
-            if (bookParts.length > 1 && /^\d+$/.test(bookParts[0])) {
-                bookNumber = bookParts[0];
-                baseBookName = bookParts.slice(1).join(' ');
+            if (orderParts.length > 1 && /^\d+$/.test(orderParts[0])) {
+                orderNumber = orderParts[0];
+                orderBaseName = orderParts.slice(1).join(' ');
             }
             
-            const bookIndex = BOOK_ORDER.findIndex(book => {
-                const orderParts = book.split(' ');
-                let orderNumber = '';
-                let orderBaseName = book;
-                
-                if (orderParts.length > 1 && /^\d+$/.test(orderParts[0])) {
-                    orderNumber = orderParts[0];
-                    orderBaseName = orderParts.slice(1).join(' ');
-                }
-                
-                return orderBaseName.toLowerCase() === baseBookName.toLowerCase() && 
-                       orderNumber === bookNumber;
+            return orderBaseName.toLowerCase() === baseBookName.toLowerCase() && 
+                   orderNumber === bookNumber;
+        });
+        
+        if (bookIndex === -1) return null;
+        
+        // Get timestamp for time-based sorting
+        const timestamp = state.highlightMeta?.[reference]?.timestamp || 0;
+        
+        return {
+            reference,
+            bookName,
+            bookIndex,
+            chapter: parseInt(chapter),
+            verse: parseInt(verse),
+            color,
+            timestamp
+        };
+    }).filter(ref => ref !== null);
+    
+    // Apply sort based on order
+    switch (sortOrder) {
+        case SORT_ORDERS.ALPHABETICAL:
+            return references.sort((a, b) => {
+                const compareBook = a.bookName.localeCompare(b.bookName);
+                if (compareBook !== 0) return compareBook;
+                if (a.chapter !== b.chapter) return a.chapter - b.chapter;
+                return a.verse - b.verse;
             });
             
-            if (bookIndex === -1) return null;
+        case SORT_ORDERS.TIME:
+            // Most recent first
+            return references.sort((a, b) => b.timestamp - a.timestamp);
             
-            return {
-                reference,
-                bookName,
-                bookIndex,
-                chapter: parseInt(chapter),
-                verse: parseInt(verse),
-                color
-            };
-        })
-        .filter(ref => ref !== null)
-        .sort((a, b) => {
-            if (a.bookIndex !== b.bookIndex) return a.bookIndex - b.bookIndex;
-            if (a.chapter !== b.chapter) return a.chapter - b.chapter;
-            return a.verse - b.verse;
-        });
+        case SORT_ORDERS.CANONICAL:
+        default:
+            return references.sort((a, b) => {
+                if (a.bookIndex !== b.bookIndex) return a.bookIndex - b.bookIndex;
+                if (a.chapter !== b.chapter) return a.chapter - b.chapter;
+                return a.verse - b.verse;
+            });
+    }
 }
 
 /**
@@ -533,7 +643,6 @@ export function scrollToVerse(verseNumber) {
  * @returns {string|null} - Valid verse text or null
  */
 export function getVerseTextFromStorage(reference, forceClearOnInvalid = false) {
-    // For non-batch calls, fall back to single validation (but prefer batch via render)
     const cachedVerses = getValidatedCache(forceClearOnInvalid);
     if (!cachedVerses || !(reference in cachedVerses)) {
         return null;

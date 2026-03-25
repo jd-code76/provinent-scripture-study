@@ -1,0 +1,865 @@
+/* ====================================================================
+    MOBILE NAVIGATION TABS
+    All CSS for mobile layout
+==================================================================== */
+.mobile-nav-tabs {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--header-background);
+    border-top: 1px solid var(--border-color);
+    padding: 0;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px var(--shadow);
+}
+
+.mobile-nav-tabs.active {
+    display: flex;
+}
+
+.mobile-nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 5px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 4px;
+    opacity: 0.7;
+}
+
+.mobile-nav-tab i {
+    font-size: 20px;
+}
+
+.mobile-nav-tab.active {
+    color: var(--accent-color);
+    opacity: 1;
+}
+
+.mobile-nav-tab.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: var(--accent-color);
+    border-radius: 0 0 3px 3px;
+}
+
+.mobile-nav-tab:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: -2px;
+}
+
+/* Mobile Panel Overrides */
+.mobile-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 50px;
+    background: var(--background);
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mobile-panel.active {
+    display: flex;
+}
+
+.mobile-panel .sidebar,
+.mobile-panel .notes-section,
+.mobile-panel .reference-panel {
+    display: flex !important;
+    position: static;
+    width: 100% !important;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 15px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-panel .sidebar {
+    background: var(--sidebar-background);
+    flex-direction: column;
+}
+
+.mobile-panel .notes-section {
+    background: var(--notes-background);
+}
+
+.mobile-close-btn {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1001;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.mobile-panel .mobile-close-btn {
+    display: flex;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    /* Root font adjustment */
+    html {
+        font-size: 14px;
+    }
+
+    /* Adjust main container for mobile tabs */
+    .container {
+        height: calc(100vh - 50px);
+        flex-direction: column;
+    }
+
+    /* Hide desktop collapse toggles */
+    .collapse-toggle {
+        display: none;
+    }
+
+    /* Hide desktop resize handles */
+    .resize-handle {
+        display: none;
+    }
+
+    /* Hide desktop sidebar/notes sections */
+    .sidebar,
+    .notes-section {
+        display: none;
+    }
+
+    /* Main content takes full width */
+    .main-content {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Toolbar adjustments */
+    .toolbar {
+        padding: 8px 10px;
+        gap: 6px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .toolbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .toolbar button {
+        min-width: auto;
+        font-size: 12px;
+    }
+
+    .toolbar select.btn {
+        max-width: 70px;
+        padding: 6px 20px 6px 6px;
+        font-size: 12px;
+    }
+
+    .toolbar-info {
+        display: none;
+    }
+
+    .toolbar-divider {
+        display: none;
+    }
+
+    /* Chapter select fix */
+    #chapterSelect {
+        max-width: 60px;
+        padding: 6px 20px 6px 6px;
+        margin-left: 2px;
+    }
+
+    /* Scripture section adjustments */
+    .scripture-section {
+        margin: 10px;
+        padding: 15px;
+        border-radius: 8px;
+        min-width: 0;
+    }
+
+    .scripture-content {
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    .passage-header {
+        padding: 8px;
+        margin-bottom: 12px;
+    }
+
+    .passage-header h2 {
+        font-size: 1.2em;
+        margin-left: 8px;
+    }
+
+    .passage-reference {
+        font-size: 1em;
+        margin-left: 8px;
+    }
+
+    /* Verse improvements for touch */
+    .verse {
+        padding: 6px 8px;
+        margin-bottom: 4px;
+    }
+
+    .verse-number {
+        font-size: 0.8em;
+    }
+
+    /* Header adjustments */
+    .header {
+        padding: 5px 10px;
+        min-height: 50px;
+    }
+
+    .header h1 {
+        font-size: 1.2em;
+    }
+
+    .header-controls {
+        gap: 6px;
+    }
+
+    .theme-toggle {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    /* HIDE REFERENCE BIBLE BUTTON ON MOBILE TOOLBAR */
+    #toggleReferencePanelBtn {
+        display: none !important;
+    }
+
+    /* Hide certain toolbar buttons on mobile */
+    #openSettingsBtn,
+    #audio-tb-divider,
+    #chapter-tb-divider,
+    #bible-tb-divider {
+        display: none;
+    }
+
+    /* Audio controls */
+    .audio-controls-hidden {
+        display: none !important;
+    }
+
+    #audioControls {
+        transform: scale(0.85);
+        transform-origin: left center;
+        margin: 5px 0;
+    }
+
+    /* Buttons */
+    .btn {
+        min-width: 80px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    /* Popups and modals */
+    .highlights-modal,
+    .strongs-popup,
+    .help-modal {
+        width: 95%;
+        max-width: none;
+        margin: 10px 0;
+        padding: 15px;
+        max-height: 85vh;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .highlights-modal.active,
+    .strongs-popup.active,
+    .help-modal.active {
+        animation: none;
+    }
+
+    /* Highlights modal specific */
+    .highlights-modal .popup-header {
+        padding-bottom: 10px;
+        padding-top: 5px;
+    }
+
+    .highlights-modal .popup-header h2 {
+        font-size: 1.2em;
+    }
+
+    .highlights-filters {
+        gap: 5px;
+        padding-bottom: 10px;
+    }
+
+    .highlight-filter-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .highlights-search {
+        max-width: 100%;
+    }
+
+    .highlights-list {
+        max-height: 45vh;
+    }
+
+    .highlight-item {
+        padding: 12px;
+    }
+
+    /* Strong's popup */
+    .strongs-popup .popup-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .embedded-resources {
+        grid-template-columns: 1fr;
+    }
+
+    .strongs-popup .resource-frame iframe {
+        height: 250px !important;
+    }
+
+    /* ===== SETTINGS MODAL - FULL SCREEN WITH FLOATING BUTTONS ===== */
+    .settings-modal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        transform: none !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        padding-bottom: 80px !important;
+        border-radius: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .settings-modal .settings-actions {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: var(--popup-background) !important;
+        padding: 15px !important;
+        margin: 0 !important;
+        border-top: 2px solid var(--border-color) !important;
+        box-shadow: 0 -2px 10px var(--shadow) !important;
+        z-index: 2001 !important;
+        display: flex !important;
+        gap: 10px !important;
+        justify-content: center !important;
+    }
+    
+    .settings-modal .settings-actions button {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .file-info-container {
+        grid-template-columns: 1fr;
+    }
+
+    .color-theme-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* ===== SIDEBAR MOBILE FIXES - SCROLLABLE ===== */
+    .mobile-panel .sidebar {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 15px;
+        height: 100%;
+        display: flex !important;
+        flex-direction: column;
+    }
+    
+    .mobile-panel .sidebar h2 {
+        flex-shrink: 0;
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--accent-color);
+    }
+    
+    .mobile-panel .sidebar .sidebar-section {
+        flex-shrink: 0;
+        margin-bottom: 15px;
+    }
+    
+    .mobile-panel .sidebar .sidebar-section-header {
+        padding: 12px;
+        font-size: 1em;
+        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 5px;
+        margin-bottom: 0;
+        transition: background-color 0.2s;
+    }
+
+    .mobile-panel .sidebar .sidebar-section-header:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .mobile-panel .sidebar .sidebar-section-content {
+        overflow: visible;
+        max-height: none;
+        opacity: 1;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+    
+    .mobile-panel .sidebar .sidebar-section-content.collapsed {
+        max-height: 0 !important;
+        opacity: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    .mobile-panel .sidebar .section-toggle {
+        transition: transform 0.3s ease;
+    }
+    
+    .mobile-panel .sidebar .section-toggle.collapsed {
+        transform: rotate(-90deg);
+    }
+    
+    .mobile-panel .sidebar .sidebar-links {
+        list-style: none;
+        margin: 10px 0 0 0;
+        padding: 0;
+    }
+    
+    .mobile-panel .sidebar .sidebar-links li {
+        margin-bottom: 8px;
+    }
+    
+    .mobile-panel .sidebar .sidebar-links a {
+        display: block;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: var(--sidebar-text);
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+    
+    .mobile-panel .sidebar .sidebar-section-content.collapsed .sidebar-links a {
+        pointer-events: none !important;
+    }
+    
+    .mobile-panel .sidebar .sidebar-links a:hover {
+        background-color: var(--secondary-color);
+    }
+    
+    .mobile-panel .sidebar .bible-gateway-container {
+        margin: 15px 0;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    
+    .mobile-panel .sidebar .bible-gateway-header {
+        background-color: var(--primary-color);
+        color: var(--sidebar-text);
+        text-align: center;
+        padding: 10px;
+        font-weight: bold;
+    }
+    
+    .mobile-panel .sidebar .bible-gateway-content {
+        background-color: var(--card-background);
+        padding: 10px;
+    }
+    
+    .mobile-panel .sidebar .bible-gateway-inputs input[type="text"] {
+        width: 100%;
+        margin: 8px 0;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        background-color: var(--bg-secondary);
+        color: var(--text-color);
+        box-sizing: border-box;
+    }
+    
+    .mobile-panel .sidebar .bible-gateway-inputs input[type="submit"] {
+        width: 100%;
+        margin: 8px 0;
+        padding: 10px;
+        background-color: var(--primary-color);
+        color: var(--sidebar-text);
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        box-sizing: border-box;
+    }
+    
+    .mobile-panel .sidebar .bible-gateway-content small {
+        color: var(--text-color);
+        opacity: 0.8;
+        display: block;
+        margin-top: 8px;
+        font-size: 11px;
+        text-align: center;
+    }
+
+    /* Force sidebar to be scrollable container */
+    .mobile-panel #mobilePanelContent {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        height: 100%;
+    }
+
+    /* ===== NOTES SECTION MOBILE FIXES - FULL SCREEN SCROLLABLE ===== */
+    .mobile-panel .notes-section {
+        width: 100% !important;
+        height: 100% !important;
+        padding: 15px !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: var(--notes-background);
+    }
+
+    .mobile-panel .notes-section .notes-header {
+        flex-shrink: 0;
+        margin-bottom: 15px;
+    }
+
+    .mobile-panel .notes-section .notes-header h3 {
+        font-size: 16px;
+        color: var(--text-color);
+    }
+
+    .mobile-panel .notes-section .notes-view-toggle {
+        flex-shrink: 0;
+        margin-bottom: 10px;
+        display: flex;
+        gap: 5px;
+        padding: 5px;
+        background-color: var(--toolbar-background);
+        border-radius: 5px;
+    }
+
+    .mobile-panel .notes-section .markdown-toolbar {
+        flex-shrink: 0;
+        padding: 8px;
+        gap: 4px;
+        margin-bottom: 10px;
+    }
+
+    .mobile-panel .notes-section .markdown-btn {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+
+    .mobile-panel .notes-section #notesInput,
+    .mobile-panel .notes-section #notesDisplay {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 12px !important;
+        margin: 0 !important;
+        margin-bottom: 10px !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 5px !important;
+        background-color: var(--card-background) !important;
+        color: var(--text-color) !important;
+        font-size: 14px !important;
+        resize: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .mobile-panel .notes-section #notesInput {
+        font-family: 'Courier New', monospace !important;
+        line-height: 1.6 !important;
+    }
+
+    .mobile-panel .notes-section #notesDisplay {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        line-height: 1.8 !important;
+    }
+
+    .mobile-panel .notes-section .notes-controls {
+        flex-shrink: 0;
+        display: flex;
+        gap: 8px;
+        margin-top: 0;
+        padding-right: 50px;
+    }
+
+    .mobile-panel .notes-section .notes-controls .btn {
+        flex: 1;
+        min-width: 100px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    /* Reference panel */
+    .reference-panel {
+        width: 100%;
+    }
+
+    .reference-panel-header {
+        padding: 8px;
+    }
+
+    .reference-panel-header h3 {
+        font-size: 14px;
+    }
+
+    .reference-panel-controls {
+        gap: 5px;
+    }
+
+    /* HIDE DESKTOP REFERENCE PANEL TOGGLE */
+    .reference-panel-toggle {
+        display: none !important;
+    }
+
+    /* Reference Panel - Full width when open on mobile */
+    .reference-panel.active {
+        width: 100% !important;
+        flex: 1 !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        border-right: none;
+    }
+
+    /* Hide scripture section when reference panel is active */
+    .content-area:has(.reference-panel.active) .scripture-section {
+        display: none !important;
+    }
+
+    /* Hide notes section when reference panel is active */
+    .content-area:has(.reference-panel.active) .notes-section {
+        display: none !important;
+    }
+
+    /* Color picker */
+    #colorPicker {
+        padding: 8px;
+    }
+
+    .color-options {
+        grid-template-columns: repeat(3, 40px);
+        grid-template-rows: repeat(2, 40px);
+    }
+
+    .color-option {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+        width: 100%;
+        height: 100%;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 420px) {
+    html {
+        font-size: 13px;
+    }
+
+    .toolbar {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+
+    .toolbar button {
+        font-size: 11px;
+    }
+
+    .btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .scripture-section {
+        margin: 8px;
+        padding: 12px;
+    }
+
+    .header h1 {
+        font-size: 1em;
+    }
+
+    .theme-toggle {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    /* Stacked toolbar for very small screens */
+    .toolbar {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .toolbar-divider {
+        display: none;
+    }
+
+    /* Hide more buttons on very small screens */
+    #nextPassageBtn,
+    #prevPassageBtn,
+    #openSettingsBtn {
+        display: none;
+    }
+
+    /* Smaller mobile nav */
+    .mobile-nav-tab {
+        padding: 8px 4px;
+    }
+
+    .mobile-nav-tab i {
+        font-size: 18px;
+    }
+
+    .mobile-nav-tab span {
+        font-size: 10px;
+    }
+    
+    /* Settings modal adjustments for small screens */
+    .settings-modal {
+        padding: 15px !important;
+        padding-bottom: 70px !important;
+    }
+    
+    .settings-modal .settings-actions {
+        padding: 10px !important;
+        gap: 8px !important;
+    }
+    
+    .settings-modal .settings-actions button {
+        font-size: 12px !important;
+        padding: 10px !important;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .verse:hover {
+        background-color: transparent;
+    }
+
+    .verse:active {
+        background-color: var(--verse-hover);
+    }
+
+    .btn {
+        min-height: 44px;
+    }
+
+    .btn:focus {
+        outline: 2px solid var(--accent-color);
+        outline-offset: 2px;
+    }
+
+    .sidebar-links a {
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .mobile-nav-tabs {
+        flex-direction: row;
+        height: 45px;
+    }
+
+    .mobile-nav-tab {
+        flex-direction: row;
+        gap: 5px;
+        font-size: 11px;
+    }
+
+    .mobile-nav-tab i {
+        font-size: 16px;
+    }
+
+    .container {
+        height: calc(100vh - 45px);
+    }
+
+    .mobile-panel {
+        bottom: 45px;
+    }
+
+    .highlights-modal,
+    .settings-modal,
+    .strongs-popup {
+        max-height: 90vh;
+    }
+    
+    .settings-modal .settings-actions {
+        padding: 10px !important;
+    }
+}
+
+@media (min-width: 421px) and (max-width: 768px) {
+    #nextPassageBtn,
+    #prevPassageBtn,
+    #randomPassageBtn,
+    #showHighlightsBtn {
+        display: inline-flex !important;
+    }
+    
+    #bible-tb-divider {
+        display: block !important;
+    }
+}

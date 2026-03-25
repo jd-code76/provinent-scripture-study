@@ -1,6 +1,9 @@
 /* ====================================================================
    RESPONSIVE DESIGN
    Media queries for different screen sizes
+   
+   Note: Core mobile styles are in mobile-navigation.css
+   This file contains tablet-specific and unique styles only
 ==================================================================== */
 
 /* Tablet (1024px and below) */
@@ -22,7 +25,7 @@
     }
 }
 
-/* Misc. responsive design enhancements */
+/* Container queries - unique to this module */
 @container (max-width: 768px) {
     .feature-grid {
         grid-template-columns: 1fr;
@@ -31,236 +34,6 @@
     .toolbar {
         flex-direction: column;
         gap: 15px;
-    }
-}
-
-/* Mobile (768px and below) */
-@media (max-width: 768px) {
-    .header {
-        padding: 2px 3px;
-    }
-
-    .header h1 {
-        font-size: 1.5em;
-    }
-
-    .theme-toggle {
-        width: 33px;
-        height: 33px;
-    }
-        
-    .toolbar {
-        gap: 2px;
-    }
-
-    .toolbar-info {
-        display: none;
-    }
-
-    #showHighlightsBtn,
-    #randomPassageBtn {
-        position: relative;
-    }
-
-    .notes-section {
-        padding: 4px;
-        width: 250px;
-        display: none;
-    }
-
-    .collapse-toggle {
-        width: 60px;
-        height: 60px;
-    }
-
-    .notes-controls button {
-        font-size: 14px;
-    }
-
-    .notes-header h3 {
-        font-size: 20px;
-    }
-
-    .sidebar {
-        display: none;
-    }
-
-    .passage-header {
-        padding: 8px;
-        margin-bottom: 6px;
-    }
-
-    .embedded-resources {
-        grid-template-columns: auto;
-    }
-
-    .reference-panel-header {
-        padding: 2px;
-    }
-
-    .reference-panel-toggle {
-        display: none;
-    }
-
-    #referencePanel {
-        display: none;
-    }
-
-    .toolbar-divider {
-        margin: 0 3px;
-    }
-
-    button#nextPassageBtn {
-        display: none;
-    }
-
-    button#prevPassageBtn {
-        display: none;
-    }
-
-    span#chapter-tb-divider {
-        display: none;
-    }
-
-    span#audio-tb-divider {
-        display: none;
-    }
-
-    span#bible-tb-divider {
-        display: none;
-    }
-
-    .highlights-modal {
-        width: 90%;
-        max-width: none;
-        margin: 10px 0px;
-        padding: 10px;
-    }
-    
-    .highlights-filters {
-        justify-content: center;
-    }
-    
-    .highlight-filter-btn {
-        padding: 6px 12px;
-        font-size: 14px;
-    }
-    
-    .highlight-item {
-        padding: 12px;
-    }
-
-    .highlights-search {
-        max-width: 250px;
-    }
-    
-    #highlightsSearch {
-        min-width: 100px;
-        padding: 6px 8px;
-        font-size: 14px;
-    }
-    
-    .clear-search-btn {
-        padding: 6px;
-        font-size: 14px;
-    }
-
-    /* Improve scrolling performance */
-    .scripture-section {
-        -webkit-overflow-scrolling: touch;
-        will-change: transform;
-        contain: content;
-    }
-
-    .verse {
-        transform: translateZ(0);
-        backface-visibility: hidden;
-    }
-
-    /* Prevent text selection during touch */
-    .verse {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-
-    /* Allow selection in text areas */
-    #notesInput, .strongs-content {
-        -webkit-user-select: text;
-        -moz-user-select: text;
-        -ms-user-select: text;
-        user-select: text;
-    }
-
-    /* Export/import data info */
-    .file-info-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .file-info-block {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .file-info-details .info-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    
-    .file-info-details .info-value {
-        text-align: left;
-    }
-    
-    .file-action-btn {
-        max-width: 280px;
-        width: 100%;
-    }
-    
-    .file-action-note {
-        max-width: 280px;
-        text-align: center;
-    }
-}
-
-/* Smaller Mobile (420px and below) */
-@media (max-width: 420px) {
-    button.stop-audio-btn {
-        display: none !important;
-    }
-
-    .highlights-search {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--bg-secondary);
-    }
-
-    #highlightsSearch {
-        max-width: 100px;
-    }
-
-        .highlights-search {
-        max-width: 200px;
-    }
-    
-    #highlightsSearch {
-        min-width: 80px;
-        padding: 4px 6px;
-        font-size: 14px;
-    }
-    
-    .clear-search-btn {
-        padding: 4px;
-        font-size: 14px;
-    }
-    
-    .highlight-filter-btn {
-        padding: 6px 12px;
-        font-size: 14px;
     }
 }
 
@@ -280,6 +53,7 @@
     animation: modalSlideIn 0.3s ease-out;
 }
 
+/* Accessibility: screen reader only */
 .sr-only {
     position: absolute;
     width: 1px;
@@ -292,7 +66,7 @@
     border: 0;
 }
 
-/* Print styles */
+/* Print styles - unique to this module */
 @media print {
     .sidebar,
     .header-controls,
@@ -312,9 +86,21 @@
         background: white;
         color: black;
     }
+    
+    .verse {
+        page-break-inside: avoid;
+    }
+    
+    .passage-header {
+        break-after: avoid;
+    }
+    
+    .highlight-yellow {
+        background-color: #fff59d !important;
+    }
 }
 
-/* Responsive typography */
+/* Base typography */
 html {
     font-size: 16px;
 }
@@ -323,25 +109,16 @@ html {
     html {
         font-size: 14px;
     }
-}
-
-/* Touch device optimization */
-@media (hover: none) and (pointer: coarse) {
-    .verse:hover {
-        background-color: transparent;
-    }
     
-    .sidebar-links a {
-        padding: var(--spacing-md) var(--spacing-lg);
-    }
-    
-    .btn {
-        min-height: 44px;
-        min-width: 44px;
+    .settings-modal .settings-actions {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
     }
 }
 
-/* High contrast mode */
+/* High contrast mode - unique to this module */
 @media (prefers-contrast: high) {
     .verse-number {
         font-weight: 900;
@@ -352,7 +129,7 @@ html {
     }
 }
 
-/* Animation performance */
+/* Loading spinner animation */
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -367,7 +144,7 @@ html {
     transform: translateZ(0);
 }
 
-/* Focus management */
+/* Focus management for settings modal */
 .settings-modal:focus {
     outline: none;
 }
@@ -377,26 +154,9 @@ html {
     outline-offset: 2px;
 }
 
-/* Print styles for scripture */
-@media print {
-    .verse {
-        page-break-inside: avoid;
-    }
-    
-    .passage-header {
-        break-after: avoid;
-    }
-    
-    body {
-        background: white !important;
-        color: black !important;
-    }
-    
-    .verse {
-        cursor: default !important;
-    }
-    
-    .highlight-yellow {
-        background-color: #fff59d !important;
+/* Smaller mobile - 420px and below (unique adjustments only) */
+@media (max-width: 420px) {
+    button.stop-audio-btn {
+        display: none !important;
     }
 }

@@ -112,6 +112,7 @@ export function switchNotesView(view) {
         if (view === 'text') {
             input.style.display = 'block';
             display.style.display = 'none';
+            input.value = state.notes || '';
         } else {
             input.style.display = 'none';
             display.style.display = 'block';

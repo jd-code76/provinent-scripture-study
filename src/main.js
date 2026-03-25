@@ -59,9 +59,6 @@ if (typeof marked !== 'undefined') {
    Centralized error management utilities
 ==================================================================== */
 
-/**
- * Custom application error class for better error tracking
- */
 class AppError extends Error {
     constructor(message, type, originalError) {
         super(message);
@@ -71,12 +68,6 @@ class AppError extends Error {
     }
 }
 
-/**
- * Handle application errors with context awareness
- * @param {Error} error - The error object
- * @param {string} context - Where the error occurred
- * @param {string} userFriendlyMessage - Optional user-facing message
- */
 export function handleError(error, context, userFriendlyMessage) {
     console.error(`Error in ${context}:`, error);
 
@@ -91,10 +82,6 @@ export function handleError(error, context, userFriendlyMessage) {
     }
 }
 
-/**
- * Display error message to user (HTML-escaped)
- * @param {string} escapedMsg - Pre-escaped message to display
- */
 export function showError(escapedMsg) {
     const errorContainer = document.getElementById('errorContainer');
     if (errorContainer) {
@@ -102,9 +89,6 @@ export function showError(escapedMsg) {
     }
 }
 
-/**
- * Clear any displayed error messages
- */
 export function clearError() {
     const errorContainer = document.getElementById('errorContainer');
     if (errorContainer) {
@@ -117,10 +101,6 @@ export function clearError() {
    Helper functions for application functionality
 ==================================================================== */
 
-/**
- * Get formatted date string for filenames (MM-DD-YY-HHMM)
- * @returns {string} Formatted date string
- */
 export function getFormattedDateForFilename() {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -132,10 +112,6 @@ export function getFormattedDateForFilename() {
     return `${month}-${day}-${year}-${hours}${minutes}`;
 }
 
-/**
- * Get formatted date string for display
- * @returns {string} Localized date/time string
- */
 export function getFormattedDateForDisplay() {
     const now = new Date();
     return now.toLocaleString('en-US', {
@@ -149,10 +125,6 @@ export function getFormattedDateForDisplay() {
     });
 }
 
-/**
- * Get simple date string (MM-DD-YY) for basic filenames
- * @returns {string} Simple date string
- */
 export function getSimpleDate() {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -162,11 +134,6 @@ export function getSimpleDate() {
     return `${month}-${day}-${year}`;
 }
 
-/**
- * Format file size in human-readable format
- * @param {number} bytes - File size in bytes
- * @returns {string} - Formatted file size
- */
 export function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     
@@ -177,11 +144,6 @@ export function formatFileSize(bytes) {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
-/**
- * Format date and time for display (24-hour format)
- * @param {string} isoDate - ISO date string
- * @returns {string} - Formatted date and time
- */
 export function formatDateTime(isoDate) {
     const date = new Date(isoDate);
     const dateStr = date.toLocaleDateString('en-US', {
@@ -198,19 +160,11 @@ export function formatDateTime(isoDate) {
     return `${dateStr}, ${timeStr}`;
 }
 
-/**
- * Show or hide loading overlay
- * @param {boolean} flag - Whether to show loading
- */
 export function showLoading(flag) {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.classList.toggle('active', flag);
 }
 
-/**
- * Update offline status indicator
- * @param {boolean} isOffline - Whether app is offline
- */
 function updateOfflineStatus(isOffline) {
     let indicator = document.getElementById('offlineIndicator');
     
@@ -235,16 +189,12 @@ function updateOfflineStatus(isOffline) {
     indicator.textContent = isOffline ? 'Offline Mode' : 'Online';
     indicator.style.background = isOffline ? '#ff6b6b' : '#51cf66';
     
-    // Auto-hide after 3 seconds
     setTimeout(() => {
         indicator.style.opacity = '0';
         setTimeout(() => indicator.remove(), 300);
     }, 3000);
 }
 
-/**
- * Update header title with current translation
- */
 export function updateHeaderTitle() {
     const headerTitleEl = document.getElementById('passageHeaderTitle');
     if (headerTitleEl) {
@@ -253,9 +203,6 @@ export function updateHeaderTitle() {
     }
 }
 
-/**
- * Handle touch start for mobile highlighting
- */
 function handleTouchStart(e) {
     const verse = e.target.closest('.verse');
     if (verse) {
@@ -275,9 +222,6 @@ function handleTouchStart(e) {
     }
 }
 
-/**
- * Handle touch move to detect scrolling
- */
 function handleTouchMove(e) {
     if (longPressTimer && e.touches && e.touches[0]) {
         const currentY = e.touches[0].clientY;
@@ -289,9 +233,6 @@ function handleTouchMove(e) {
     }
 }
 
-/**
- * Handle touch cancel
- */
 function handleTouchCancel() {
     if (longPressTimer) {
         clearTimeout(longPressTimer);
@@ -300,9 +241,6 @@ function handleTouchCancel() {
     isScrolling = false;
 }
 
-/**
- * Handle touch end for highlighting
- */
 function handleTouchEnd(e) {
     if (longPressTimer) {
         clearTimeout(longPressTimer);
@@ -325,11 +263,6 @@ function handleTouchEnd(e) {
     isScrolling = false;
 }
 
-/**
- * Escape HTML special characters
- * @param {string} string - String to escape
- * @returns {string} - Escaped string
- */
 export function escapeHTML(string) {
     return string.replace(/[&<>"']/g, char => {
         const escape = {
@@ -348,9 +281,6 @@ export function escapeHTML(string) {
    Theme management functions
 ==================================================================== */
 
-/**
- * Apply current theme to document
- */
 export function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.settings.theme);
     const themeIcon = document.getElementById('themeIcon');
@@ -363,10 +293,6 @@ export function applyTheme() {
     refreshHighlightsModalTheme();
 }
 
-/**
- * Select a color theme
- * @param {string} theme - Theme identifier
- */
 export function selectColorTheme(theme) {
     state.settings.colorTheme = theme;
     applyColorTheme();
@@ -381,17 +307,11 @@ export function selectColorTheme(theme) {
     refreshHighlightsModalTheme();
 }
 
-/**
- * Apply current color theme
- */
 export function applyColorTheme() {
     document.documentElement.setAttribute('data-color-theme', state.settings.colorTheme);
     refreshHighlightsModalTheme();
 }
 
-/**
- * Refresh highlights modal theme
- */
 function refreshHighlightsModalTheme() {
     const modal = document.getElementById('highlightsModal');
     if (modal?.classList.contains('show')) {
@@ -405,9 +325,6 @@ function refreshHighlightsModalTheme() {
    Centralized event binding for UI interactions
 ==================================================================== */
 
-/**
- * Set up all application event listeners
- */
 function setupEventListeners() {
     setupHeaderButtons();
     setupToolbarNavigation();
@@ -456,17 +373,9 @@ function setupAudioControls() {
         const pauseBtn = document.querySelector('.pause-audio-btn');
         const stopBtn = document.querySelector('.stop-audio-btn');
         
-        if (playBtn) {
-            playBtn.addEventListener('click', handleAudioPlayback);
-        }
-        
-        if (pauseBtn) {
-            pauseBtn.addEventListener('click', pauseChapterAudio);
-        }
-        
-        if (stopBtn) {
-            stopBtn.addEventListener('click', stopChapterAudio);
-        }
+        if (playBtn) playBtn.addEventListener('click', handleAudioPlayback);
+        if (pauseBtn) pauseBtn.addEventListener('click', pauseChapterAudio);
+        if (stopBtn) stopBtn.addEventListener('click', stopChapterAudio);
     });
 }
 
@@ -514,16 +423,13 @@ function setupKeyboardShortcuts() {
 }
 
 function setupSidebarControls() {
-    // Reference panel toggle
     const refToggle = document.getElementById('referencePanelToggle');
     if (refToggle) refToggle.addEventListener('click', toggleReferencePanel);
     
-    // Section headers
     document.querySelectorAll('.sidebar-section-header').forEach(h => {
         h.addEventListener('click', () => toggleSection(h.dataset.section));
     });
     
-    // Collapse toggles
     document.querySelectorAll('.collapse-toggle').forEach(btn => {
         btn.addEventListener('click', function() {
             const panel = this.closest('[id]');
@@ -531,7 +437,6 @@ function setupSidebarControls() {
         });
     });
     
-    // Reference panel controls
     const refSource = document.getElementById('referenceSource');
     const refTranslation = document.getElementById('referenceTranslation');
     const refClose = document.querySelector('.reference-panel-close');
@@ -559,24 +464,14 @@ function setupNotesControls() {
     const textViewBtn = document.getElementById('textViewBtn');
     const markdownViewBtn = document.getElementById('markdownViewBtn');
     
-    if (notesInput) {
-        notesInput.addEventListener('input', handleNotesInput);
-    }
+    if (notesInput) notesInput.addEventListener('input', handleNotesInput);
+    if (textViewBtn) textViewBtn.addEventListener('click', () => switchNotesView('text'));
+    if (markdownViewBtn) markdownViewBtn.addEventListener('click', () => switchNotesView('markdown'));
     
-    if (textViewBtn) {
-        textViewBtn.addEventListener('click', () => switchNotesView('text'));
-    }
-    
-    if (markdownViewBtn) {
-        markdownViewBtn.addEventListener('click', () => switchNotesView('markdown'));
-    }
-    
-    // Markdown formatting buttons
     document.querySelectorAll('.markdown-btn').forEach(btn => {
         btn.addEventListener('click', () => insertMarkdown(btn.dataset.format));
     });
     
-    // Export buttons
     document.querySelectorAll('.notes-controls button').forEach(btn => {
         btn.addEventListener('click', () => exportNotes(btn.dataset.format));
     });
@@ -591,24 +486,18 @@ function handleNotesInput(e) {
 }
 
 function setupHighlightingControls() {
-    // Color options
     document.querySelectorAll('.color-option').forEach(opt => {
         opt.addEventListener('click', () => applyHighlight(opt.dataset.color));
     });
     
-    // Remove highlight
     const removeHighlight = document.getElementById('removeHighlight');
     if (removeHighlight) {
         removeHighlight.addEventListener('click', () => applyHighlight('none'));
     }
     
-    // Context menu for highlighting
     document.addEventListener('contextmenu', handleContextMenu);
-    
-    // Click outside color picker
     document.addEventListener('click', handleOutsideColorPickerClick);
     
-    // Highlights modal
     const showHighlightsBtn = document.getElementById('showHighlightsBtn');
     const closeHighlightsBtn = document.getElementById('closeHighlightsBtn');
     const highlightsOverlay = document.getElementById('highlightsOverlay');
@@ -634,14 +523,12 @@ function handleOutsideColorPickerClick(e) {
 }
 
 function setupModalControls() {
-    // Strong's popup
     const popupOverlay = document.getElementById('popupOverlay');
     const strongsClose = document.querySelector('#strongsPopup .popup-close');
     
     if (popupOverlay) popupOverlay.addEventListener('click', closeStrongsPopup);
     if (strongsClose) strongsClose.addEventListener('click', closeStrongsPopup);
     
-    // Settings modal
     const settingsOverlay = document.getElementById('settingsOverlay');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
@@ -654,14 +541,12 @@ function setupModalControls() {
     if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
     if (clearHighlightsBtn) clearHighlightsBtn.addEventListener('click', clearHighlights);
     
-    // Clear cache and delete data
     const clearCacheBtn = document.getElementById('clearCacheBtn');
     const deleteAllDataBtn = document.getElementById('deleteAllDataBtn');
     
     if (clearCacheBtn) clearCacheBtn.addEventListener('click', clearCache);
     if (deleteAllDataBtn) deleteAllDataBtn.addEventListener('click', deleteAllData);
     
-    // Color themes
     document.querySelectorAll('.color-theme-option').forEach(opt => {
         opt.addEventListener('click', () => selectColorTheme(opt.dataset.theme));
     });
@@ -706,36 +591,440 @@ function setupTouchEvents() {
 }
 
 /* ====================================================================
+   MOBILE NAVIGATION
+   Mobile tab-based navigation for small screens
+==================================================================== */
+
+function initMobileNav() {
+    const mobileTabs = document.querySelectorAll('.mobile-nav-tab');
+    const mobilePanel = document.getElementById('mobilePanel');
+    const mobilePanelContent = document.getElementById('mobilePanelContent');
+    const mobilePanelClose = document.getElementById('mobilePanelClose');
+    const sidebar = document.querySelector('.sidebar');
+    const notesSection = document.querySelector('.notes-section');
+    const referencePanel = document.getElementById('referencePanel');
+
+    if (window.innerWidth > 768) return;
+
+    mobileTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const panel = this.dataset.panel;
+            
+            // Always clear active states first
+            mobileTabs.forEach(t => t.classList.remove('active'));
+            
+            // Hide all panels
+            if (sidebar) sidebar.style.display = 'none';
+            if (notesSection) notesSection.style.display = 'none';
+            mobilePanel.classList.remove('active');
+
+            switch(panel) {
+                case 'scripture':
+                    // Close reference panel if open
+                    if (referencePanel) referencePanel.classList.remove('active');
+                    this.classList.add('active');
+                    break;
+                    
+                case 'sidebar':
+                    if (referencePanel) referencePanel.classList.remove('active');
+                    this.classList.add('active');
+                    
+                    if (sidebar) {
+                        mobilePanelContent.innerHTML = sidebar.outerHTML;
+                        const clonedSidebar = mobilePanelContent.querySelector('.sidebar');
+                        clonedSidebar.style.display = 'flex';
+                        clonedSidebar.style.flexDirection = 'column';
+                        clonedSidebar.style.height = '100%';
+                        clonedSidebar.querySelector('.collapse-toggle')?.remove();
+                        reattachSidebarEvents(clonedSidebar);
+                    }
+                    mobilePanel.classList.add('active');
+                    break;
+                    
+                case 'notes':
+                    if (referencePanel) referencePanel.classList.remove('active');
+                    this.classList.add('active');
+                    
+                    if (notesSection) {
+                        mobilePanelContent.innerHTML = notesSection.outerHTML;
+                        const clonedNotes = mobilePanelContent.querySelector('.notes-section');
+                        clonedNotes.style.display = 'flex';
+                        clonedNotes.style.height = '100%';
+                        clonedNotes.querySelector('.collapse-toggle')?.remove();
+                        reattachNotesEvents(clonedNotes);
+                    }
+                    mobilePanel.classList.add('active');
+                    break;
+                    
+                case 'reference':
+                    if (referencePanel) {
+                        const isCurrentlyActive = referencePanel.classList.contains('active');
+                        
+                        if (isCurrentlyActive) {
+                            // Close it
+                            referencePanel.classList.remove('active');
+                            state.settings.referencePanelOpen = false;
+                            saveToStorage();
+                            
+                            // Switch to ScripturesetupReferencePanelCloseButton
+                            const scriptureTab = document.querySelector('[data-panel="scripture"]');
+                            if (scriptureTab) scriptureTab.classList.add('active');
+                        } else {
+                            // Open it
+                            this.classList.add('active');
+                            referencePanel.classList.add('active');
+                            state.settings.referencePanelOpen = true;
+                            saveToStorage();
+                            
+                            // Load iframe if needed
+                            const iframe = referencePanel.querySelector('.reference-panel-iframe');
+                            if (iframe && !iframe.src) {
+                                updateReferencePanel();
+                            }
+                            
+                            // Setup close button
+                            setupReferencePanelCloseButton(referencePanel, mobileTabs);
+                        }
+                    }
+                    break;
+                    
+                case 'settings':
+                    openSettings();
+                    const scriptureTab = document.querySelector('[data-panel="scripture"]');
+                    if (scriptureTab) scriptureTab.classList.add('active');
+                    break;
+            }
+        });
+    });
+
+    if (mobilePanelClose) {
+        mobilePanelClose.addEventListener('click', function() {
+            mobilePanel.classList.remove('active');
+            delete mobilePanel.dataset.activePanel;
+            mobileTabs.forEach(t => {
+                if (t.dataset.panel === 'scripture') t.classList.add('active');
+                else t.classList.remove('active');
+            });
+        });
+    }
+}
+
+function setupReferencePanelCloseButton(referencePanel, mobileTabs) {
+    const refClose = referencePanel.querySelector('.reference-panel-close');
+    if (refClose) {
+        const newRefClose = refClose.cloneNode(true);
+        refClose.parentNode.replaceChild(newRefClose, refClose);
+        
+        newRefClose.addEventListener('click', () => {
+            referencePanel.classList.remove('active');
+            state.settings.referencePanelOpen = false;
+            saveToStorage();
+            
+            // Switch back to Scripture tab
+            mobileTabs.forEach(t => t.classList.remove('active'));
+            const scriptureTab = document.querySelector('[data-panel="scripture"]');
+            if (scriptureTab) scriptureTab.classList.add('active');
+        });
+    }
+}
+
+function reattachSidebarEvents(sidebarElement) {
+    sidebarElement.querySelectorAll('.sidebar-section-header').forEach(header => {
+        // Clone to remove old event listeners
+        const newHeader = header.cloneNode(true);
+        header.parentNode.replaceChild(newHeader, header);
+        
+        newHeader.addEventListener('click', () => {
+            const content = newHeader.nextElementSibling;
+            const toggle = newHeader.querySelector('.section-toggle');
+            
+            if (content && content.classList.contains('sidebar-section-content')) {
+                const isCollapsed = content.classList.contains('collapsed');
+                
+                if (isCollapsed) {
+                    // Expand
+                    content.classList.remove('collapsed');
+                    if (toggle) toggle.classList.remove('collapsed');
+                } else {
+                    // Collapse
+                    content.classList.add('collapsed');
+                    if (toggle) toggle.classList.add('collapsed');
+                }
+            }
+        });
+    });
+    
+    const refToggle = sidebarElement.querySelector('#referencePanelToggle');
+    if (refToggle) {
+        const newRefToggle = refToggle.cloneNode(true);
+        refToggle.parentNode.replaceChild(newRefToggle, refToggle);
+        newRefToggle.addEventListener('click', toggleReferencePanel);
+    }
+}
+
+function reattachNotesEvents(notesElement) {
+    const notesInput = notesElement.querySelector('#notesInput');
+    const notesDisplay = notesElement.querySelector('#notesDisplay');
+    const textViewBtn = notesElement.querySelector('#textViewBtn');
+    const markdownViewBtn = notesElement.querySelector('#markdownViewBtn');
+    
+    const closeBtn = notesElement.querySelector('.mobile-close-btn');
+    if (closeBtn) closeBtn.remove();
+    
+    if (textViewBtn && markdownViewBtn && notesInput && notesDisplay) {
+        textViewBtn.classList.remove('active');
+        markdownViewBtn.classList.remove('active');
+        
+        if (state.settings.notesView === 'markdown') {
+            markdownViewBtn.classList.add('active');
+            notesInput.style.display = 'none';
+            notesDisplay.style.display = 'block';
+            notesDisplay.contentEditable = 'false';
+            
+            if (typeof marked !== 'undefined') {
+                notesDisplay.innerHTML = marked.parse(state.notes || '');
+            }
+        } else {
+            textViewBtn.classList.add('active');
+            notesInput.style.display = 'block';
+            notesDisplay.style.display = 'none';
+            notesInput.value = state.notes || '';
+        }
+        
+        const newTextBtn = textViewBtn.cloneNode(true);
+        const newMarkdownBtn = markdownViewBtn.cloneNode(true);
+        textViewBtn.parentNode.replaceChild(newTextBtn, textViewBtn);
+        markdownViewBtn.parentNode.replaceChild(newMarkdownBtn, markdownViewBtn);
+        
+        newTextBtn.addEventListener('click', () => switchToTextView(notesInput, notesDisplay, newTextBtn, newMarkdownBtn));
+        newMarkdownBtn.addEventListener('click', () => switchToMarkdownView(notesInput, notesDisplay, newTextBtn, newMarkdownBtn));
+    }
+    
+    if (notesInput) {
+        const newNotesInput = notesInput.cloneNode(true);
+        notesInput.parentNode.replaceChild(newNotesInput, notesInput);
+        
+        newNotesInput.addEventListener('input', function(e) {
+            state.notes = e.target.value;
+            saveToStorage();
+            
+            const origInput = document.querySelector('.notes-section #notesInput');
+            if (origInput && origInput !== this) {
+                origInput.value = e.target.value;
+            }
+            
+            if (state.settings.notesView === 'markdown') {
+                updateAllMarkdownDisplays();
+            }
+        });
+        
+        newNotesInput.addEventListener('keydown', handleNotesKeydown);
+    }
+    
+    notesElement.querySelectorAll('.markdown-btn').forEach(btn => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', function() {
+            const format = this.dataset.format;
+            const currentInput = notesElement.querySelector('#notesInput');
+            if (format && currentInput) {
+                applyMarkdownToTextarea(currentInput, format);
+            }
+        });
+    });
+    
+    notesElement.querySelectorAll('.notes-controls button').forEach(btn => {
+        if (!btn.classList.contains('view-toggle-btn') && !btn.classList.contains('markdown-btn')) {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', () => exportNotes());
+        }
+    });
+}
+
+function switchToTextView(notesInput, notesDisplay, textBtn, markdownBtn) {
+    state.settings.notesView = 'text';
+    saveToStorage();
+    
+    textBtn.classList.add('active');
+    markdownBtn.classList.remove('active');
+    notesInput.style.display = 'block';
+    notesDisplay.style.display = 'none';
+    
+    const origTextBtn = document.querySelector('.notes-section #textViewBtn');
+    const origMarkdownBtn = document.querySelector('.notes-section #markdownViewBtn');
+    const origInput = document.querySelector('.notes-section #notesInput');
+    const origDisplay = document.querySelector('.notes-section #notesDisplay');
+    
+    if (origTextBtn) origTextBtn.classList.add('active');
+    if (origMarkdownBtn) origMarkdownBtn.classList.remove('active');
+    if (origInput) origInput.style.display = 'block';
+    if (origDisplay) origDisplay.style.display = 'none';
+}
+
+function switchToMarkdownView(notesInput, notesDisplay, textBtn, markdownBtn) {
+    state.settings.notesView = 'markdown';
+    saveToStorage();
+    
+    markdownBtn.classList.add('active');
+    textBtn.classList.remove('active');
+    notesInput.style.display = 'none';
+    notesDisplay.style.display = 'block';
+    notesDisplay.contentEditable = 'false';
+    
+    if (typeof marked !== 'undefined') {
+        notesDisplay.innerHTML = marked.parse(state.notes || '');
+    }
+    
+    const origTextBtn = document.querySelector('.notes-section #textViewBtn');
+    const origMarkdownBtn = document.querySelector('.notes-section #markdownViewBtn');
+    const origInput = document.querySelector('.notes-section #notesInput');
+    const origDisplay = document.querySelector('.notes-section #notesDisplay');
+    
+    if (origTextBtn) origTextBtn.classList.remove('active');
+    if (origMarkdownBtn) origMarkdownBtn.classList.add('active');
+    if (origInput) origInput.style.display = 'none';
+    if (origDisplay) {
+        origDisplay.style.display = 'block';
+        origDisplay.contentEditable = 'false';
+        if (typeof marked !== 'undefined') {
+            origDisplay.innerHTML = marked.parse(state.notes || '');
+        }
+    }
+}
+
+function handleNotesKeydown(e) {
+    const ctrlCmd = e.ctrlKey || e.metaKey;
+    
+    if (ctrlCmd && !e.shiftKey) {
+        const actions = {
+            'b': 'bold', 'i': 'italic', 'k': 'link',
+            '1': 'h1', '2': 'h2', '3': 'h3', '`': 'code'
+        };
+        
+        const action = actions[e.key.toLowerCase()];
+        if (action) {
+            e.preventDefault();
+            applyMarkdownToTextarea(this, action);
+            return false;
+        }
+    }
+    
+    if (ctrlCmd && e.shiftKey) {
+        const actions = { 'u': 'ul', 'o': 'ol', '>': 'quote' };
+        const action = actions[e.key.toLowerCase()];
+        
+        if (action) {
+            e.preventDefault();
+            applyMarkdownToTextarea(this, action);
+            return false;
+        }
+    }
+}
+
+function updateAllMarkdownDisplays() {
+    const clonedDisplay = document.querySelector('.mobile-panel #notesDisplay');
+    const origDisplay = document.querySelector('.notes-section #notesDisplay');
+    
+    if (clonedDisplay && typeof marked !== 'undefined') {
+        clonedDisplay.innerHTML = marked.parse(state.notes || '');
+    }
+    
+    if (origDisplay && typeof marked !== 'undefined') {
+        origDisplay.innerHTML = marked.parse(state.notes || '');
+    }
+}
+
+function applyMarkdownToTextarea(textarea, format) {
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+    
+    const patterns = {
+        bold: { before: '**', after: '**', placeholder: 'bold text' },
+        italic: { before: '*', after: '*', placeholder: 'italic text' },
+        h1: { before: '# ', after: '', placeholder: 'Heading 1' },
+        h2: { before: '## ', after: '', placeholder: 'Heading 2' },
+        h3: { before: '### ', after: '', placeholder: 'Heading 3' },
+        ul: { before: '- ', after: '', placeholder: 'List item' },
+        ol: { before: '1. ', after: '', placeholder: 'List item' },
+        quote: { before: '> ', after: '', placeholder: 'Quote' },
+        code: { before: '`', after: '`', placeholder: 'code' },
+        link: { before: '[', after: '](url)', placeholder: 'link text' }
+    };
+    
+    const config = patterns[format] || patterns.bold;
+    const content = selectedText || config.placeholder;
+    const replacement = config.before + content + config.after;
+    
+    const newText = text.substring(0, start) + replacement + text.substring(end);
+    textarea.value = newText;
+    
+    state.notes = newText;
+    saveToStorage();
+    
+    const origInput = document.querySelector('.notes-section #notesInput');
+    if (origInput && origInput !== textarea) {
+        origInput.value = newText;
+    }
+    
+    const newCursorPos = start + config.before.length + content.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    textarea.focus();
+    
+    if (state.settings.notesView === 'markdown') {
+        updateAllMarkdownDisplays();
+    }
+}
+
+function handleMobileNavResize() {
+    const mobileNavTabs = document.getElementById('mobileNavTabs');
+    
+    if (window.innerWidth <= 768) {
+        if (mobileNavTabs && !mobileNavTabs.classList.contains('active')) {
+            mobileNavTabs.classList.add('active');
+            initMobileNav();
+        }
+    } else {
+        if (mobileNavTabs) {
+            mobileNavTabs.classList.remove('active');
+        }
+        
+        const referencePanel = document.getElementById('referencePanel');
+        if (referencePanel) {
+            referencePanel.classList.remove('mobile-panel');
+        }
+    }
+}
+
+/* ====================================================================
    INITIALIZATION
    Application startup sequence
 ==================================================================== */
 
-/**
- * Initialize the application
- */
 async function init() {
     try {
         await loadFromStorage();
         loadFromCookies();
         
-        // Add offline styles
         const style = document.createElement('style');
         style.textContent = OFFLINE_STYLES;
         document.head.appendChild(style);
         
-        // Setup offline detection
         updateOfflineStatus(!navigator.onLine);
         window.addEventListener('online', () => updateOfflineStatus(false));
         window.addEventListener('offline', () => updateOfflineStatus(true));
         
-        // Initialize components
         initBookChapterControls();
         initializeAudioControls();
         initialiseNarratorSelect();
         setupNavigationWithURL();
         setupPopStateListener();
         
-        // Load initial content
         if (!navigateFromURL()) {
             loadSelectedChapter(
                 state.settings.manualBook || BOOK_ORDER[0],
@@ -743,32 +1032,37 @@ async function init() {
             );
         }
         
-        // Restore UI state
         restoreBookChapterUI();
         applyTheme();
         applyColorTheme();
         restoreSidebarState();
         restorePanelStates();
+        
         if (typeof updateScriptureFontSize === 'function') {
             updateScriptureFontSize(state.settings.scriptureFontSize);
         }
         if (typeof updateNotesFontSize === 'function') {
             updateNotesFontSize(state.settings.notesFontSize);
         }
+        
         updateHeaderTitle();
         initResizeHandles();
         switchNotesView(state.settings.notesView || 'text');
         updateBibleGatewayVersion();
         setupEventListeners();
+        
+        window.addEventListener('resize', handleMobileNavResize);
+        handleMobileNavResize();
+        
+        setTimeout(() => {
+            const container = document.querySelector('.container');
+            if (container) container.classList.add('loaded');
+        }, 100);
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
+                .then(reg => navigator.serviceWorker.ready)
                 .then(reg => {
-                    // Wait until the worker is controlling the page
-                    return navigator.serviceWorker.ready;
-                })
-            .then(reg => {
-                    // Now the worker is active – send the version
                     reg.active.postMessage({ type: 'VERSION', version: APP_VERSION });
                     console.log('Sent version to SW:', APP_VERSION);
                 })

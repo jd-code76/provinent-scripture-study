@@ -535,7 +535,9 @@
     <div class="highlights-modal" id="highlightsModal" role="dialog" aria-labelledby="highlightsModalTitle" aria-modal="true">
         <div class="popup-header">
             <h2 id="highlightsModalTitle">Highlights</h2>
-            <button class="popup-close" id="closeHighlightsBtn" aria-label="Close highlights"><i class="fas fa-xmark"></i></button>
+            <button class="popup-close" id="closeHighlightsBtn" aria-label="Close highlights">
+                <i class="fas fa-xmark"></i>
+            </button>
             <div class="highlights-search">
                 <input type="text" id="highlightsSearch" placeholder="Search..." />
                 <button id="clearSearch" class="clear-search-btn">
@@ -543,19 +545,40 @@
                 </button>
             </div>
         </div>
-        <div class="highlights-content" id="highlightsContent">
-            <div class="highlights-filters">
-                <button class="highlight-filter-btn active" data-color="all">All</button>
-                <button class="highlight-filter-btn" data-color="yellow">Yellow</button>
-                <button class="highlight-filter-btn" data-color="green">Green</button>
-                <button class="highlight-filter-btn" data-color="blue">Blue</button>
-                <button class="highlight-filter-btn" data-color="pink">Pink</button>
-                <button class="highlight-filter-btn" data-color="orange">Orange</button>
-                <button class="highlight-filter-btn" data-color="purple">Purple</button>
+        
+        <div class="highlight-controls">
+            <!-- Sort Controls -->
+            <div class="highlight-sort-controls">
+                <button class="highlight-sort-btn active" data-sort="canon" title="Canonical Order (Bible book order)">
+                    <i class="fas fa-book"></i>
+                    <span>Canon</span>
+                </button>
+                <button class="highlight-sort-btn" data-sort="alpha" title="Alphabetical Order (A-Z by book name)">
+                    <i class="fas fa-sort-alpha-down"></i>
+                    <span>A-Z</span>
+                </button>
+                <button class="highlight-sort-btn" data-sort="time" title="Time Highlighted (Most recent first)">
+                    <i class="fas fa-clock"></i>
+                    <span>Time</span>
+                </button>
             </div>
-            <div class="highlights-list" id="highlightsList">
-                <!-- Highlighted verses will be inserted here -->
+            
+            <!-- Color Filter Controls -->
+            <div class="highlight-filter-controls">
+                <div class="highlights-filters">
+                    <button class="highlight-filter-btn active" data-color="all">All</button>
+                    <button class="highlight-filter-btn" data-color="yellow">Yellow</button>
+                    <button class="highlight-filter-btn" data-color="green">Green</button>
+                    <button class="highlight-filter-btn" data-color="blue">Blue</button>
+                    <button class="highlight-filter-btn" data-color="pink">Pink</button>
+                    <button class="highlight-filter-btn" data-color="orange">Orange</button>
+                    <button class="highlight-filter-btn" data-color="purple">Purple</button>
+                </div>
             </div>
+        </div>
+        
+        <div class="highlights-list" id="highlightsList">
+            <!-- Highlighted verses will be inserted here -->
         </div>
     </div>
 
@@ -830,6 +853,112 @@
             <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
             <button class="btn" id="saveSettingsBtn">Save Settings</button>
         </div>
+    </div>
+
+    <!-- IMPORT OPTIONS MODAL -->
+    <div class="popup-overlay" id="importOptionsOverlay" aria-hidden="true"></div>
+    <div class="settings-modal" id="importOptionsModal" role="dialog" aria-labelledby="importOptionsTitle" aria-modal="true">
+        <div class="popup-header">
+            <h2 id="importOptionsTitle">Import Options</h2>
+            <button class="popup-close" id="closeImportOptionsBtn" aria-label="Close import options">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div class="import-options-content">
+            <p style="margin-bottom: 20px; color: var(--text-color); opacity: 0.9;">
+                Choose how to import your data. These options control what gets overwritten.
+            </p>
+            
+            <!-- Highlights Merge Option -->
+            <div class="settings-group">
+                <label class="toggle-label">
+                    <input type="checkbox" id="mergeHighlightsToggle" checked>
+                    <span class="toggle-slider"></span>
+                    <span style="flex: 1;">
+                        <strong>Merge Highlights</strong>
+                        <small style="display: block; margin-top: 4px; opacity: 0.8; font-weight: normal;">
+                            Keep existing highlights and add imported ones. If disabled, all current highlights will be replaced.
+                        </small>
+                    </span>
+                </label>
+            </div>
+            
+            <!-- Notes Merge Option -->
+            <div class="settings-group">
+                <label class="toggle-label">
+                    <input type="checkbox" id="mergeNotesToggle">
+                    <span class="toggle-slider"></span>
+                    <span style="flex: 1;">
+                        <strong>Merge Notes</strong>
+                        <small style="display: block; margin-top: 4px; opacity: 0.8; font-weight: normal;">
+                            Append imported notes to existing notes. If disabled, current notes will be replaced.
+                        </small>
+                    </span>
+                </label>
+            </div>
+            
+            <!-- Settings Override Option -->
+            <div class="settings-group">
+                <label class="toggle-label">
+                    <input type="checkbox" id="preserveSettingsToggle" checked>
+                    <span class="toggle-slider"></span>
+                    <span style="flex: 1;">
+                        <strong>Keep Current Settings</strong>
+                        <small style="display: block; margin-top: 4px; opacity: 0.8; font-weight: normal;">
+                            Preserve your device's current settings (translation, theme, audio, etc.). If disabled, imported settings will be applied.
+                        </small>
+                    </span>
+                </label>
+            </div>
+            
+            <!-- Import Summary -->
+            <div class="import-summary" style="margin-top: 25px; padding: 15px; background: var(--toolbar-background); border-radius: 8px; border-left: 4px solid var(--accent-color);">
+                <h4 style="margin: 0 0 10px 0; color: var(--text-color);">
+                    <i class="fas fa-info-circle"></i> What will happen:
+                </h4>
+                <ul id="importSummaryList" style="margin: 0; padding-left: 20px; color: var(--text-color); opacity: 0.9; line-height: 1.8;">
+                    <!-- Dynamically populated -->
+                </ul>
+            </div>
+        </div>
+        
+        <div class="settings-actions">
+            <button class="btn btn-secondary" id="cancelImportBtn">Cancel</button>
+            <button class="btn" id="confirmImportBtn">
+                <i class="fas fa-upload"></i> Import Data
+            </button>
+        </div>
+    </div>
+
+    <!-- MOBILE NAVIGATION TABS -->
+    <div class="mobile-nav-tabs" id="mobileNavTabs">
+        <button class="mobile-nav-tab active" data-panel="scripture" aria-label="Scripture">
+            <i class="fas fa-book-open"></i>
+            <span>Scripture</span>
+        </button>
+        <button class="mobile-nav-tab" data-panel="reference" aria-label="Reference">
+            <i class="fas fa-book"></i>
+            <span>Reference</span>
+        </button>
+        <button class="mobile-nav-tab" data-panel="notes" aria-label="Notes">
+            <i class="fas fa-sticky-note"></i>
+            <span>Notes</span>
+        </button>
+        <button class="mobile-nav-tab" data-panel="sidebar" aria-label="Resources">
+            <i class="fas fa-sitemap"></i>
+            <span>Resources</span>
+        </button>
+        <button class="mobile-nav-tab" data-panel="settings" aria-label="Settings">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </button>
+    </div>
+
+    <!-- Mobile Panel Container -->
+    <div class="mobile-panel" id="mobilePanel">
+        <button class="mobile-close-btn" id="mobilePanelClose" aria-label="Close panel">&times;</button>
+        <div id="mobilePanelContent"></div>
     </div>
 
     <!-- JAVASCRIPT ENTRY POINT -->
