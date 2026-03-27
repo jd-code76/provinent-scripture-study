@@ -1,9 +1,33 @@
 import { stopChapterAudio } from './api.js';
 import { getVerseTextFromStorage } from './highlights.js';
-import { applyColorTheme, applyTheme, formatDateTime, formatFileSize, getFormattedDateForFilename, getFormattedDateForDisplay, handleError, handleNarratorChange, showLoading } from '../main.js';
+import { 
+    applyColorTheme, 
+    applyTheme, 
+    formatDateTime, 
+    formatFileSize, 
+    getFormattedDateForFilename, 
+    getFormattedDateForDisplay, 
+    handleError, 
+    handleNarratorChange, 
+    showLoading 
+} from '../main.js';
 import { populateChapterDropdown, updateChapterDropdownVisibility } from './navigation.js';
-import { APP_VERSION, BOOK_ORDER, saveToCookies, saveToStorage, state, updateBibleGatewayVersion, updateURL } from './state.js';
-import { restorePanelStates, restoreSidebarState, switchNotesView, updateMarkdownPreview, updateScriptureFontSize } from './ui.js';
+import { 
+    APP_VERSION, 
+    BOOK_ORDER, 
+    saveToCookies, 
+    saveToStorage, 
+    state, 
+    updateBibleGatewayVersion, 
+    updateURL 
+} from './state.js';
+import { 
+    restorePanelStates, 
+    restoreSidebarState, 
+    switchNotesView, 
+    updateMarkdownPreview, 
+    updateScriptureFontSize 
+} from './ui.js';
 let pendingImportFile = null;
 let pendingImportData = null;
 export function exportData() {
@@ -660,7 +684,7 @@ function clearAllStorage() {
         theme: 'dark',
         colorTheme: 'blue',
         notesView: 'text',
-        referencePanelOpen: true,
+        referencePanelOpen: false,
         referenceSource: 'biblegateway',
         collapsedSections: {},
         collapsedPanels: {},

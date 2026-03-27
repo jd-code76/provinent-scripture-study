@@ -6,6 +6,7 @@ $files = @(
     "../src/modules/api.js",
     "../src/modules/highlights.js", 
     "../src/modules/hotkeys.js",
+    "../src/modules/mobile.js",
     "../src/modules/navigation.js",
     "../src/modules/passage.js",
     "../src/modules/settings.js",

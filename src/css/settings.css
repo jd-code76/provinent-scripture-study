@@ -102,7 +102,6 @@
 }
 
 .file-info-block {
-    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 15px;
@@ -114,7 +113,6 @@
     margin: 0 0 12px 0;
     font-size: 14px;
     font-weight: 600;
-    color: var(--accent-color);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -162,34 +160,6 @@
     font-size: 13px;
     text-align: center;
     flex: 1;
-}
-
-/* File action buttons */
-.file-action-btn {
-    width: 100%;
-    margin-top: auto;
-    padding: 10px 15px;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.file-action-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.file-action-btn i {
-    margin-right: 6px;
-}
-
-.file-action-note {
-    display: block;
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.4;
 }
 
 .pdf-download-options {
@@ -282,7 +252,6 @@
     gap: 8px;
     padding: 8px 12px;
     margin-bottom: 8px;
-    background-color: var(--bg-secondary);
     border-radius: 6px;
     text-decoration: none;
     color: var(--text-color);
@@ -335,7 +304,6 @@
 .version-info {
     font-family: monospace;
     padding: 2px 4px;
-    background-color: var(--bg-secondary);
     border-radius: 6px;
     display: inline-block;
 }

@@ -188,7 +188,7 @@
 #audioControls {
     margin: 10px 0;
     padding: 10px;
-    background: var(--bg-secondary);
+    background: var(--secondary-color);
     border-radius: 5px;
     border: 1px solid var(--border-color);
     transform: scale(0.9);

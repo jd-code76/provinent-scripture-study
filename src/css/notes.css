@@ -20,6 +20,20 @@
     display: none;
 }
 
+#notesSection.panel-collapsed {
+    overflow: hidden !important;
+}
+
+#notesSection.panel-collapsed .notes-header,
+#notesSection.panel-collapsed .notes-view-toggle,
+#notesSection.panel-collapsed .markdown-toolbar,
+#notesSection.panel-collapsed #notesInput,
+#notesSection.panel-collapsed #notesDisplay,
+#notesSection.panel-collapsed .resize-handle {
+    display: none !important;
+    visibility: hidden !important;
+}
+
 /* Notes Header & Controls */
 
 .notes-header {

@@ -95,11 +95,11 @@
 
 #highlightsSearch {
     flex: 1;
-    min-width: 120px;
+    max-width: 120px;
     padding: 8px 12px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    background: var(--bg-primary);
+    background: var(--background);
     color: var(--text-primary);
     font-size: 14px;
 }
@@ -110,7 +110,7 @@
 }
 
 .clear-search-btn {
-    background: var(--bg-secondary);
+    background: var(--background);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 8px;
@@ -119,7 +119,7 @@
 }
 
 .clear-search-btn:hover {
-    background: var(--bg-tertiary);
+    background: var(--accent-color);
 }
 
 .highlights-content {
@@ -132,9 +132,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
     justify-content: center;
 }
 

@@ -21,7 +21,7 @@ This project was developed with assistance from AI tools including [Gab AI](http
 - **Highlights Management**: Search and filter highlighted verses by color/content
 - **Keyboard Navigation**: Extensive keyboard shortcuts (F1 to toggle help)
 - **Data Portability**: Import/export highlights, notes, and settings
-- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Responsive Design**: Optimized for both desktop and mobile devices (no Markdown for mobile at this time)
 - **Theming**: Dark/light mode with six color themes
 
 ## Markdown Keyboard Shortcuts

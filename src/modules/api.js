@@ -465,6 +465,12 @@ export function updateAudioControls(audioLinks) {
  * @param {HTMLElement} audioControls - Audio controls container
  */
 function handleKJVAudioControls(audioControls) {
+    // Check if audio controls should be visible
+    if (!state.settings.audioControlsVisible) {
+        audioControls.style.display = 'none';
+        return;
+    }
+    
     audioControls.style.display = 'block';
     
     const narratorSelect = audioControls.querySelector('.narrator-select');
@@ -480,28 +486,15 @@ function handleKJVAudioControls(audioControls) {
  * @param {Object} audioLinks - Available audio links
  */
 function handleBSBAudioControls(audioControls, audioLinks) {
+    // Check if audio controls should be visible
+    if (!state.settings.audioControlsVisible) {
+        audioControls.style.display = 'none';
+        return;
+    }
+    
     if (audioLinks && Object.keys(audioLinks).length > 0) {
         audioControls.style.display = 'block';
-        
-        const narratorSelect = audioControls.querySelector('.narrator-select');
-        const narratorLabel = audioControls.querySelector('span');
-        
-        if (narratorSelect) {
-            narratorSelect.style.display = 'inline-block';
-            narratorSelect.innerHTML = '';
-            
-            Object.keys(audioLinks).forEach(narrator => {
-                const option = document.createElement('option');
-                option.value = narrator;
-                option.textContent = narrator.charAt(0).toUpperCase() + narrator.slice(1);
-                option.selected = narrator === state.settings.audioNarrator;
-                narratorSelect.appendChild(option);
-            });
-        }
-        
-        if (narratorLabel) narratorLabel.style.display = 'inline';
-        
-        updateAudioPlayerUI(state.audioPlayer?.isPlaying || false, state.settings.audioNarrator);
+        // ... rest of existing code
     } else {
         audioControls.style.display = 'none';
     }

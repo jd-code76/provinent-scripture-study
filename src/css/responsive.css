@@ -26,7 +26,7 @@
 }
 
 /* Container queries - unique to this module */
-@container (max-width: 768px) {
+@container (max-width: 850px) {
     .feature-grid {
         grid-template-columns: 1fr;
     }
@@ -105,7 +105,7 @@ html {
     font-size: 16px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 850px) {
     html {
         font-size: 14px;
     }
@@ -154,8 +154,8 @@ html {
     outline-offset: 2px;
 }
 
-/* Smaller mobile - 420px and below (unique adjustments only) */
-@media (max-width: 420px) {
+/* Smaller mobile - 400px and below (unique adjustments only) */
+@media (max-width: 400px) {
     button.stop-audio-btn {
         display: none !important;
     }

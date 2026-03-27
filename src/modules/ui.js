@@ -5,7 +5,17 @@
 
 import { handleError, getSimpleDate } from '../main.js';
 import { loadSelectedChapter, populateBookDropdown, populateChapterDropdown } from './navigation.js';
-import { BOOK_ORDER, CHAPTER_COUNTS, bibleComUrlMap, bibleHubUrlMap, ebibleOrgUrlMap, formatBookNameForSource, saveToStorage, state, stepBibleUrlMap } from './state.js';
+import { 
+    BOOK_ORDER, 
+    CHAPTER_COUNTS, 
+    bibleComUrlMap, 
+    bibleHubUrlMap, 
+    ebibleOrgUrlMap, 
+    formatBookNameForSource, 
+    saveToStorage, 
+    state, 
+    stepBibleUrlMap 
+} from './state.js';
 
 /* ====================================================================
    CONSTANTS
@@ -103,25 +113,96 @@ export function switchNotesView(view) {
         const mdBtn = document.getElementById('markdownViewBtn');
         const input = document.getElementById('notesInput');
         const display = document.getElementById('notesDisplay');
+        const toolbar = document.getElementById('markdownToolbar');
+        
+        if (!txtBtn || !mdBtn || !input || !display) {
+            console.error('Notes view elements not found');
+            return;
+        }
         
         // Toggle button states
         txtBtn.classList.toggle('active', view === 'text');
         mdBtn.classList.toggle('active', view === 'markdown');
         
-        // Toggle visibility of input and display in the same area
         if (view === 'text') {
-            input.style.display = 'block';
-            display.style.display = 'none';
+            // Show text input, hide markdown display
+            display.style.setProperty('display', 'none', 'important');
+            input.style.setProperty('display', 'block', 'important');
+            if (toolbar) {
+                toolbar.style.setProperty('display', 'none', 'important');
+            }
+            
+            // Sync textarea with state
             input.value = state.notes || '';
+            
+            // Force reflow
+            void input.offsetHeight;
         } else {
-            input.style.display = 'none';
-            display.style.display = 'block';
+            // Show markdown display, hide text input
+            input.style.setProperty('display', 'none', 'important');
+            display.style.setProperty('display', 'block', 'important');
+            if (toolbar) {
+                toolbar.style.setProperty('display', 'flex', 'important');
+            }
+            
+            // Update preview
             updateMarkdownPreview();
+            
+            // Force reflow
+            void display.offsetHeight;
         }
         
         saveToStorage();
     } catch (error) {
         console.error('Error switching notes view:', error);
+    }
+}
+
+/**
+ * Initialize notes view on page load or panel activation
+ * This ensures correct display state is applied
+ */
+export function initNotesView() {
+    try {
+        const view = state.settings.notesView || 'text';
+        const input = document.getElementById('notesInput');
+        const display = document.getElementById('notesDisplay');
+        const toolbar = document.getElementById('markdownToolbar');
+        
+        if (!input || !display) {
+            console.warn('Notes elements not found during initialization');
+            return;
+        }
+        
+        // Apply the current view state
+        if (view === 'text') {
+            input.style.setProperty('display', 'block', 'important');
+            display.style.setProperty('display', 'none', 'important');
+            if (toolbar) toolbar.style.setProperty('display', 'none', 'important');
+            
+            // Sync content
+            if (input.value !== state.notes) {
+                input.value = state.notes || '';
+            }
+        } else {
+            input.style.setProperty('display', 'none', 'important');
+            display.style.setProperty('display', 'block', 'important');
+            if (toolbar) toolbar.style.setProperty('display', 'flex', 'important');
+            
+            // Update preview
+            updateMarkdownPreview();
+        }
+        
+        // Update button states
+        const txtBtn = document.getElementById('textViewBtn');
+        const mdBtn = document.getElementById('markdownViewBtn');
+        
+        if (txtBtn && mdBtn) {
+            txtBtn.classList.toggle('active', view === 'text');
+            mdBtn.classList.toggle('active', view === 'markdown');
+        }
+    } catch (error) {
+        console.error('Error initializing notes view:', error);
     }
 }
 

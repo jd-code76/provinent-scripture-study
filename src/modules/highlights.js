@@ -13,7 +13,7 @@ import { BOOK_ORDER, saveToStorage, state, updateURL } from './state.js';
 ==================================================================== */
 
 const HIGHLIGHT_COLORS = [
-    'yellow', 'green', 'blue', 'pink', 'orange', 'purple'
+    'pink', 'orange', 'yellow', 'green', 'blue', 'purple'
 ];
 
 const SORT_ORDERS = {

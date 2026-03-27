@@ -288,6 +288,10 @@ export function updateAudioControls(audioLinks) {
     }
 }
 function handleKJVAudioControls(audioControls) {
+    if (!state.settings.audioControlsVisible) {
+        audioControls.style.display = 'none';
+        return;
+    }
     audioControls.style.display = 'block';
     const narratorSelect = audioControls.querySelector('.narrator-select');
     const narratorLabel = audioControls.querySelector('span');
@@ -295,23 +299,12 @@ function handleKJVAudioControls(audioControls) {
     if (narratorLabel) narratorLabel.style.display = 'inline';
 }
 function handleBSBAudioControls(audioControls, audioLinks) {
+    if (!state.settings.audioControlsVisible) {
+        audioControls.style.display = 'none';
+        return;
+    }
     if (audioLinks && Object.keys(audioLinks).length > 0) {
         audioControls.style.display = 'block';
-        const narratorSelect = audioControls.querySelector('.narrator-select');
-        const narratorLabel = audioControls.querySelector('span');
-        if (narratorSelect) {
-            narratorSelect.style.display = 'inline-block';
-            narratorSelect.innerHTML = '';
-            Object.keys(audioLinks).forEach(narrator => {
-                const option = document.createElement('option');
-                option.value = narrator;
-                option.textContent = narrator.charAt(0).toUpperCase() + narrator.slice(1);
-                option.selected = narrator === state.settings.audioNarrator;
-                narratorSelect.appendChild(option);
-            });
-        }
-        if (narratorLabel) narratorLabel.style.display = 'inline';
-        updateAudioPlayerUI(state.audioPlayer?.isPlaying || false, state.settings.audioNarrator);
     } else {
         audioControls.style.display = 'none';
     }

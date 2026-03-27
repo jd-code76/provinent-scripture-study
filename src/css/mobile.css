@@ -56,11 +56,6 @@
     border-radius: 0 0 3px 3px;
 }
 
-.mobile-nav-tab:focus {
-    outline: 2px solid var(--accent-color);
-    outline-offset: -2px;
-}
-
 /* Mobile Panel Overrides */
 .mobile-panel {
     position: fixed;
@@ -127,7 +122,7 @@
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 768px) {
+@media (max-width: 850px) {
     /* Root font adjustment */
     html {
         font-size: 14px;
@@ -152,6 +147,12 @@
     /* Hide desktop sidebar/notes sections */
     .sidebar,
     .notes-section {
+        display: none;
+    }
+
+    /* Hide close buttons for mobile view */
+    .reference-panel-close,
+    .mobile-panel .mobile-close-btn {
         display: none;
     }
 
@@ -263,6 +264,78 @@
         display: none !important;
     }
 
+     /* Hide the toolbar audio controls and toolbar dividers */
+    #audioControls {
+        display: none !important;
+    }
+
+    .toolbar-divider {
+        display: none !important;
+    }
+    
+    /* Create floating audio button from existing controls */
+    .scripture-section {
+        position: relative;
+    }
+    
+    /* Move audio controls to floating position */
+    .main-content #audioControls {
+        display: flex !important;
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 999;
+        margin: 0;
+        padding: 12px;
+        background: var(--secondary-color);
+        border-radius: 50px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        width: auto;
+        min-width: unset;
+    }
+
+    /* Mobile audio controls visibility */
+    .main-content #audioControls.audio-controls-hidden {
+        display: none !important;
+    }
+    
+    /* Hide the headphone icon */
+    .main-content #audioControls > div > span {
+        display: none;
+    }
+    
+    /* Style the buttons container */
+    .main-content #audioControls > div {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    
+    /* Style the audio control buttons */
+    .main-content #audioControls .play-audio-btn,
+    .main-content #audioControls .pause-audio-btn,
+    .main-content #audioControls .stop-audio-btn {
+        background: white;
+        color: var(--accent-color);
+        padding: 10px;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        margin: 0;
+    }
+    
+    .main-content #audioControls .play-audio-btn i,
+    .main-content #audioControls .pause-audio-btn i,
+    .main-content #audioControls .stop-audio-btn i {
+        font-size: 18px;
+        margin: 0;
+    }
+
     /* Hide certain toolbar buttons on mobile */
     #openSettingsBtn,
     #audio-tb-divider,
@@ -274,12 +347,6 @@
     /* Audio controls */
     .audio-controls-hidden {
         display: none !important;
-    }
-
-    #audioControls {
-        transform: scale(0.85);
-        transform-origin: left center;
-        margin: 5px 0;
     }
 
     /* Buttons */
@@ -518,7 +585,7 @@
         padding: 8px;
         border: 1px solid var(--border-color);
         border-radius: 5px;
-        background-color: var(--bg-secondary);
+        background-color: var(--background);
         color: var(--text-color);
         box-sizing: border-box;
     }
@@ -574,56 +641,9 @@
         color: var(--text-color);
     }
 
-    .mobile-panel .notes-section .notes-view-toggle {
-        flex-shrink: 0;
-        margin-bottom: 10px;
-        display: flex;
-        gap: 5px;
-        padding: 5px;
-        background-color: var(--toolbar-background);
-        border-radius: 5px;
-    }
-
-    .mobile-panel .notes-section .markdown-toolbar {
-        flex-shrink: 0;
-        padding: 8px;
-        gap: 4px;
-        margin-bottom: 10px;
-    }
-
     .mobile-panel .notes-section .markdown-btn {
         padding: 5px 8px;
         font-size: 12px;
-    }
-
-    .mobile-panel .notes-section #notesInput,
-    .mobile-panel .notes-section #notesDisplay {
-        flex: 1 1 auto !important;
-        width: 100% !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        padding: 12px !important;
-        margin: 0 !important;
-        margin-bottom: 10px !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 5px !important;
-        background-color: var(--card-background) !important;
-        color: var(--text-color) !important;
-        font-size: 14px !important;
-        resize: none !important;
-        box-sizing: border-box !important;
-    }
-
-    .mobile-panel .notes-section #notesInput {
-        font-family: 'Courier New', monospace !important;
-        line-height: 1.6 !important;
-    }
-
-    .mobile-panel .notes-section #notesDisplay {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-        line-height: 1.8 !important;
     }
 
     .mobile-panel .notes-section .notes-controls {
@@ -631,7 +651,6 @@
         display: flex;
         gap: 8px;
         margin-top: 0;
-        padding-right: 50px;
     }
 
     .mobile-panel .notes-section .notes-controls .btn {
@@ -639,6 +658,47 @@
         min-width: 100px;
         padding: 8px 12px;
         font-size: 12px;
+    }
+
+    /* ====================================================================
+    MOBILE NOTES - TEXT ONLY
+    ==================================================================== */
+
+    /* Hide toggle buttons and markdown preview on mobile */
+    .mobile-panel .notes-section .notes-view-toggle,
+    .mobile-panel .notes-section .markdown-toolbar,
+    .mobile-panel .notes-section #notesDisplay {
+        display: none !important;
+    }
+
+    /* Make textarea fill the available space */
+    .mobile-panel .notes-section #notesInput {
+        display: block !important;
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        height: 100% !important;
+        max-height: none !important;
+        margin-bottom: 0 !important;
+        resize: none !important;
+        border-radius: 5px !important;
+    }
+
+    /* Adjust notes section layout for mobile text-only */
+    .mobile-panel .notes-section {
+        padding: 15px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .mobile-panel .notes-section .notes-header {
+        flex-shrink: 0;
+        margin-bottom: 10px;
+    }
+
+    .mobile-panel .notes-section .notes-controls {
+        flex-shrink: 0;
+        margin-top: 10px;
     }
 
     /* Reference panel */
@@ -710,7 +770,7 @@
 }
 
 /* Extra small screens */
-@media (max-width: 420px) {
+@media (max-width: 400px) {
     html {
         font-size: 13px;
     }
@@ -755,8 +815,7 @@
     }
 
     /* Hide more buttons on very small screens */
-    #nextPassageBtn,
-    #prevPassageBtn,
+    #randomPassageBtn,
     #openSettingsBtn {
         display: none;
     }
@@ -851,7 +910,7 @@
     }
 }
 
-@media (min-width: 421px) and (max-width: 768px) {
+@media (min-width: 400px) and (max-width: 850px) {
     #nextPassageBtn,
     #prevPassageBtn,
     #randomPassageBtn,
@@ -861,5 +920,18 @@
     
     #bible-tb-divider {
         display: block !important;
+    }
+
+    .main-content #audioControls {
+        top: 70px;
+        right: 15px;
+        padding: 10px;
+    }
+    
+    .main-content #audioControls .play-audio-btn,
+    .main-content #audioControls .pause-audio-btn,
+    .main-content #audioControls .stop-audio-btn {
+        width: 40px;
+        height: 40px;
     }
 }

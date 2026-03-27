@@ -92,7 +92,7 @@
 
 .hotkey-keys {
     font-family: monospace;
-    background: var(--bg-secondary);
+    background: var(--background);
     padding: 6px 10px;
     border-radius: 5px;
     border: 1px solid var(--border-color);

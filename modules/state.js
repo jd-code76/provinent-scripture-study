@@ -1,5 +1,5 @@
 import { handleError } from '../main.js';
-export const APP_VERSION = '2.3-2026.03.25';
+export const APP_VERSION = '2.4-2026.03.27';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -82,7 +82,7 @@ export const state = {
         theme: 'dark',
         colorTheme: 'blue',
         notesView: 'text',
-        referencePanelOpen: true,
+        referencePanelOpen: false,
         referenceSource: 'biblegateway',
         collapsedSections: {},
         collapsedPanels: {},

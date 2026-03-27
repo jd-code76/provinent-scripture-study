@@ -145,8 +145,8 @@
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    background-color: var(--bg-secondary);
     color: var(--text-color);
+    background: var(--background);
 }
 
 .bible-gateway-inputs input[type="submit"] {
@@ -159,10 +159,6 @@
     cursor: pointer;
     transition: background-color var(--transition-fast);
     width: 180px;
-}
-
-.bible-gateway-inputs input[type="submit"]:hover {
-    background-color: var(--secondary-color);
 }
 
 .bible-gateway-content small {

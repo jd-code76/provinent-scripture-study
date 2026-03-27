@@ -99,11 +99,11 @@
     --accent-color: #ff9800;
 }
 
-/* Teal theme */
-[data-color-theme="teal"] {
-    --primary-color: #004d40;
-    --secondary-color: #00695c;
-    --accent-color: #009688;
+/* Yellow theme */
+[data-color-theme="yellow"] {
+    --primary-color: #bfa038;
+    --secondary-color: #d4b938;
+    --accent-color: #e8c95e;
 }
 
 /* Dark Theme Colors */
@@ -165,8 +165,8 @@
     --accent-color: #ffa726;
 }
 
-[data-theme="dark"][data-color-theme="teal"] {
-    --primary-color: #004d40;
-    --secondary-color: #00796b;
-    --accent-color: #26a69a;
+[data-theme="dark"][data-color-theme="yellow"] {
+    --primary-color: #d4b938;
+    --secondary-color: #c4a644;
+    --accent-color: #a68b3c;
 }

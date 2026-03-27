@@ -1,9 +1,28 @@
-import { apiTranslationCode, cleanupAudioPlayer, fetchChapter, getApiBookCode, isKJV, stopChapterAudio, updateAudioControls } from './api.js';
+import { 
+    apiTranslationCode, 
+    cleanupAudioPlayer, 
+    fetchChapter, 
+    getApiBookCode, 
+    isKJV, 
+    stopChapterAudio, 
+    updateAudioControls 
+} from './api.js';
 import { scrollToVerse } from './highlights.js';
 import { setupKeyboardNavigation } from './hotkeys.js';
 import { clearError, handleError, showError, showLoading, updateHeaderTitle } from '../main.js';
 import { displayPassage, extractVerseText, updateDisplayRef } from './passage.js';
-import { AVAILABLE_TRANSLATIONS, BOOKS_ABBREVIATED, BOOK_ORDER, BOOK_NAME_TO_ABBREVIATION, CHAPTER_COUNTS, bookNameMapping, parseURL, saveToStorage, state, updateURL } from './state.js';
+import { 
+    AVAILABLE_TRANSLATIONS, 
+    BOOKS_ABBREVIATED, 
+    BOOK_ORDER, 
+    BOOK_NAME_TO_ABBREVIATION, 
+    CHAPTER_COUNTS, 
+    bookNameMapping, 
+    parseURL, 
+    saveToStorage, 
+    state, 
+    updateURL 
+} from './state.js';
 import { updateReferencePanel } from './ui.js';
 const SINGLE_CHAPTER_BOOKS = new Set([
     'Obadiah', 'Philemon', '2 John', '3 John', 'Jude'
@@ -461,20 +480,6 @@ export function setupPopStateListener() {
             navigateFromURL();
         }
     });
-}
-function applyPopStateNavigation(stateData) {
-    const { translation, book, chapter } = stateData;
-    state.settings.manualBook = book;
-    state.settings.manualChapter = chapter;
-    state.settings.bibleTranslation = translation;
-    const bookSelect = document.getElementById('bookSelect');
-    const chapterSelect = document.getElementById('chapterSelect');
-    if (bookSelect) bookSelect.value = book;
-    if (chapterSelect) {
-        populateChapterDropdown(book);
-        chapterSelect.value = chapter;
-    }
-    loadSelectedChapter(book, chapter);
 }
 export function setupNavigationWithURL() {
     const bookSelect = document.getElementById('bookSelect');
