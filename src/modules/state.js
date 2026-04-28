@@ -9,7 +9,7 @@ import { handleError } from '../main.js';
    CONSTANTS
 ==================================================================== */
 
-export const APP_VERSION = '2.4-2026.03.27';
+export const APP_VERSION = '2.5-2026.04.28';
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -132,7 +132,7 @@ export const state = {
     
     settings: {
         bibleTranslation: 'BSB',
-        referenceVersion: 'NASB',
+        referenceVersion: 'NASB1995',
         footnotes: {},
         audioControlsVisible: true,
         audioNarrator: 'gilbert',

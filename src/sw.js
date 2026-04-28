@@ -5,12 +5,13 @@
 
 const CORE_ASSETS = [
     '/', '/index.html', '/styles.css', '/main.js',
-    '/modules/api.js', '/modules/highlights.js', '/modules/hotkeys.js',
-    '/modules/navigation.js', '/modules/passage.js', '/modules/settings.js',
-    '/modules/state.js', '/modules/strongs.js', '/modules/ui.js',
-    '/sw.js', '/404.html', '/manifest.json',
-    '/favicons/apple-touch-icon.png', '/favicons/favicon.ico',
-    '/favicons/favicon-16x16.png', '/favicons/favicon-32x32.png'
+    '/modules/api.js', '/modules/highlights.js', '/modules/hotkeys.js', 
+    '/modules/mobile.js', '/modules/navigation.js', '/modules/passage.js', 
+    '/modules/settings.js', '/modules/state.js', '/modules/strongs.js', 
+    '/modules/ui.js', '/sw.js', '/404.html', '/manifest.json',
+    '/favicons/apple-touch-icon.png', '/favicons/favicon.png',
+    '/favicons/favicon-16x16.png', '/favicons/favicon-32x32.png',
+    '/favicons/favicon-192x192.png', '/favicons/favicon-512x512.png'
 ];
 
 let CURRENT_CACHE = null;   // will become “provinent‑cache‑vX.Y.Z”

@@ -259,8 +259,10 @@ export async function updateReferencePanel() {
         const translationSelect = document.getElementById('referenceTranslation');
         const iframe = document.getElementById('referenceIframe');
         if (!sourceSelect || !translationSelect || !iframe) return;
-        const source = sourceSelect.value;
-        const translation = translationSelect.value;
+        const source = state.settings.referenceSource || sourceSelect.value || 'biblegateway';
+        const translation = state.settings.referenceVersion || translationSelect.value || 'NASB1995';
+        sourceSelect.value = source;
+        translationSelect.value = translation;
         state.settings.referenceSource = source;
         state.settings.referenceVersion = translation;
         translationSelect.style.display = 'block';

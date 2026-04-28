@@ -102,6 +102,7 @@ function handleMobileTabClick(clickedTab, elements) {
 function handleScripturePanel(tab, referencePanel) {
     if (referencePanel) referencePanel.classList.remove('active');
     state.settings.referencePanelOpen = false;
+    state.settings.mobileActiveTab = 'scripture';
     saveToStorage();
     tab.classList.add('active');
 }
@@ -117,6 +118,8 @@ function handleScripturePanel(tab, referencePanel) {
 function handleSidebarPanel(tab, sidebar, mobilePanel, mobilePanelContent, referencePanel) {
     if (referencePanel) referencePanel.classList.remove('active');
     tab.classList.add('active');
+    state.settings.mobileActiveTab = 'sidebar';
+    saveToStorage();
 
     if (sidebar) {
         sidebar.classList.remove('panel-collapsed');
@@ -147,6 +150,7 @@ function handleSidebarPanel(tab, sidebar, mobilePanel, mobilePanelContent, refer
 function handleNotesPanel(tab, notesSection, mobilePanel, mobilePanelContent, referencePanel) {
     if (referencePanel) referencePanel.classList.remove('active');
     tab.classList.add('active');
+    state.settings.mobileActiveTab = 'notes';
 
     // Ensure notes section is not collapsed
     state.settings.notesCollapsed = false;
@@ -170,7 +174,10 @@ function handleNotesPanel(tab, notesSection, mobilePanel, mobilePanelContent, re
 }
 
 /**
- * Handle switching to reference panel
+ * Handle switching to reference panel.
+ * Always highlights the tab. Only reloads the iframe if the panel
+ * was not already active — prevents unnecessary reloads on repeated taps
+ * while keeping the tab highlight correct.
  * @param {HTMLElement} tab - The reference tab element
  * @param {HTMLElement} referencePanel - The reference panel element
  * @param {NodeList} mobileTabs - All mobile navigation tabs
@@ -178,10 +185,14 @@ function handleNotesPanel(tab, notesSection, mobilePanel, mobilePanelContent, re
 function handleReferencePanel(tab, referencePanel, mobileTabs) {
     if (!referencePanel) return;
 
-    const isCurrentlyActive = referencePanel.classList.contains('active');
+    const wasAlreadyActive = referencePanel.classList.contains('active');
 
-    if (!isCurrentlyActive) {
-        tab.classList.add('active');
+    // Always mark the tab active regardless of prior panel state
+    tab.classList.add('active');
+    state.settings.mobileActiveTab = 'reference';
+    saveToStorage();
+
+    if (!wasAlreadyActive) {
         referencePanel.classList.add('active');
         state.settings.referencePanelOpen = true;
         saveToStorage();
@@ -228,6 +239,9 @@ function closeMobilePanel(mobilePanel, mobileTabs) {
             t.classList.remove('active');
         }
     });
+
+    state.settings.mobileActiveTab = 'scripture';
+    saveToStorage();
 }
 
 /* ====================================================================
@@ -249,6 +263,7 @@ function setupReferencePanelCloseButton(referencePanel, mobileTabs) {
     newRefClose.addEventListener('click', () => {
         referencePanel.classList.remove('active');
         state.settings.referencePanelOpen = false;
+        state.settings.mobileActiveTab = 'scripture';
         saveToStorage();
 
         mobileTabs.forEach(t => t.classList.remove('active'));
@@ -406,20 +421,6 @@ function setupMobileTextView(notesElement) {
 }
 
 /* ====================================================================
-   KEYBOARD SHORTCUTS IN NOTES TEXTAREA
-==================================================================== */
-
-/**
- * Handle keyboard shortcuts in notes textarea
- * Only plain text editing shortcuts apply on mobile (no markdown insertion)
- * @param {KeyboardEvent} e - The keyboard event
- */
-function handleNotesKeydown(e) {
-    // Reserved for future plain-text keyboard shortcuts on mobile
-    // Markdown shortcuts are intentionally excluded
-}
-
-/* ====================================================================
    RESIZE HANDLING
 ==================================================================== */
 
@@ -443,7 +444,10 @@ export function handleMobileNavResize() {
 }
 
 /**
- * Switch to mobile mode UI
+ * Switch to mobile mode UI.
+ * On first entry, restores the last active tab from state so that
+ * a page refresh lands on the correct tab rather than always defaulting
+ * to Scripture.
  * @param {HTMLElement} mobileNavTabs - Mobile navigation tabs container
  * @param {HTMLElement} mobilePanel - Mobile panel container
  * @param {HTMLElement} sidebar - Sidebar element
@@ -460,6 +464,33 @@ function enterMobileMode(mobileNavTabs, mobilePanel, sidebar, notesSection) {
             initMobileNav();
             mobilePanel.dataset.initialized = 'true';
         }
+
+        // Restore the tab that was active before the refresh
+        restoreMobileTabState(mobileNavTabs, mobilePanel);
+    }
+}
+
+/**
+ * Restore the last active mobile tab from persisted state.
+ * Called once after initMobileNav() so all click handlers are already bound.
+ * @param {HTMLElement} mobileNavTabs - Mobile navigation tabs container
+ * @param {HTMLElement} mobilePanel - Mobile panel container
+ */
+function restoreMobileTabState(mobileNavTabs, mobilePanel) {
+    const savedTab = state.settings.mobileActiveTab || 'scripture';
+
+    // Find and simulate a click on the saved tab so all panel
+    // open/close logic runs exactly as if the user tapped it
+    const tabToRestore = document.querySelector(
+        `.mobile-nav-tab[data-panel="${savedTab}"]`
+    );
+
+    if (tabToRestore) {
+        tabToRestore.click();
+    } else {
+        // Fallback: activate scripture tab
+        const scriptureTab = document.querySelector('[data-panel="scripture"]');
+        if (scriptureTab) scriptureTab.classList.add('active');
     }
 }
 
@@ -627,7 +658,6 @@ function restoreNotesListeners() {
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
         newBtn.addEventListener('click', () => {
-            // insertMarkdown is desktop-only, import only needed on desktop path
             import('./ui.js').then(({ insertMarkdown }) => insertMarkdown(newBtn.dataset.format));
         });
     });

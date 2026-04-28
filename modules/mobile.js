@@ -64,12 +64,15 @@ function handleMobileTabClick(clickedTab, elements) {
 function handleScripturePanel(tab, referencePanel) {
     if (referencePanel) referencePanel.classList.remove('active');
     state.settings.referencePanelOpen = false;
+    state.settings.mobileActiveTab = 'scripture';
     saveToStorage();
     tab.classList.add('active');
 }
 function handleSidebarPanel(tab, sidebar, mobilePanel, mobilePanelContent, referencePanel) {
     if (referencePanel) referencePanel.classList.remove('active');
     tab.classList.add('active');
+    state.settings.mobileActiveTab = 'sidebar';
+    saveToStorage();
     if (sidebar) {
         sidebar.classList.remove('panel-collapsed');
         mobilePanelContent.innerHTML = sidebar.outerHTML;
@@ -85,6 +88,7 @@ function handleSidebarPanel(tab, sidebar, mobilePanel, mobilePanelContent, refer
 function handleNotesPanel(tab, notesSection, mobilePanel, mobilePanelContent, referencePanel) {
     if (referencePanel) referencePanel.classList.remove('active');
     tab.classList.add('active');
+    state.settings.mobileActiveTab = 'notes';
     state.settings.notesCollapsed = false;
     saveToStorage();
     if (notesSection) {
@@ -100,9 +104,11 @@ function handleNotesPanel(tab, notesSection, mobilePanel, mobilePanelContent, re
 }
 function handleReferencePanel(tab, referencePanel, mobileTabs) {
     if (!referencePanel) return;
-    const isCurrentlyActive = referencePanel.classList.contains('active');
-    if (!isCurrentlyActive) {
-        tab.classList.add('active');
+    const wasAlreadyActive = referencePanel.classList.contains('active');
+    tab.classList.add('active');
+    state.settings.mobileActiveTab = 'reference';
+    saveToStorage();
+    if (!wasAlreadyActive) {
         referencePanel.classList.add('active');
         state.settings.referencePanelOpen = true;
         saveToStorage();
@@ -133,6 +139,8 @@ function closeMobilePanel(mobilePanel, mobileTabs) {
             t.classList.remove('active');
         }
     });
+    state.settings.mobileActiveTab = 'scripture';
+    saveToStorage();
 }
 function setupReferencePanelCloseButton(referencePanel, mobileTabs) {
     const refClose = referencePanel.querySelector('.reference-panel-close');
@@ -142,6 +150,7 @@ function setupReferencePanelCloseButton(referencePanel, mobileTabs) {
     newRefClose.addEventListener('click', () => {
         referencePanel.classList.remove('active');
         state.settings.referencePanelOpen = false;
+        state.settings.mobileActiveTab = 'scripture';
         saveToStorage();
         mobileTabs.forEach(t => t.classList.remove('active'));
         const scriptureTab = document.querySelector('[data-panel="scripture"]');
@@ -234,8 +243,6 @@ function setupMobileTextView(notesElement) {
         newBtn.addEventListener('click', () => exportNotes());
     });
 }
-function handleNotesKeydown(e) {
-}
 export function handleMobileNavResize() {
     const mobileNavTabs = document.getElementById('mobileNavTabs');
     const mobilePanel = document.getElementById('mobilePanel');
@@ -258,6 +265,19 @@ function enterMobileMode(mobileNavTabs, mobilePanel, sidebar, notesSection) {
             initMobileNav();
             mobilePanel.dataset.initialized = 'true';
         }
+        restoreMobileTabState(mobileNavTabs, mobilePanel);
+    }
+}
+function restoreMobileTabState(mobileNavTabs, mobilePanel) {
+    const savedTab = state.settings.mobileActiveTab || 'scripture';
+    const tabToRestore = document.querySelector(
+        `.mobile-nav-tab[data-panel="${savedTab}"]`
+    );
+    if (tabToRestore) {
+        tabToRestore.click();
+    } else {
+        const scriptureTab = document.querySelector('[data-panel="scripture"]');
+        if (scriptureTab) scriptureTab.classList.add('active');
     }
 }
 function enterDesktopMode(mobileNavTabs, mobilePanel, sidebar, notesSection, referencePanel) {

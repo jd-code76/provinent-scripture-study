@@ -994,7 +994,7 @@ function clearAllStorage() {
     // Reset all settings to defaults
     state.settings = {
         bibleTranslation: 'BSB',
-        referenceVersion: 'NASB',
+        referenceVersion: 'NASB1995',
         footnotes: {},
         audioControlsVisible: true,
         audioNarrator: 'gilbert',

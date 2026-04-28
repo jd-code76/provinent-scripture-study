@@ -136,6 +136,38 @@
     justify-content: center;
 }
 
+/* Color-specific left borders for inactive state */
+.highlight-filter-btn[data-color="pink"]   { border-left-color: #e91e63; }
+.highlight-filter-btn[data-color="orange"] { border-left-color: #ff9800; }
+.highlight-filter-btn[data-color="yellow"] { border-left-color: #ffeb3b; }
+.highlight-filter-btn[data-color="green"]  { border-left-color: #4caf50; }
+.highlight-filter-btn[data-color="blue"]   { border-left-color: #2196f3; }
+.highlight-filter-btn[data-color="purple"] { border-left-color: #9c27b0; }
+
+/* Active state: full highlight color as background */
+.highlight-filter-btn[data-color="pink"].active   { background: var(--highlight-pink);   color: #000; border-color: #e91e63; }
+.highlight-filter-btn[data-color="orange"].active { background: var(--highlight-orange); color: #000; border-color: #ff9800; }
+.highlight-filter-btn[data-color="yellow"].active { background: var(--highlight-yellow); color: #000; border-color: #ffeb3b; }
+.highlight-filter-btn[data-color="green"].active  { background: var(--highlight-green);  color: #000; border-color: #4caf50; }
+.highlight-filter-btn[data-color="blue"].active   { background: var(--highlight-blue);   color: #000; border-color: #2196f3; }
+.highlight-filter-btn[data-color="purple"].active { background: var(--highlight-purple); color: #000; border-color: #9c27b0; }
+
+/* "All" button keeps existing accent-color active behavior */
+.highlight-filter-btn[data-color="all"].active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+    border-left-color: var(--accent-color);
+}
+
+/* Dark mode: use semi-transparent backgrounds to stay readable */
+[data-theme="dark"] .highlight-filter-btn[data-color="pink"].active   { background: rgba(233, 30, 99, 0.35);  color: #fff; }
+[data-theme="dark"] .highlight-filter-btn[data-color="orange"].active { background: rgba(255, 152, 0, 0.35);  color: #fff; }
+[data-theme="dark"] .highlight-filter-btn[data-color="yellow"].active { background: rgba(255, 235, 59, 0.35); color: #fff; }
+[data-theme="dark"] .highlight-filter-btn[data-color="green"].active  { background: rgba(76, 175, 80, 0.35);  color: #fff; }
+[data-theme="dark"] .highlight-filter-btn[data-color="blue"].active   { background: rgba(33, 150, 243, 0.35); color: #fff; }
+[data-theme="dark"] .highlight-filter-btn[data-color="purple"].active { background: rgba(156, 39, 176, 0.35); color: #fff; }
+
 .highlight-filter-btn {
     padding: 8px 16px;
     border: 1px solid var(--border-color);
@@ -147,11 +179,14 @@
     font-weight: 500;
     transition: all 0.2s ease;
     white-space: nowrap;
+    border-left-width: 4px;
+    min-width: 48px; /* holds the box size without text */
 }
 
 .highlight-filter-btn:hover {
     background: var(--verse-hover);
     border-color: var(--accent-color);
+    border-left-color: inherit;
 }
 
 .highlight-filter-btn.active {

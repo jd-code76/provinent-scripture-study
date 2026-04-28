@@ -675,7 +675,7 @@ function clearAllStorage() {
     state.notes = '';
     state.settings = {
         bibleTranslation: 'BSB',
-        referenceVersion: 'NASB',
+        referenceVersion: 'NASB1995',
         footnotes: {},
         audioControlsVisible: true,
         audioNarrator: 'gilbert',
