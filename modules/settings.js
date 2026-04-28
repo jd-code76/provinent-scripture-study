@@ -605,10 +605,6 @@ function saveSettingsToStorage() {
 }
 function updateUIAfterSettingsChange() {
     applyColorTheme();
-    const referenceTranslationSelect = document.getElementById('referenceTranslation');
-    if (referenceTranslationSelect) {
-        referenceTranslationSelect.value = state.settings.referenceVersion;
-    }
     if (typeof updateScriptureFontSize === 'function') {
         updateScriptureFontSize(state.settings.scriptureFontSize);
     }

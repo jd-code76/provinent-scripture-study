@@ -5,7 +5,6 @@ import {
     CHAPTER_COUNTS, 
     bibleComUrlMap, 
     bibleHubUrlMap, 
-    ebibleOrgUrlMap, 
     formatBookNameForSource, 
     saveToStorage, 
     state, 
@@ -16,7 +15,6 @@ const UNSUPPORTED_TRANSLATIONS = {
     biblehub: [],
     biblegateway: ['BSB'],
     stepbible: ['NKJV', 'CSB', 'NLT'],
-    ebibleorg: ['LSB', 'NASB', 'ASV', 'ESV', 'NKJV', 'CSB', 'NIV', 'NLT']
 };
 const PANEL_LIMITS = {
     sidebar: { min: 150, max: 600 },
@@ -265,17 +263,18 @@ export async function updateReferencePanel() {
         translationSelect.value = translation;
         state.settings.referenceSource = source;
         state.settings.referenceVersion = translation;
-        translationSelect.style.display = 'block';
-        filterTranslationOptions(source, translationSelect);
         iframe.style.display = 'block';
         const passage = {
             book: state.settings.manualBook,
             chapter: state.settings.manualChapter,
             displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`
         };
-        const url = generateReferenceUrl(source, translation, passage);
+        let url = generateReferenceUrl(source, translation, passage);
         if (url) {
-            iframe.src = url;
+            iframe.src = '';
+            setTimeout(() => {
+                iframe.src = url;
+            }, 10);
         }
         saveToStorage();
     } catch (error) {
@@ -294,7 +293,6 @@ export function makeToggleSticky() {
 }
 function generateReferenceUrl(source, translation, passage) {
     const bookName = passage.book.toLowerCase().replace(/\s+/g, '_');
-    const bookAbbr = bookName.substring(0, 3).toUpperCase();
     const chapter = passage.chapter;
     switch (source) {
         case 'biblehub': {
@@ -303,8 +301,6 @@ function generateReferenceUrl(source, translation, passage) {
         }
         case 'biblecom':
             return generateBibleComUrl(translation, passage);
-        case 'ebibleorg':
-            return generateEbibleOrgUrl(translation, bookName, bookAbbr, chapter);
         case 'stepbible':
             return getStepBibleUrl(passage.displayRef, translation);
         default:
@@ -325,21 +321,12 @@ function generateBibleComUrl(translation, passage) {
     ];
     return urlFormats[0]; 
 }
-function generateEbibleOrgUrl(translation, bookName, bookAbbr, chapter) {
-    const ebibleOrgCode = ebibleOrgUrlMap[translation];
-    if (!ebibleOrgCode) {
-        alert(`eBible.org doesn't support ${translation}. Please choose another translation.`);
-        return null;
-    }
-    const bookRef = bookName === 'psalms' ? 'PS1' : `${bookAbbr}1`;
-    return `https://ebible.org/study/?w1=bible&t1=${encodeURIComponent(ebibleOrgCode)}&v1=${bookRef}_${chapter}`;
-}
 function generateBibleGatewayUrl(translation, passage) {
     const query = passage.displayRef.replace(/\s+/g, '+');
     const version = translation === 'GNV' ? 'GNV' : translation;
     return `https://www.biblegateway.com/passage/?search=${query}&version=${version}&interface=print`;
 }
-function filterTranslationOptions(source, selectElement) {
+export function filterTranslationOptions(source, selectElement) {
     if (!selectElement.id.includes('Translation') && !selectElement.id.includes('reference')) {
         return; 
     }
@@ -366,10 +353,6 @@ function handleUnsupportedTranslation(source, selectElement, currentValue) {
             state.settings.referenceSource = 'biblehub';
         }
         selectElement.value = 'BSB';
-    } else {
-        const fallback = source === 'ebibleorg' ? 'NASB1995' : 'LSB';
-        selectElement.value = fallback;
-        state.settings.referenceVersion = fallback;
     }
     saveToStorage();
 }
@@ -453,35 +436,42 @@ export function restoreSidebarState() {
 }
 export function restorePanelStates() {
     try {
-        Object.entries(state.settings.panelWidths || {}).forEach(([panelId, width]) => {
-            const panel = document.getElementById(panelId);
-            if (panel && width) {
-                panel.style.width = width + 'px';
-            }
-        });
-        Object.entries(state.settings.collapsedPanels || {}).forEach(([panelId, isCollapsed]) => {
-            const panel = document.getElementById(panelId);
-            if (panel && isCollapsed) {
-                panel.classList.add('panel-collapsed');
-            }
-        });
         const sourceSelect = document.getElementById('referenceSource');
         const translationSelect = document.getElementById('referenceTranslation');
-        if (sourceSelect) {
-            sourceSelect.value = state.settings.referenceSource || 'biblegateway';
+        if (!sourceSelect || !translationSelect) {
+            console.warn('Reference panel selects not found during restore');
+            return;
         }
-        if (translationSelect) {
-            translationSelect.value = state.settings.referenceVersion || 'NASB1995';
+        const savedSource = state.settings.referenceSource || 'biblegateway';
+        const savedTranslation = state.settings.referenceVersion || 'NASB1995';
+        sourceSelect.value = savedSource;
+        filterTranslationOptions(savedSource, translationSelect);
+        const targetOption = Array.from(translationSelect.options).find(o => o.value === savedTranslation);
+        if (targetOption) {
+            if (targetOption.disabled) {
+                targetOption.disabled = false; 
+            }
+            translationSelect.value = savedTranslation;
+            } else {
+            console.warn('Target option not found. Falling back.');
+            const firstValid = Array.from(translationSelect.options).find(o => !o.disabled);
+            if (firstValid) {
+                translationSelect.value = firstValid.value;
+                console.log('Fallback to:', translationSelect.value);
+            }
         }
+        sourceSelect.dispatchEvent(new Event('change'));
+        translationSelect.dispatchEvent(new Event('change'));
         if (state.settings.referencePanelOpen) {
             const referencePanel = document.getElementById('referencePanel');
             if (referencePanel) {
                 referencePanel.classList.add('active');
+                updateReferencePanel();
             }
-            updateReferencePanel();
         }
     } catch (error) {
         console.error('Error restoring panel states:', error);
+        handleError(error, 'restorePanelStates');
     }
 }
 export function restoreBookChapterUI() {

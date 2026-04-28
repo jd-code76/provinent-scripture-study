@@ -2,16 +2,71 @@
   Provinent Scripture Study – main.js
 =====================================================================*/
 
-import { isKJV, playChapterAudio, pauseChapterAudio, resumeChapterAudio, stopChapterAudio } from './modules/api.js';
-import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights, showColorPicker, showHighlightsModal } from './modules/highlights.js';
+import { 
+    isKJV,
+    playChapterAudio,
+    pauseChapterAudio,
+    resumeChapterAudio,
+    stopChapterAudio 
+} from './modules/api.js';
+import { 
+    applyHighlight, 
+    clearHighlights, 
+    closeHighlightsModal, 
+    renderHighlights, 
+    showColorPicker, 
+    showHighlightsModal 
+} from './modules/highlights.js';
 import { showHelpModal } from './modules/hotkeys.js';
 import { handleMobileNavResize } from './modules/mobile.js'
-import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
-import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings } from './modules/settings.js'
-import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToStorage, state } from './modules/state.js'
+import { 
+    initBookChapterControls, 
+    loadSelectedChapter, 
+    navigateFromURL, 
+    nextPassage, 
+    prevPassage, 
+    randomPassage, 
+    setupNavigationWithURL, 
+    setupPopStateListener 
+} from './modules/navigation.js'
+import { 
+    clearCache, 
+    closeSettings, 
+    deleteAllData, 
+    exportData, 
+    importData, 
+    initializeAudioControls, 
+    initialiseNarratorSelect, 
+    openSettings, 
+    saveSettings 
+} from './modules/settings.js'
+import { 
+    APP_VERSION, 
+    BOOK_ORDER, 
+    updateBibleGatewayVersion, 
+    loadFromCookies, 
+    loadFromStorage, 
+    saveToStorage, 
+    state 
+} from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
-import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
-    updateMarkdownPreview, updateReferencePanel, updateNotesFontSize, updateScriptureFontSize } from './modules/ui.js'
+import { 
+    exportNotes, 
+    filterTranslationOptions,
+    initResizeHandles, 
+    insertMarkdown, 
+    restoreBookChapterUI, 
+    restorePanelStates, 
+    restoreSidebarState, 
+    switchNotesView, 
+    togglePanelCollapse, 
+    toggleReferencePanel, 
+    toggleSection, 
+    updateMarkdownPreview, 
+    updateReferencePanel, 
+    updateNotesFontSize, 
+    updateScriptureFontSize 
+} from './modules/ui.js'
 
 /* ====================================================================
    CONSTANTS
@@ -391,22 +446,23 @@ function setupSidebarControls() {
     const refTranslation = document.getElementById('referenceTranslation');
     const refClose = document.querySelector('.reference-panel-close');
     
-    if (refSource) refSource.addEventListener('change', updateReferencePanel);
-    if (refTranslation) refTranslation.addEventListener('change', handleReferenceTranslationChange);
-    if (refClose) refClose.addEventListener('click', toggleReferencePanel);
-}
-
-function handleReferenceTranslationChange(e) {
-    state.settings.referenceVersion = e.target.value;
-    updateBibleGatewayVersion();
-    saveToStorage();
-    
-    const settingsDropdown = document.getElementById('referenceVersionSetting');
-    if (settingsDropdown) {
-        settingsDropdown.value = e.target.value;
+    if (refSource) {
+        refSource.addEventListener('change', () => {
+            // 1. Filter options FIRST based on new source
+            filterTranslationOptions(refSource.value, refTranslation);
+            // 2. Then update the panel
+            updateReferencePanel();
+        });
     }
     
-    updateReferencePanel();
+    if (refTranslation) {
+        refTranslation.addEventListener('change', () => {
+            // Just update the panel when translation changes
+            updateReferencePanel();
+        });
+    }
+    
+    if (refClose) refClose.addEventListener('click', toggleReferencePanel);
 }
 
 function setupNotesControls() {
@@ -547,8 +603,11 @@ function setupTouchEvents() {
 
 async function init() {
     try {
-        await loadFromStorage();
-        loadFromCookies();
+        const storageLoaded = await loadFromStorage();
+        // Only load cookies if storage failed or returned nothing
+        if (!storageLoaded) {
+            loadFromCookies();
+        }
         
         const style = document.createElement('style');
         document.head.appendChild(style);

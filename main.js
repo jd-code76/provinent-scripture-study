@@ -1,13 +1,68 @@
-import { isKJV, playChapterAudio, pauseChapterAudio, resumeChapterAudio, stopChapterAudio } from './modules/api.js';
-import { applyHighlight, clearHighlights, closeHighlightsModal, renderHighlights, showColorPicker, showHighlightsModal } from './modules/highlights.js';
+import { 
+    isKJV,
+    playChapterAudio,
+    pauseChapterAudio,
+    resumeChapterAudio,
+    stopChapterAudio 
+} from './modules/api.js';
+import { 
+    applyHighlight, 
+    clearHighlights, 
+    closeHighlightsModal, 
+    renderHighlights, 
+    showColorPicker, 
+    showHighlightsModal 
+} from './modules/highlights.js';
 import { showHelpModal } from './modules/hotkeys.js';
 import { handleMobileNavResize } from './modules/mobile.js'
-import { initBookChapterControls, loadSelectedChapter, navigateFromURL, nextPassage, prevPassage, randomPassage, setupNavigationWithURL, setupPopStateListener } from './modules/navigation.js'
-import { clearCache, closeSettings, deleteAllData, exportData, importData, initializeAudioControls, initialiseNarratorSelect, openSettings, saveSettings } from './modules/settings.js'
-import { APP_VERSION, BOOK_ORDER, updateBibleGatewayVersion, loadFromCookies, loadFromStorage, saveToStorage, state } from './modules/state.js'
+import { 
+    initBookChapterControls, 
+    loadSelectedChapter, 
+    navigateFromURL, 
+    nextPassage, 
+    prevPassage, 
+    randomPassage, 
+    setupNavigationWithURL, 
+    setupPopStateListener 
+} from './modules/navigation.js'
+import { 
+    clearCache, 
+    closeSettings, 
+    deleteAllData, 
+    exportData, 
+    importData, 
+    initializeAudioControls, 
+    initialiseNarratorSelect, 
+    openSettings, 
+    saveSettings 
+} from './modules/settings.js'
+import { 
+    APP_VERSION, 
+    BOOK_ORDER, 
+    updateBibleGatewayVersion, 
+    loadFromCookies, 
+    loadFromStorage, 
+    saveToStorage, 
+    state 
+} from './modules/state.js'
 import { closeStrongsPopup, showStrongsReference } from './modules/strongs.js'
-import { exportNotes, initResizeHandles, insertMarkdown, restoreBookChapterUI, restorePanelStates, restoreSidebarState, switchNotesView, togglePanelCollapse, toggleReferencePanel, toggleSection, 
-    updateMarkdownPreview, updateReferencePanel, updateNotesFontSize, updateScriptureFontSize } from './modules/ui.js'
+import { 
+    exportNotes, 
+    filterTranslationOptions,
+    initResizeHandles, 
+    insertMarkdown, 
+    restoreBookChapterUI, 
+    restorePanelStates, 
+    restoreSidebarState, 
+    switchNotesView, 
+    togglePanelCollapse, 
+    toggleReferencePanel, 
+    toggleSection, 
+    updateMarkdownPreview, 
+    updateReferencePanel, 
+    updateNotesFontSize, 
+    updateScriptureFontSize 
+} from './modules/ui.js'
 let touchStartTime = 0;
 let longPressTimer = null;
 let touchStartY = 0;
@@ -301,19 +356,18 @@ function setupSidebarControls() {
     const refSource = document.getElementById('referenceSource');
     const refTranslation = document.getElementById('referenceTranslation');
     const refClose = document.querySelector('.reference-panel-close');
-    if (refSource) refSource.addEventListener('change', updateReferencePanel);
-    if (refTranslation) refTranslation.addEventListener('change', handleReferenceTranslationChange);
-    if (refClose) refClose.addEventListener('click', toggleReferencePanel);
-}
-function handleReferenceTranslationChange(e) {
-    state.settings.referenceVersion = e.target.value;
-    updateBibleGatewayVersion();
-    saveToStorage();
-    const settingsDropdown = document.getElementById('referenceVersionSetting');
-    if (settingsDropdown) {
-        settingsDropdown.value = e.target.value;
+    if (refSource) {
+        refSource.addEventListener('change', () => {
+            filterTranslationOptions(refSource.value, refTranslation);
+            updateReferencePanel();
+        });
     }
-    updateReferencePanel();
+    if (refTranslation) {
+        refTranslation.addEventListener('change', () => {
+            updateReferencePanel();
+        });
+    }
+    if (refClose) refClose.addEventListener('click', toggleReferencePanel);
 }
 function setupNotesControls() {
     const notesInput = document.getElementById('notesInput');
@@ -423,8 +477,10 @@ function setupTouchEvents() {
 }
 async function init() {
     try {
-        await loadFromStorage();
-        loadFromCookies();
+        const storageLoaded = await loadFromStorage();
+        if (!storageLoaded) {
+            loadFromCookies();
+        }
         const style = document.createElement('style');
         document.head.appendChild(style);
         initBookChapterControls();

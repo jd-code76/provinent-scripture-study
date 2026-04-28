@@ -23,7 +23,7 @@ import {
  * Initialize mobile navigation tabs and panel switching
  * Only runs on screens 850px or smaller
  */
-export function initMobileNav() {
+function initMobileNav() {
     const mobileTabs = document.querySelectorAll('.mobile-nav-tab');
     const mobilePanel = document.getElementById('mobilePanel');
     const mobilePanelContent = document.getElementById('mobilePanelContent');

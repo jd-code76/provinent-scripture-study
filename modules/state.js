@@ -1,5 +1,9 @@
 import { handleError } from '../main.js';
+<<<<<<< HEAD
 export const APP_VERSION = '2.5-2026.04.28';
+=======
+export const APP_VERSION = '2.6-2026.05.01';
+>>>>>>> 510f629 (- Add mobile.js and additional favicon assets to service worker)
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;
@@ -144,8 +148,6 @@ export function formatBookNameForSource(bookName, source) {
             };
             return bibleComCodes[book] || book.substring(0, 3).toUpperCase();
         }
-        case 'ebibleorg':
-            return book === 'psalms' ? 'PS1' : book.substring(0, 3).toUpperCase() + '1';
         default:
             return book.replace(/\s+/g, '_');
     }
@@ -195,9 +197,11 @@ export function loadFromStorage() {
         }
         const notesInput = document.getElementById('notesInput');
         if (notesInput) notesInput.value = state.notes;
+        return true; 
     } catch (error) {
         console.error('Storage load error:', error);
         handleError(error, 'loadFromStorage');
+        return false;
     }
 }
 export function saveToCookies() {
@@ -279,14 +283,6 @@ export const bibleComUrlMap = {
     NET: '107',
     NIV: '111',
     NLT: '116'
-};
-export const ebibleOrgUrlMap = {
-    NASB1995: 'local:engnasb',
-    ASV: 'local:eng-asv',
-    KJV: 'local:eng-kjv2006',
-    GNV: 'local:enggnv',
-    BSB: 'local:engbsb',
-    NET: 'local:engnet'
 };
 export const stepBibleUrlMap = {
     LSB: 'LSB',

@@ -21,9 +21,9 @@
 
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
-        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
-        frame-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
-        child-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com https://ebible.org;
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com;
+        frame-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com;
+        child-src 'self' https://www.stepbible.org https://biblehub.com https://www.biblegateway.com https://www.bible.com;
     ">
     
     <!-- Preconnect to external domains -->
@@ -314,7 +314,6 @@
                         <option value="biblecom">Bible.com (YouVersion)</option>
                         <option value="biblehub">Bible Hub</option>
                         <option value="stepbible">STEP Bible</option>
-                        <option value="ebibleorg">eBible.org</option>
                     </select>
 
                     <label for="referenceTranslation" class="sr-only">Reference Translation</label>

@@ -131,7 +131,6 @@ Data that is transmitted to external servers:
   - [Bible.com (YouVersion)](https://www.bible.com)
   - [Bible Hub](https://biblehub.com)
   - [STEP Bible](https://www.stepbible.org)
-  - [eBible.org](https://ebible.org)
 - All copyrights, trademarks, and attributions belong to their respective owners
 
 ## License

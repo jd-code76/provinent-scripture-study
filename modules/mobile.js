@@ -9,7 +9,7 @@ import {
     updateReferencePanel,
     switchNotesView
 } from './ui.js';
-export function initMobileNav() {
+function initMobileNav() {
     const mobileTabs = document.querySelectorAll('.mobile-nav-tab');
     const mobilePanel = document.getElementById('mobilePanel');
     const mobilePanelContent = document.getElementById('mobilePanelContent');
