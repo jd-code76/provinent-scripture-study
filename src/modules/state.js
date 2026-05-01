@@ -9,11 +9,7 @@ import { handleError } from '../main.js';
    CONSTANTS
 ==================================================================== */
 
-<<<<<<< HEAD
-export const APP_VERSION = '2.5-2026.04.28';
-=======
 export const APP_VERSION = '2.6-2026.05.01';
->>>>>>> 510f629 (- Add mobile.js and additional favicon assets to service worker)
 const SAVE_DEBOUNCE_MS = 500;
 const COOKIE_LENGTH = 10;
 let saveTimeout = null;

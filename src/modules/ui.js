@@ -405,26 +405,12 @@ export async function updateReferencePanel() {
 
         if (!sourceSelect || !translationSelect || !iframe) return;
 
-<<<<<<< HEAD
-        const source = state.settings.referenceSource || sourceSelect.value || 'biblegateway';
-        const translation = state.settings.referenceVersion || translationSelect.value || 'NASB1995';
-
-        sourceSelect.value = source;
-        translationSelect.value = translation;
-        state.settings.referenceSource = source;
-        state.settings.referenceVersion = translation;
-
-        translationSelect.style.display = 'block';
-        filterTranslationOptions(source, translationSelect);
-
-=======
         const source = sourceSelect.value;
         const translation = translationSelect.value;
 
         state.settings.referenceSource = source;
         state.settings.referenceVersion = translation;
 
->>>>>>> 510f629 (- Add mobile.js and additional favicon assets to service worker)
         iframe.style.display = 'block';
 
         const passage = {
@@ -433,11 +419,7 @@ export async function updateReferencePanel() {
             displayRef: `${state.settings.manualBook} ${state.settings.manualChapter}`
         };
 
-<<<<<<< HEAD
-        const url = generateReferenceUrl(source, translation, passage);
-=======
         let url = generateReferenceUrl(source, translation, passage);
->>>>>>> 510f629 (- Add mobile.js and additional favicon assets to service worker)
         if (url) {
             // Force reload by removing and re-adding src
             iframe.src = '';
